@@ -48,4 +48,18 @@ export default {
     Salir: 'Выйти',
     Informacion: 'Информация',
 
+    InicioConfiguracion: "Запуск подключения",
+    ConfiguracionWifi: "Настройка...",
+    ConfiguracionRealizada: "*Настройка завершена*",
+    ErrorConfiguracion: "*Ошибка настройки*",
+    CapturaTagCorral: "Считать тег загона",
+    CorralTag: "Тег загона",
+    versionUint16: "Эта версия устройства поддерживает номера загонов только до 65000",
+    versionUint32: "Эта версия устройства поддерживает номера загонов до 4000000000",
+    EnvioConfiguracion: "Отправка конфигурации",
+    NumeroCorral: "Номер загона",
+    NumeroMaquina: "Номер машины",
+    Corralnovalido: "Недопустимый загон",
+    Númeromáquinanovalido: "Недопустимый номер машины",
+
 };

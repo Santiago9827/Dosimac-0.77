@@ -47,4 +47,18 @@ export default {
     Enviar: 'Надіслати',
     Salir: 'Вийти',
     Informacion: 'Інформація',
+
+    InicioConfiguracion: "Запуск підключення",
+    ConfiguracionWifi: "Налаштування...",
+    ConfiguracionRealizada: "*Налаштування завершено*",
+    ErrorConfiguracion: "*Помилка налаштування*",
+    CapturaTagCorral: "Зчитати тег загону",
+    CorralTag: "Тег загону",
+    versionUint16: "Ця версія пристрою підтримує загони лише до 65000",
+    versionUint32: "Ця версія пристрою підтримує загони до 4000000000",
+    EnvioConfiguracion: "Надсилання конфігурації",
+    NumeroCorral: "Номер загону",
+    NumeroMaquina: "Номер машини",
+    Corralnovalido: 'Невірний загін',
+    Númeromáquinanovalido: 'Невірний номер машини',
 };

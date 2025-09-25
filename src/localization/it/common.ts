@@ -47,4 +47,18 @@ export default {
     Enviar: 'Invia',
     Salir: 'Esci',
     Informacion: 'Informazioni',
+
+    InicioConfiguracion: "Avvio connessione",
+    ConfiguracionWifi: "Configurazione in corso...",
+    ConfiguracionRealizada: "*Configurazione completata*",
+    ErrorConfiguracion: "*Errore di configurazione*",
+    CapturaTagCorral: "Acquisisci tag del recinto",
+    CorralTag: "Tag del recinto",
+    versionUint16: "Questa versione del dispositivo supporta recinti solo fino a 65000",
+    versionUint32: "Questa versione del dispositivo supporta recinti fino a 4000000000",
+    EnvioConfiguracion: "Invio della configurazione",
+    NumeroCorral: "Numero del recinto",
+    NumeroMaquina: "Numero macchina",
+    Corralnovalido: "Recinto non valido",
+    Númeromáquinanovalido: "Numero macchina non valido",
 };

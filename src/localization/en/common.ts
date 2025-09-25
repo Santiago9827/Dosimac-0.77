@@ -49,6 +49,18 @@ export default {
    Enviar: 'Send',
    Salir: 'Exit',
    Informacion: 'Information',
+   InicioConfiguracion: 'Starting connection',
+   ConfiguracionWifi: 'Configuring...',
+   ConfiguracionRealizada: '*Configuration completed*',
+   ErrorConfiguracion: '*Configuration error*',
+   CapturaTagCorral: 'Capture pen tag',
+   CorralTag: 'Corral tag',
+   versionUint16: 'This device version only supports pens up to 65000',
+   versionUint32: 'This device version supports pens up to 4000000000',
+   EnvioConfiguracion: 'Sending configuration',
+   NumeroCorral: 'Pen number',
+   Corralnovalido: 'Invalid pen',
+   Númeromáquinanovalido: 'Invalid machine number',
 
 
 };

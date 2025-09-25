@@ -300,74 +300,161 @@ export const DRSetup = ({ navigation, route }) => {
       setVisibleMenu(false);
    }
 
+   // const sendButtonClick = () => {
+
+   //    //Set the data structure with the data to send
+   //    //setSendHasMsg(false);
+   //    const data = parseInt(corral)
+
+   //    console.log("CORRAL: ", data);
+   //    if (!Number.isSafeInteger(data) || data <= 0) {
+   //       setSendHasMsg(true);
+   //       setSendMsg("Corral no valido");
+   //       setSendVisible(true);
+   //       setSendHasError(true);
+   //       setWaitingSetting(false);
+   //       return;
+   //    }
+   //    // if (route.params.operacion > 2) {
+   //    if (globals.dispenserType > 2) {
+   //       const data2 = parseInt(deviceNumber)
+   //       console.log("DEVICE: ", data2);
+   //       if (!Number.isSafeInteger(data2) || data2 <= 0 || data2 > 4) {
+   //          setSendHasMsg(true);
+   //          setSendMsg("Número de máquina no valido");
+   //          setSendVisible(true);
+   //          setSendHasError(true);
+   //          setWaitingSetting(false);
+   //          return;
+   //       }
+   //    }
+   //    dosimacSetup.ssid = sfarm.ssid //
+   //    dosimacSetup.wifiPassword = sfarm.wifiPassword; //
+   //    dosimacSetup.serverIp = sfarm.serverIp; //
+
+   //    if (globals.dispenserType <= 2)
+   //       // if (route.params.operacion <= 2)         
+   //       dosimacSetup.deviceType = 200;
+   //    else
+   //       dosimacSetup.deviceType = 203;
+
+   //    // if (route.params.operacion <= 2)
+   //    if (globals.dispenserType <= 2)
+   //       dosimacSetup.phase = 3; //maternidad
+   //    else
+   //       dosimacSetup.phase = 2; //gestacion
+
+   //    dosimacSetup.deviceNumber = parseInt(deviceNumber);
+   //    dosimacSetup.nfcTag = nfcTag;
+   //    console.log("SENDBUTTON corral: ", corral);
+   //    dosimacSetup.corral = parseInt(corral);
+   //    console.log("SENDBUTTON dosimacSetup.corral: ", dosimacSetup.corral);
+
+
+
+
+
+
+   //    setWaitingSetting(true);
+   //    setSendVisible(true);
+   //    // pcomDosimacSetup();
+   //    //Ponemos a cero el estado      
+   //    masterState.dInfoComState = -1;
+   //    masterState.dInfomanState = 0;
+   //    //Inciciamos un nuevo ciclo de configuracion
+   //    setConfigState(0);
+   //    setDInfoComState(masterState.dInfoComState);
+   //    setDInfomanState(masterState.dInfomanState); //
+   //    pcomActiveSetupState();
+
+   // }
+
+   // === ANDROID: DRSetup screen (sendButtonClick) ===
    const sendButtonClick = () => {
-
-      //Set the data structure with the data to send
-      //setSendHasMsg(false);
-      const data = parseInt(corral)
-
-      console.log("CORRAL: ", data);
-      if (!Number.isSafeInteger(data) || data <= 0) {
+      const corralNum = parseInt(corral);
+      if (!Number.isSafeInteger(corralNum) || corralNum <= 0) {
          setSendHasMsg(true);
-         setSendMsg("Corral no valido");
+         setSendMsg(t("Corralnovalido"));
          setSendVisible(true);
          setSendHasError(true);
          setWaitingSetting(false);
          return;
       }
-      // if (route.params.operacion > 2) {
+
       if (globals.dispenserType > 2) {
-         const data2 = parseInt(deviceNumber)
-         console.log("DEVICE: ", data2);
-         if (!Number.isSafeInteger(data2) || data2 <= 0 || data2 > 4) {
+         const devNum = parseInt(deviceNumber);
+         if (!Number.isSafeInteger(devNum) || devNum <= 0 || devNum > 4) {
             setSendHasMsg(true);
-            setSendMsg("Número de máquina no valido");
+            setSendMsg(t("Númeromáquinanovalido"));
             setSendVisible(true);
             setSendHasError(true);
             setWaitingSetting(false);
             return;
          }
       }
-      dosimacSetup.ssid = sfarm.ssid //
-      dosimacSetup.wifiPassword = sfarm.wifiPassword; //
-      dosimacSetup.serverIp = sfarm.serverIp; //
 
-      if (globals.dispenserType <= 2)
-         // if (route.params.operacion <= 2)         
-         dosimacSetup.deviceType = 200;
-      else
-         dosimacSetup.deviceType = 203;
+      // Tipo deseado (igual que iOS)
+      const intendedDeviceType = globals.dispenserType <= 2 ? 200 : 203;
+      const isI = intendedDeviceType === 200;
+      const isG = intendedDeviceType === 203;
+      const sw = dosimacInfo.swVersion || 0;
+      const allowUint32 = (isI && sw >= 155) || (isG && sw >= 134);
 
-      // if (route.params.operacion <= 2)
-      if (globals.dispenserType <= 2)
-         dosimacSetup.phase = 3; //maternidad
-      else
-         dosimacSetup.phase = 2; //gestacion
+      console.log(
+         `[DOSIMAC][UI] ${new Date().toISOString()} Enviar: ` +
+         `sw=${sw}, intendedDeviceType=${intendedDeviceType} (I=${isI}, G=${isG}), ` +
+         `allowUint32=${allowUint32}, corralIntroducido=${corralNum}`
+      );
 
-      dosimacSetup.deviceNumber = parseInt(deviceNumber);
-      dosimacSetup.nfcTag = nfcTag;
-      console.log("SENDBUTTON corral: ", corral);
-      dosimacSetup.corral = parseInt(corral);
-      console.log("SENDBUTTON dosimacSetup.corral: ", dosimacSetup.corral);
+      // Rango
+      if (!allowUint32 && corralNum > 65000) {
+         setSendHasMsg(true);
+         setSendMsg(t("versionUint16")); //"Esta versión del equipo solo admite corrales hasta 65000"
+         setSendVisible(true);
+         setSendHasError(true);
+         setWaitingSetting(false);
+         return;
+      }
+      if (allowUint32 && corralNum > 4000000000) {
+         setSendHasMsg(true);
+         setSendMsg(t("versionUint32")); //"Esta versión del equipo admite corrales hasta 4000000000"
+         setSendVisible(true);
+         setSendHasError(true);
+         setWaitingSetting(false);
+         return;
+      }
 
+      // Rellenar estructura
+      dosimacSetup.ssid = sfarm.ssid || '';
+      dosimacSetup.wifiPassword = sfarm.wifiPassword || '';
+      dosimacSetup.serverIp = sfarm.serverIp || '';
+      dosimacSetup.deviceType = intendedDeviceType;
+      dosimacSetup.phase = globals.dispenserType <= 2 ? 3 : 2;
+      dosimacSetup.deviceNumber = parseInt(deviceNumber) || 1;
+      dosimacSetup.nfcTag = nfcTag || '';
 
+      if (allowUint32) {
+         dosimacSetup.corral = 0;
+         (dosimacSetup as any).corral32 = corralNum;
+      } else {
+         dosimacSetup.corral = corralNum;
+         (dosimacSetup as any).corral32 = 0;
+      }
 
-
-
-
+      // UI + arrancar FSM setup
       setWaitingSetting(true);
       setSendVisible(true);
-      // pcomDosimacSetup();
-      //Ponemos a cero el estado      
-      masterState.dInfoComState = -1;
-      masterState.dInfomanState = 0;
-      //Inciciamos un nuevo ciclo de configuracion
-      setConfigState(0);
-      setDInfoComState(masterState.dInfoComState);
-      setDInfomanState(masterState.dInfomanState); //
-      pcomActiveSetupState();
+      setSendHasError(false);
+      setSendHasMsg(false);
+      setSendMsg('');
 
-   }
+      setConfigState(0);
+      setDInfoComState(-1);
+      setDInfomanState(0);
+
+      pcomActiveSetupState();
+   };
+
 
    return (
       <ScrollView>
@@ -483,7 +570,7 @@ export const DRSetup = ({ navigation, route }) => {
                      {/* </Dialog.Content> */}
                   </Dialog.ScrollArea>
                   <Dialog.Actions>
-                     <Button onPress={dohideDialog}>Aceptar</Button>
+                     <Button onPress={dohideDialog}>{t("Aceptar")}</Button>
                   </Dialog.Actions>
                </Dialog>
             </Portal>
@@ -499,7 +586,7 @@ export const DRSetup = ({ navigation, route }) => {
 
                >
                   {/* <Dialog.Icon icon="house" color="black" size={30}/> */}
-                  <Dialog.Title style={{ color: '#007263', alignSelf: 'center' }}>Envío de configuración</Dialog.Title>
+                  <Dialog.Title style={{ color: '#007263', alignSelf: 'center' }}>{t("EnvioConfiguracion")}</Dialog.Title>
                   <Dialog.Content
                      className='flex-col items-center '
                   >
@@ -519,17 +606,19 @@ export const DRSetup = ({ navigation, route }) => {
                                  {"\n"}Conexion:  {configState}
                               </Text> */}
                            <Text className={`text-center text-xl text-black ${configState === 2 ? (dInfoComState === 2 ? 'text-blue-600' : 'text-red-600') : 'text-back'}`}>
-                              {
-                                 configState === 0 ? 'Iniciando conexion' :
-                                    configState === 1 ? 'configurando...' :
-                                       dInfoComState === 0 ? `Error configuración (${dInfomanState})` : '*Configuracion realizada*'
-                              }
+                              {configState === 0
+                                 ? t("InicioConfiguracion")
+                                 : configState === 1
+                                    ? t("ConfiguracionWifi")
+                                    : dInfoComState === 0
+                                       ? `${t("ErrorConfiguracion")} (${dInfomanState})`
+                                       : t("ConfiguracionRealizada")}
                            </Text>
                            {configState === 2 && dInfoComState === 2 ? (
                               <Pressable className='flex-row mt-8 w-auto h-12 rounded-lg bg-green-700 items-center justify-center'
                                  onPress={() => { dohideDialogSendConfiguration(1); pcomStopStateMachine(); navigation.navigate('DR-NEWUPDATE', { operacion: route.params.operacion }) }}>
 
-                                 <Text className='text-center text-gray-100 text-lg px-14 font-semibold'>Salir</Text>
+                                 <Text className='text-center text-gray-100 text-lg px-14 font-semibold'>{t("Aceptar")}</Text>
 
                               </Pressable>
                            ) : ((configState === 2 && dInfoComState === 0 && <Text className='text-lg text-slate-700 mt-2'>{errorList[dInfomanState].msg}</Text>))
@@ -561,7 +650,7 @@ export const DRSetup = ({ navigation, route }) => {
 
                >
                   {/* <Dialog.Icon icon="house" color="black" size={30}/> */}
-                  <Dialog.Title style={{ color: '#007263', alignSelf: 'center' }}>Capturar tag de corral</Dialog.Title>
+                  <Dialog.Title style={{ color: '#007263', alignSelf: 'center' }}>{t("CapturaTagCorral")}</Dialog.Title>
                   <Dialog.Content>
                      {/* <Dialog.ScrollArea> */}
 
@@ -577,7 +666,7 @@ export const DRSetup = ({ navigation, route }) => {
                      {/* </Dialog.ScrollArea> */}
                   </Dialog.Content>
                   <Dialog.Actions>
-                     <Button onPress={dohideDialogTagCapture}>Aceptar</Button>
+                     <Button onPress={dohideDialogTagCapture}>{t("Aceptar")}</Button>
                   </Dialog.Actions>
                </Dialog>
             </Portal>
@@ -633,7 +722,7 @@ export const DRSetup = ({ navigation, route }) => {
                         style={{ ...styles.boton2, }}
                         onPress={() => { openMenu() }}
                      >
-                        <Text style={styles.texto}>Corral Tag</Text>
+                        <Text style={styles.texto}>{t("CorralTag")}</Text>
                      </Pressable>
 
 

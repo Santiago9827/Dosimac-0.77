@@ -48,4 +48,18 @@ export default {
     Salir: 'Wyjdź',
     Informacion: 'Informacje',
 
+    InicioConfiguracion: "Démarrage de la connexion",
+    ConfiguracionWifi: "Configuration en cours...",
+    ConfiguracionRealizada: "*Configuration terminée*",
+    ErrorConfiguracion: "*Erreur de configuration*",
+    CapturaTagCorral: "Capturer le tag de l’enclos",
+    CorralTag: "Tag de l’enclos",
+    versionUint16: "Cette version de l’appareil ne prend en charge que des enclos jusqu’à 65000",
+    versionUint32: "Cette version de l’appareil prend en charge des enclos jusqu’à 4000000000",
+    EnvioConfiguracion: "Envoi de la configuration",
+    NumeroCorral: "Numéro d’enclos",
+    NumeroMaquina: "Numéro de machine",
+    Corralnovalido: 'Nieprawidłowy kojec',
+    Númeromáquinanovalido: 'Nieprawidłowy numer maszyny',
+
 };

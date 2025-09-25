@@ -47,4 +47,18 @@ export default {
     Enviar: 'Enviar',
     Salir: 'Sortir',
     Informacion: 'Informació',
+
+    InicioConfiguracion: "Iniciando conexión",
+    ConfiguracionWifi: "Configurando...",
+    ConfiguracionRealizada: "*Configuración completada*",
+    ErrorConfiguracion: "*Error de configuración*",
+    CapturaTagCorral: "Capturar tag de corral",
+    CorralTag: "Tag de corral",
+    versionUint16: "Esta versión del dispositivo solo admite corrales hasta 65000",
+    versionUint32: "Esta versión del dispositivo admite corrales hasta 4000000000",
+    EnvioConfiguracion: "Envío de configuración",
+    NumeroCorral: "Número de corral",
+    NumeroMaquina: "Número de máquina",
+    Corralnovalido: "Corral no vàlid",
+    Númeromáquinanovalido: "Número de màquina no vàlid",
 };

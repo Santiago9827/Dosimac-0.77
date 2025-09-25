@@ -48,4 +48,18 @@ export default {
     Salir: '나가기',
     Informacion: '정보',
 
+    InicioConfiguracion: "연결 시작 중",
+    ConfiguracionWifi: "구성 중...",
+    ConfiguracionRealizada: "*구성이 완료되었습니다*",
+    ErrorConfiguracion: "*구성 오류*",
+    CapturaTagCorral: "우리 태그 캡처",
+    CorralTag: "우리 태그",
+    versionUint16: "이 기기 버전은 우리 번호를 65000까지만 지원합니다",
+    versionUint32: "이 기기 버전은 우리 번호를 4000000000까지 지원합니다",
+    EnvioConfiguracion: "구성 전송 중",
+    NumeroCorral: "우리 번호",
+    NumeroMaquina: "장치 번호",
+    Corralnovalido: '잘못된 우리',
+    Númeromáquinanovalido: '잘못된 기계 번호',
+
 };

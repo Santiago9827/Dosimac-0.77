@@ -218,53 +218,105 @@ export const pcomDosimacSetup = () => {
 }
 
 
+// const payloadSetup = (): Buffer => {
+
+
+//    console.log("Inside payloadSetup");
+//    const payLoad = Buffer.alloc(148);
+
+//    payLoad.writeUInt16LE(1, 0) //Version
+//    payLoad.writeUInt16LE(1, 2) //Tipo de informacion=> Setup configuration
+
+//    payLoad.write(dosimacSetup.ssid, 4, 32, 'utf16le') //ssid unicode 64bytes //
+//    payLoad.write(dosimacSetup.wifiPassword, 68, 32, 'ascii') //password wifi 32bytes//
+//    payLoad.write(dosimacSetup.serverIp, 100, 32, 'ascii') //ip servidor 32bytes //
+
+//    payLoad.writeUInt16LE(dosimacSetup.deviceType, 132) //Tipo de equipo  2 byte //
+//    payLoad.writeUInt8(dosimacSetup.phase, 134) //Fase 1 byte //
+//    payLoad.writeUInt8(dosimacSetup.deviceNumber, 135) //Numero de maquina 2 byte //
+
+//    //payLoad.writeBigUInt64LE(BigInt(dosimacSetup.nfcTag), 136) //tag ncf 64 bytes //payLoad.writeBigUInt64LE(0x0101010101010101n,136) //tag ncf 64 bytes
+//    //payLoad.writeBigUInt64LE(0x0101010101010101n,136) //tag ncf 64 bytes
+
+//    payLoad.writeUInt16LE(dosimacSetup.corral, 144) //corral 2 bytes
+
+//    payLoad.writeUInt16LE(9, 146) //reserva 2 bytes
+
+
+
+
+
+//    //* Test data
+//    // payLoad.write("CTICONTROL_IN", 4, 32, 'utf16le') //ssid unicode 64bytes
+//    // payLoad.write("Free43aba", 68, 32, 'ascii') //password wifi 32bytes
+//    // payLoad.write("192.168.10.70", 100, 32, 'ascii') //ip servidor 32bytes
+
+//    // payLoad.writeUInt16LE(1, 132) //Tipo de equipo  2 byte
+//    // payLoad.writeUInt8(1, 134) //Fase 1 byte
+//    // payLoad.writeUInt8(1, 135) //Numero de maquina 2 byte
+
+//    // payLoad.writeInt32LE(0x01020304, 136) //tag ncf 64 bytes //payLoad.writeBigUInt64LE(0x0101010101010101n,136) //tag ncf 64 bytes
+
+
+//    // payLoad.writeUInt16LE(278, 144) //corral 2 bytes
+//    // payLoad.writeUInt16LE(9, 146) //reserva 2 bytes
+//    //* End Test data
+
+//    console.log("End payloadSetup");
+//    return payLoad;
+// }
+
+// === ANDROID: dosimacBleMessages.ts ===
 const payloadSetup = (): Buffer => {
-
-
    console.log("Inside payloadSetup");
-   const payLoad = Buffer.alloc(148);
 
-   payLoad.writeUInt16LE(1, 0) //Version
-   payLoad.writeUInt16LE(1, 2) //Tipo de informacion=> Setup configuration
+   const isI = dosimacSetup.deviceType === 200;
+   const isG = dosimacSetup.deviceType === 203;
+   const sw = dosimacInfo.swVersion || 0;
+   const allowUint32 = (isI && sw >= 155) || (isG && sw >= 134);
 
-   payLoad.write(dosimacSetup.ssid, 4, 32, 'utf16le') //ssid unicode 64bytes //
-   payLoad.write(dosimacSetup.wifiPassword, 68, 32, 'ascii') //password wifi 32bytes//
-   payLoad.write(dosimacSetup.serverIp, 100, 32, 'ascii') //ip servidor 32bytes //
+   const baseLen = 148;                  // layout clásico
+   const extraLen = allowUint32 ? 4 : 0;  // +4 al final si usamos corral32
+   const payLoad = Buffer.alloc(baseLen + extraLen);
 
-   payLoad.writeUInt16LE(dosimacSetup.deviceType, 132) //Tipo de equipo  2 byte //
-   payLoad.writeUInt8(dosimacSetup.phase, 134) //Fase 1 byte //
-   payLoad.writeUInt8(dosimacSetup.deviceNumber, 135) //Numero de maquina 2 byte //
+   // Cabecera
+   payLoad.writeUInt16LE(1, 0); // Version
+   payLoad.writeUInt16LE(1, 2); // Tipo => Setup configuration
 
-   //payLoad.writeBigUInt64LE(BigInt(dosimacSetup.nfcTag), 136) //tag ncf 64 bytes //payLoad.writeBigUInt64LE(0x0101010101010101n,136) //tag ncf 64 bytes
-   //payLoad.writeBigUInt64LE(0x0101010101010101n,136) //tag ncf 64 bytes
+   // Cadenas
+   payLoad.write(dosimacSetup.ssid, 4, 32, 'utf16le'); // 4..67 (64B)
+   payLoad.write(dosimacSetup.wifiPassword, 68, 32, 'ascii');   // 68..99
+   payLoad.write(dosimacSetup.serverIp, 100, 32, 'ascii');   // 100..131
 
-   payLoad.writeUInt16LE(dosimacSetup.corral, 144) //corral 2 bytes
+   // Campos fijos
+   payLoad.writeUInt16LE(dosimacSetup.deviceType, 132);
+   payLoad.writeUInt8(dosimacSetup.phase, 134);
+   payLoad.writeUInt8(dosimacSetup.deviceNumber, 135);
 
-   payLoad.writeUInt16LE(9, 146) //reserva 2 bytes
+   // 136..143 NFC (queda en 0 si no lo usas)
 
+   // Corral 16-bit legado en 144..145 (si hay 32-bit, aquí va 0)
+   payLoad.writeUInt16LE(allowUint32 ? 0 : dosimacSetup.corral, 144);
 
+   // Reserva 146..147
+   payLoad.writeUInt16LE(9, 146);
 
+   // Corral 32-bit solo si procede, AL FINAL (offset 148..151)
+   if (allowUint32) {
+      const c32 = (dosimacSetup as any).corral32 ?? 0;
+      payLoad.writeUInt32LE(c32, 148);
+   }
 
-
-   //* Test data
-   // payLoad.write("CTICONTROL_IN", 4, 32, 'utf16le') //ssid unicode 64bytes
-   // payLoad.write("Free43aba", 68, 32, 'ascii') //password wifi 32bytes
-   // payLoad.write("192.168.10.70", 100, 32, 'ascii') //ip servidor 32bytes
-
-   // payLoad.writeUInt16LE(1, 132) //Tipo de equipo  2 byte
-   // payLoad.writeUInt8(1, 134) //Fase 1 byte
-   // payLoad.writeUInt8(1, 135) //Numero de maquina 2 byte
-
-   // payLoad.writeInt32LE(0x01020304, 136) //tag ncf 64 bytes //payLoad.writeBigUInt64LE(0x0101010101010101n,136) //tag ncf 64 bytes
-
-
-   // payLoad.writeUInt16LE(278, 144) //corral 2 bytes
-   // payLoad.writeUInt16LE(9, 146) //reserva 2 bytes
-   //* End Test data
+   console.log(
+      `[DOSIMAC][SETUP] ${new Date().toISOString()} ` +
+      `build payload: len=${payLoad.length}, sw=${sw}, type=${dosimacSetup.deviceType}, ` +
+      `allowUint32=${allowUint32}, corral16=${allowUint32 ? 0 : dosimacSetup.corral}, ` +
+      `corral32=${(dosimacSetup as any).corral32 ?? 0}`
+   );
 
    console.log("End payloadSetup");
    return payLoad;
-}
+};
 
 export const pcomProccessResponse = (response: Buffer, length: number) => {
 
@@ -350,6 +402,26 @@ const pcomresponseStatus = () => {
    dosimacInfo.swVersion = parser.payLoad.readUint16LE(256)
    dosimacInfo.hwVersion = parser.payLoad.readUint16LE(258)
 
+   const corral16 = parser.payLoad.readUInt16LE(240); // legado
+   const corral32 = parser.payLoad.readUInt32LE(136); // nuevo (STATUS lo trae aquí)
+
+   const isI = dosimacInfo.deviceType === 200;
+   const isG = dosimacInfo.deviceType === 203;
+   const allowUint32 =
+      (isI && dosimacInfo.swVersion >= 155) ||
+      (isG && dosimacInfo.swVersion >= 134);
+
+   const corralEfectivo = allowUint32 ? (corral16 === 0 ? corral32 : corral16) : corral16;
+   dosimacInfo.corral = corralEfectivo;
+
+   console.log(
+      `[DOSIMAC][STATUS] v=${dosimacInfo.swVersion} type=${dosimacInfo.deviceType} ` +
+      `allow32=${allowUint32} corral16=${corral16} corral32=${corral32} => efectivo=${corralEfectivo}`
+   );
+   console.log(
+      `[DOSIMAC][STATUS] ${new Date().toISOString()} ` +
+      `swVersion=${dosimacInfo.swVersion} hwVersion=${dosimacInfo.hwVersion} deviceType=${dosimacInfo.deviceType}`
+   );
 
 
 
