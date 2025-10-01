@@ -61,4 +61,5 @@ export default {
     NumeroMaquina: "機器編號",
     Corralnovalido: '無效的畜欄',
     Númeromáquinanovalido: '無效的機器編號',
+    configuarIntalacion: "請設定安裝以繼續",
 };

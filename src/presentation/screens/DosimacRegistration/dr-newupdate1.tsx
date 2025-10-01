@@ -117,9 +117,12 @@ export default function Drnewupdate() {
                   <Portal>
                      <Dialog visible={visible} onDismiss={dohideDialog}>
                         <Dialog.Icon icon="warning" color="red" size={60} />
-                        <Dialog.Title style={{ color: 'red' }}>Aviso</Dialog.Title>
+                        <Dialog.Title style={{ color: 'red' }}>{t('common:Aviso')}</Dialog.Title>
                         <Dialog.Content>
-                           <Text >{t('common:configuarIntalacion')}</Text>
+                           <Text style={{ color: theme.colors.onSurface }}>
+
+                              {t('common:configuarIntalacion')}
+                           </Text>
                         </Dialog.Content>
                         <Dialog.Actions>
                            <Button onPress={dohideDialog}>{t('common:Aceptar')}</Button>

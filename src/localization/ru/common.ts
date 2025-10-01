@@ -1,3 +1,5 @@
+import { config } from "process";
+
 export default {
     username: 'Пользователь',
     password: 'Пароль',
@@ -61,5 +63,6 @@ export default {
     NumeroMaquina: "Номер машины",
     Corralnovalido: "Недопустимый загон",
     Númeromáquinanovalido: "Недопустимый номер машины",
+    configuarIntalacion: "Настройте установку, чтобы продолжить",
 
 };

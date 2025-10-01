@@ -61,5 +61,6 @@ export default {
     NumeroMaquina: "장치 번호",
     Corralnovalido: '잘못된 우리',
     Númeromáquinanovalido: '잘못된 기계 번호',
+    configuarIntalacion: '최소한 하나의 설치를 구성해야 합니다',
 
 };

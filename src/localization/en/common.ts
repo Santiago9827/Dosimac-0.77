@@ -61,6 +61,7 @@ export default {
    NumeroCorral: 'Pen number',
    Corralnovalido: 'Invalid pen',
    Númeromáquinanovalido: 'Invalid machine number',
+   configuracuarIntalacion: 'You must configure at least one installation',
 
 
 };

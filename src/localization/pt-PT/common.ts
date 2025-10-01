@@ -61,4 +61,6 @@ export default {
     NumeroMaquina: "Número da máquina",
     Corralnovalido: "Curral não válido",
     Númeromáquinanovalido: "Número da máquina não válido",
+    configuarIntalacion: "Deve configurar pelo menos uma instalação",
+
 }

@@ -61,4 +61,5 @@ export default {
     NumeroMaquina: "Número de máquina",
     Corralnovalido: "Corral no vàlid",
     Númeromáquinanovalido: "Número de màquina no vàlid",
+    configuarIntalacion: "Cal configurar almenys una instal·lació",
 };

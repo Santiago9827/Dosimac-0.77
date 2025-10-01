@@ -61,5 +61,6 @@ export default {
     NumeroMaquina: "Numéro de machine",
     Corralnovalido: 'Nieprawidłowy kojec',
     Númeromáquinanovalido: 'Nieprawidłowy numer maszyny',
+    configuarIntalacion: 'Należy skonfigurować co najmniej jedną instalację',
 
 };

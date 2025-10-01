@@ -61,4 +61,5 @@ export default {
     NumeroMaquina: "Numero macchina",
     Corralnovalido: "Recinto non valido",
     Númeromáquinanovalido: "Numero macchina non valido",
+    configuarIntalacion: "Devi configurare almeno un'installazione",
 };

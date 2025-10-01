@@ -61,4 +61,5 @@ export default {
     NumeroMaquina: "Номер машини",
     Corralnovalido: 'Невірний загін',
     Númeromáquinanovalido: 'Невірний номер машини',
+    configuarIntalacion: "Налаштуйте установку, щоб продовжити",
 };
