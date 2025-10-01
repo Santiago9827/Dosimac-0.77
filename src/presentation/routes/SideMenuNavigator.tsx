@@ -98,7 +98,7 @@ export const SideMenuNavigator = () => {
             options={{ drawerIcon: ({ color }) => <IonIcon name="document-text-outline" color={color} />, title: t('common:Lista_instalaciones') }}
          />
                <Drawer.Screen
-            name="Settings"                         // ← FIJO
+            name="Settings"                         
             component={SettingsStackNavigator}
             options={{
                title: t('common:settings'),
