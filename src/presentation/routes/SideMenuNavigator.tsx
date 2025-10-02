@@ -19,6 +19,7 @@ import { isDebugMode } from '../../sharedTypes/globlaVars';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { MaintenancePasswordScreen } from './MaintenancePasswordScreen';
+import { AWRStackNavigator } from './AWRStackNavigator';
 
 const Drawer = createDrawerNavigator();
 
@@ -87,6 +88,14 @@ export const SideMenuNavigator = () => {
           drawerIcon: ({ color }) => <IonIcon name="build-outline" color={color} />
         }}
       />
+      <Drawer.Screen
+  name="AWR-SAVED"
+  component={AWRStackNavigator}
+  options={{
+    drawerIcon: ({ color }) => <IonIcon name="radio-outline" color={color} />,
+    title: 'AWR escaneados',
+  }}
+/>
 
       {isDebugMode && (
         <>

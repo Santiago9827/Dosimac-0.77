@@ -8,6 +8,7 @@ import { Buffer } from 'buffer';
 import { BlePeripheral } from '../../device/ble/bleLibrary';
 import { MainButton } from '../components/shared/MainButton ';
 import * as ble from '../../device/ble/bleLibrary';
+import { awrStore } from '../../stores/awrStore';
 
 export const AWRScanResultsScreen = ({ navigation }) => {
     const { t } = useTranslation();
@@ -19,6 +20,8 @@ export const AWRScanResultsScreen = ({ navigation }) => {
 
     const [connecting, setConnecting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string>('');
+    const upsert = awrStore(s => s.upsert);
+
 
     const handleNoDevicesAccept = () => {
         setVisible(false);
@@ -157,13 +160,26 @@ export const AWRScanResultsScreen = ({ navigation }) => {
         setConnecting(true);
         try {
             await ble.bleConnection(device.id);
-            //await ble.bleRequestMtu?.(185); // opcional Android
-            navigation.navigate('AWR-READ' as never, { id: device.id, label: labelFor(device) } as never);
+
+            // GUARDAR EN STORE
+            upsert({
+                id: device.id,
+                label: labelFor(device),
+                localName: getLocalName(device),
+                lastSeen: Date.now(),
+            });
+
+            navigation.push('AWR-READ' as never, { id: device.id, label: labelFor(device) } as never);
         } catch (e: any) {
             const msg = String(e?.message || e);
             if (msg.toLowerCase().includes('already')) {
-                // si ya estaba conectado, también navegamos
-                navigation.navigate('AWR-READ' as never, { id: device.id, label: labelFor(device) } as never);
+                upsert({
+                    id: device.id,
+                    label: labelFor(device),
+                    localName: getLocalName(device),
+                    lastSeen: Date.now(),
+                });
+                navigation.push('AWR-READ' as never, { id: device.id, label: labelFor(device) } as never);
             } else {
                 setErrorMsg(msg || 'No se pudo conectar');
             }
@@ -171,7 +187,6 @@ export const AWRScanResultsScreen = ({ navigation }) => {
             setConnecting(false);
         }
     };
-
     // === UI ===
     const RenderIsScanning = () => (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
