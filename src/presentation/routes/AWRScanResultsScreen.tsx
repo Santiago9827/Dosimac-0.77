@@ -9,6 +9,7 @@ import { BlePeripheral } from '../../device/ble/bleLibrary';
 import { MainButton } from '../components/shared/MainButton ';
 import * as ble from '../../device/ble/bleLibrary';
 import { awrStore } from '../../stores/awrStore';
+import { useAwrConn } from '../../stores/awrConnStore';
 
 export const AWRScanResultsScreen = ({ navigation }) => {
     const { t } = useTranslation();
@@ -21,12 +22,15 @@ export const AWRScanResultsScreen = ({ navigation }) => {
     const [connecting, setConnecting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string>('');
     const upsert = awrStore(s => s.upsert);
+    const { connect, startReading } = useAwrConn();
+
 
 
     const handleNoDevicesAccept = () => {
         setVisible(false);
         try { ble.stopScanning(); } catch { }
         if (navigation.canGoBack()) navigation.goBack();
+
         else navigation.navigate('AWR-STARTSCAN' as never);
     };
 
@@ -168,7 +172,8 @@ export const AWRScanResultsScreen = ({ navigation }) => {
                 localName: getLocalName(device),
                 lastSeen: Date.now(),
             });
-
+            await connect(device.id);
+            await startReading();
             navigation.push('AWR-READ' as never, { id: device.id, label: labelFor(device) } as never);
         } catch (e: any) {
             const msg = String(e?.message || e);

@@ -1,16 +1,21 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
 import { View, FlatList } from 'react-native';
-import { Appbar, List, Text } from 'react-native-paper';
-import { awrStore } from '../../stores/awrStore'; // ajusta ruta
-import * as ble from '../../device/ble/bleLibrary';
+import { Appbar, List, Text, ActivityIndicator } from 'react-native-paper';
+import { awrStore } from '../../stores/awrStore';
+import { useAwrConn } from '../../stores/awrConnStore';
 
 export const AWRSavedListScreen = ({ navigation }: any) => {
-    const devices = awrStore(s => s.devices);
+    const saved = awrStore(s => s.devices);
+    const { connect, startReading, isConnected, currentId, connecting, error } = useAwrConn();
 
-    const connectAndOpen = async (id: string, title: string) => {
-        try { await ble.bleConnection(id); } catch { }
-        navigation.navigate('AWR-READ' as never, { id, label: title } as never);
+    const handlePress = async (id: string, title: string) => {
+        try {
+            await connect(id);
+            await startReading();
+            // NO navega. Si quieres abrir lectura manualmente:
+            // navigation.navigate('AWR-READ', { id, label: title });
+        } catch { }
     };
 
     return (
@@ -20,7 +25,15 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
                 <Appbar.Content title="AWR escaneados" />
             </Appbar.Header>
 
-            {devices.length === 0 ? (
+            {connecting && (
+                <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <ActivityIndicator />
+                    <Text>Conectando…</Text>
+                </View>
+            )}
+            {!!error && <Text style={{ color: 'red', paddingHorizontal: 16 }}>{error}</Text>}
+
+            {saved.length === 0 ? (
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
                     <Text style={{ textAlign: 'center' }}>
                         No hay AWR guardados. Escanea uno desde “Prueba AWR300”.
@@ -28,17 +41,18 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
                 </View>
             ) : (
                 <FlatList
-                    data={devices}
+                    data={saved}
                     keyExtractor={item => item.id}
                     renderItem={({ item }) => {
                         const title = item.name || item.label || item.id;
-                        const desc = item.id;
+                        const isThisConnected = isConnected && currentId === item.id;
                         return (
                             <List.Item
                                 title={title}
-                                description={desc}
-                                left={props => <List.Icon {...props} icon="bluetooth" />}
-                                onPress={() => connectAndOpen(item.id, title)}
+                                description={item.id}
+                                left={props => <List.Icon {...props} icon={isThisConnected ? 'check-circle' : 'bluetooth'} />}
+                                right={() => isThisConnected ? <Text style={{ marginRight: 12, color: 'green' }}>Conectado</Text> : null}
+                                onPress={() => handlePress(item.id, title)}
                             />
                         );
                     }}
