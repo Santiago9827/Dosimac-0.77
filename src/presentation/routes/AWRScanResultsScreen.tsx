@@ -226,4 +226,5 @@ export const AWRScanResultsScreen = ({ navigation }) => {
             )}
         </View>
     );
+
 };
