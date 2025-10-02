@@ -87,27 +87,53 @@ const clearDevices = () => {
 
 
 
-export const bleConnection = (id: string) => {
-  if (id.length > 0) {
-    BleManager.connect(id)
-      .then(() => {
-        console.log('Connected to ' + id);
-        selectedDevice = id;
-        return BleManager.retrieveServices(id);
-      })
-      .then((peripheralInfo) => {
-        console.log(peripheralInfo);
-      })
-      .catch((error) => {
-        console.log('Connection error ....', error);
-      });
-  }
-  else {
-    console.log('BLEConnection: No device selected');
-  }
+export const bleConnection = async (id: string) => {
+  if (!id) throw new Error('BLEConnection: No device selected');
+
+  await BleManager.connect(id);
+  console.log('Connected to ' + id);
+  selectedDevice = id;
+
+  // MUY IMPORTANTE antes de notificar
+  const peripheralInfo = await BleManager.retrieveServices(id);
+  console.log('Services/Characteristics', peripheralInfo);
+
+  return peripheralInfo; // <- para poder await desde tu pantalla
+};
+
+export const bleSubscribeGeneric = async (
+  serviceUUID: string,
+  characteristicUUID: string,
+  onValue: (value: number[]) => void
+) => {
+  if (!selectedDevice) throw new Error('No device selected');
+
+  // listener SOLO para ese device/servicio/char
+  const listener = bleManagerEmitter.addListener(
+    'BleManagerDidUpdateValueForCharacteristic',
+    ({ value, peripheral, characteristic, service }) => {
+      const sameDev = peripheral?.toLowerCase?.() === selectedDevice?.toLowerCase?.();
+      const sameSvc = service?.toLowerCase?.() === serviceUUID?.toLowerCase?.();
+      const sameChr = characteristic?.toLowerCase?.() === characteristicUUID?.toLowerCase?.();
+      if (sameDev && sameSvc && sameChr) {
+        onValue(value as number[]);
+      }
+    }
+  );
+
+  // habilita notificaciones
+  await BleManager.startNotification(selectedDevice, serviceUUID, characteristicUUID);
+
+  // devuelve handle para limpiar
+  return {
+    remove: async () => {
+      try { await BleManager.stopNotification(selectedDevice!, serviceUUID, characteristicUUID); } catch { }
+      try { listener.remove(); } catch { }
+    }
+  };
+};
 
 
-}
 
 export const blehandleMTU = () => {
   if (selectedDevice) {
