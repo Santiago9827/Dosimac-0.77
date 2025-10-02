@@ -215,6 +215,32 @@ export const bleSubscribeNotify = () => {
 }
 
 
+type ConnCb = (id: string) => void;
+type DiscCb = (id: string, error?: any) => void;
+
+export const addConnectionListeners = (onConnect: ConnCb, onDisconnect: DiscCb) => {
+  const subConn = bleManagerEmitter.addListener(
+    'BleManagerConnectPeripheral',
+    ({ peripheral }) => onConnect?.(peripheral)
+  );
+  const subDisc = bleManagerEmitter.addListener(
+    'BleManagerDisconnectPeripheral',
+    ({ peripheral, error }) => onDisconnect?.(peripheral, error)
+  );
+  return () => { try { subConn.remove(); } catch { } try { subDisc.remove(); } catch { }; };
+};
+
+export const addBtStateListener = (onState: (state: string) => void) => {
+  const sub = bleManagerEmitter.addListener('BleManagerDidUpdateState', ({ state }) => onState?.(state));
+  return () => { try { sub.remove(); } catch { } };
+};
+
+export const bleIsConnected = async (id: string) => {
+  try { return await BleManager.isPeripheralConnected(id, []); } catch { return false; }
+};
+
+
+
 async function connectAndPrepare(peripheral: any, service: string, characteristic: string) {
   // Connect to device
   await BleManager.connect(peripheral);

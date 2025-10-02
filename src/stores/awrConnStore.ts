@@ -2,15 +2,15 @@
 /* eslint-disable prettier/prettier */
 import { create } from 'zustand';
 import { Buffer } from 'buffer';
-import * as ble from '../device/ble/bleLibrary'; // ajusta la ruta a tu bleLibrary
+import * as ble from '../device/ble/bleLibrary';
 
 const SVC_UUID = '0000180f-0000-1000-8000-00805f9b34fb';
 const CHR_UUID = '00002a19-0000-1000-8000-00805f9b34fb';
 
-// handler global de notificaciones para poder limpiarlo
 let notifHandle: { remove?: () => Promise<void> | void } | null = null;
-// acumulador de texto entre notificaciones
 let acc = '';
+let unbind: null | (() => void) = null;
+let listenersBound = false;
 
 type State = {
     currentId: string | null;
@@ -38,18 +38,44 @@ export const useAwrConn = create<State>((set, get) => ({
     lastTag: null,
     history: [],
 
-    // Asegura que BLE está inicializado (evita crashes al conectar desde el drawer)
     ensureBle: async () => {
         try { ble.BleStart(); } catch { }
+        if (!listenersBound) {
+            unbind = ble.addConnectionListeners(
+                (id) => {
+                    const { currentId } = get();
+                    if (currentId && id?.toLowerCase?.() === currentId.toLowerCase()) {
+                        set({ isConnected: true, error: null });
+                    }
+                },
+                (id) => {
+                    const { currentId } = get();
+                    if (currentId && id?.toLowerCase?.() === currentId.toLowerCase()) {
+                        // se cortó -> marcar desconectado y parar lecturas
+                        set({ isConnected: false });
+                        get().stopReading().catch(() => { });
+                    }
+                }
+            );
+            // si apagan BT -> marcar desconectado
+            ble.addBtStateListener((state) => {
+                if (state !== 'on') {
+                    set({ isConnected: false });
+                    get().stopReading().catch(() => { });
+                }
+            });
+            listenersBound = true;
+        }
     },
 
     connect: async (id: string) => {
-        const s = get();
-        set({ connecting: true, error: null });
+        set({ connecting: true, error: null, currentId: id });
         try {
-            await s.ensureBle();         // <- importante
-            await ble.bleConnection(id); // tu wrapper con react-native-ble-manager
-            set({ currentId: id, isConnected: true });
+            await get().ensureBle();
+            await ble.bleConnection(id);
+            const ok = await ble.bleIsConnected(id);
+            set({ isConnected: !!ok });
+            if (!ok) throw new Error('El dispositivo no quedó conectado');
         } catch (e: any) {
             set({ error: String(e?.message || e), isConnected: false });
             throw e;
@@ -61,37 +87,28 @@ export const useAwrConn = create<State>((set, get) => ({
     disconnect: async () => {
         const id = get().currentId;
         try { await get().stopReading(); } catch { }
-        if (id) {
-            try { await ble.bleDisconnection?.(id); } catch { }
-        }
+        if (id) { try { await ble.bleDisconnection?.(id); } catch { } }
         set({ isConnected: false, currentId: null });
     },
 
     startReading: async () => {
         const id = get().currentId;
         if (!id) throw new Error('No hay dispositivo conectado');
-        if (notifHandle) return; // ya suscrito
-
-        // limpia historial si quieres empezar de cero
-        // set({ history: [], lastTag: null });
+        if (notifHandle) return;
 
         notifHandle = await ble.bleSubscribeGeneric(SVC_UUID, CHR_UUID, (value: number[]) => {
-            const chunk = Buffer.from(value).toString('utf8'); // o 'ascii'
+            const chunk = Buffer.from(value).toString('utf8');
             acc += chunk;
-
             const parts = acc.split(/\r?\n/);
             acc = parts.pop() ?? '';
-
-            parts.forEach(line => {
+            parts.forEach((line) => {
                 const clean = line.trim();
                 if (!clean) return;
-
-                const matches = clean.match(/\d{15}/g);
-                if (matches && matches.length) {
-                    // guardar todos los de la línea, último como lastTag
-                    set(state => ({
-                        lastTag: matches[matches.length - 1],
-                        history: [...matches.reverse(), ...state.history].slice(0, 50),
+                const m = clean.match(/\d{15}/g);
+                if (m && m.length) {
+                    set((s) => ({
+                        lastTag: m[m.length - 1],
+                        history: [...m.reverse(), ...s.history].slice(0, 50),
                     }));
                 } else {
                     set({ lastTag: clean });

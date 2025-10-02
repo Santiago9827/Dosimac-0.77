@@ -4,17 +4,22 @@ import { View, FlatList } from 'react-native';
 import { Appbar, List, Text, ActivityIndicator } from 'react-native-paper';
 import { awrStore } from '../../stores/awrStore';
 import { useAwrConn } from '../../stores/awrConnStore';
+import { useEffect } from 'react';
+
 
 export const AWRSavedListScreen = ({ navigation }: any) => {
     const saved = awrStore(s => s.devices);
-    const { connect, startReading, isConnected, currentId, connecting, error } = useAwrConn();
+    const { ensureBle, connect, startReading, isConnected, currentId, connecting, error } = useAwrConn();
+
+    useEffect(() => {
+        ensureBle(); // asegura listeners activos al entrar en la pantalla
+    }, []);
 
     const handlePress = async (id: string, title: string) => {
         try {
             await connect(id);
             await startReading();
-            // NO navega. Si quieres abrir lectura manualmente:
-            // navigation.navigate('AWR-READ', { id, label: title });
+
         } catch { }
     };
 
@@ -46,12 +51,15 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
                     renderItem={({ item }) => {
                         const title = item.name || item.label || item.id;
                         const isThisConnected = isConnected && currentId === item.id;
+                        const isThis = currentId && currentId.toLowerCase() === item.id.toLowerCase();
+                        const rightLabel = isThis ? (isConnected ? 'Conectado' : 'Desconectado') : '';
+
                         return (
                             <List.Item
                                 title={title}
                                 description={item.id}
                                 left={props => <List.Icon {...props} icon={isThisConnected ? 'check-circle' : 'bluetooth'} />}
-                                right={() => isThisConnected ? <Text style={{ marginRight: 12, color: 'green' }}>Conectado</Text> : null}
+                                right={() => rightLabel ? <Text style={{ marginRight: 12, color: isConnected ? 'green' : '#666' }}>{rightLabel}</Text> : null}
                                 onPress={() => handlePress(item.id, title)}
                             />
                         );
