@@ -1,4 +1,3 @@
-import { config } from "process";
 
 export default {
     username: 'Utilisateur',
@@ -63,6 +62,6 @@ export default {
     NumeroMaquina: "Numéro de machine",
     Corralnovalido: "Enclos non valide",
     Númeromáquinanovalido: "Numéro de machine non valide",
-    config
+
 
 };
