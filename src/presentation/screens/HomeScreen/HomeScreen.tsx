@@ -1,89 +1,185 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, ScrollView, FlatList, TouchableOpacity } from 'react-native';
 import { HamburgerMenu } from '../../components/shared/HamburgerMenu';
-import { farmStore } from '../../../stores/store';
-import { Divider } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { DonutChart } from '../../components/shared/DonutChart';
-// ⬇️ importa la dona
+
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+// 👇 Define correctamente tu lista de rutas (sin "navigate: any")
+type RootStackParamList = {
+  Home: undefined;
+  TareasProgramadas: undefined;
+};
+
+type Incidencia = {
+  id: string | number;
+  area: 'Maternidad' | 'Gestación';
+  corral: string | number;
+  descripcion: string;
+};
+
+type HomeNav = NavigationProp<RootStackParamList, 'Home'>;
 
 export const HomeScreen = () => {
-  const sfarm = farmStore((state) => state.farm);
   const { t } = useTranslation(['common']);
+  const navigation = useNavigation<HomeNav>(); // ✅ tipado correcto
 
-  // Ejemplos (luego reemplázalos por datos reales)
-  const maternidadPct = 72; // % de cumplimiento/ocupación/lo que definas
-  const gestacionPct = 54;
+
+  // ----- Indicadores (ejemplo) -----
+  const maternidad = { alimentados: 180, noAlimentados: 20 };
+  const gestacion = { alimentados: 135, noAlimentados: 115 };
+
+  const totalM = maternidad.alimentados + maternidad.noAlimentados;
+  const totalG = gestacion.alimentados + gestacion.noAlimentados;
+
+  const pctM = totalM ? Math.round((maternidad.alimentados / totalM) * 100) : 0;
+  const pctG = totalG ? Math.round((gestacion.alimentados / totalG) * 100) : 0;
+
+  const StatRow = ({ label, value }: { label: string; value: number }) => (
+    <View className="flex-row justify-between w-full mt-1">
+      <Text className="text-slate-600">{label}</Text>
+      <Text className="text-slate-900 font-semibold">{value}</Text>
+    </View>
+  );
+
+  // ----- Incidencias (ejemplo) -----
+  const incidencias: Incidencia[] = [
+    { id: 1, area: 'Maternidad', corral: 'C-12', descripcion: 'Bebedero con caudal bajo.' },
+    { id: 2, area: 'Gestación', corral: 'G-03', descripcion: 'Comedero bloqueado.' },
+    { id: 3, area: 'Gestación', corral: 'G-07', descripcion: 'Sensor de paso intermitente.' },
+    { id: 4, area: 'Maternidad', corral: 'C-05', descripcion: 'Puerta sin cierre.', },
+    { id: 5, area: 'Gestación', corral: 'G-10', descripcion: 'Fallo de báscula.' },
+    // añade más para probar el scroll interno
+  ];
+
+
+  const totales = incidencias.length;
+
+  // Estilos “pill” por área
+  const pillClasses = (area: Incidencia['area']) =>
+    area === 'Maternidad'
+      ? 'bg-emerald-100 text-emerald-700'
+      : 'bg-sky-100 text-sky-700';
+
+  // Color punto por estado
+
+
+  // Render de cada incidencia
+  const renderIncidencia = ({ item }: { item: Incidencia }) => (
+    <View className="rounded-xl p-4 bg-white border border-slate-200 mb-3">
+      <View className="flex-row items-center justify-between mb-2">
+        <View className="flex-row items-center">
+          <Text className={`px-2 py-0.5 rounded-full text-xs font-semibold ${pillClasses(item.area)}`}>
+            {item.area}
+          </Text>
+          <Text className="ml-2 text-slate-500 text-xs">
+            Corral {item.corral}
+          </Text>
+        </View>
+        <View className="flex-row items-center">
+        </View>
+      </View>
+      <Text className="text-slate-800">{item.descripcion}</Text>
+    </View>
+  );
 
   return (
-    <View>
+    <ScrollView className="flex-1 bg-slate-50">
       <HamburgerMenu />
 
-      {/* ====== BLOQUE 1: KPIs con donas ====== */}
-      <View className="px-5 pt-4">
+      <View className="px-5 pt-4 pb-8">
         <Text className="text-slate-800 text-lg font-semibold mb-3">
-          {t('common:Indicadores')}
+          {t('common:Indicadores') || 'Indicadores'}
         </Text>
 
-        <View className="flex-row justify-between items-center">
-          <View className="items-center">
-            <DonutChart
-              size={140}
-              strokeWidth={14}
-              percent={maternidadPct}
-              label={t('common:Maternidad') || 'Maternidad'}
-              color="#16a34a"       // verde
-              trackColor="#E5E7EB"
-            />
+        {/* Tarjetas: Maternidad y Gestación */}
+        <View className="flex-row gap-3">
+          {/* Maternidad */}
+          <View className="flex-1 rounded-2xl p-3 shadow-sm bg-[#E9EDF2] border border-[#C8D0DA]">
+            <View className="items-center">
+              <DonutChart
+                size={140}
+                strokeWidth={22}
+                label={t('common:Maternidad') || 'Maternidad'}
+                segmentA={maternidad.alimentados}
+                segmentB={maternidad.noAlimentados}
+                colorA="#22C55E"
+                colorB="#EF4444"
+                lineCap="butt"
+                gapDegrees={0}
+                centerPercent={pctM}
+              />
+            </View>
+
+            <View className="mt-3">
+              <StatRow label="Alimentados" value={maternidad.alimentados} />
+              <StatRow label="No Alimentados" value={maternidad.noAlimentados} />
+              <View className="h-px bg-[#C8D0DA] my-1" />
+              <StatRow label="Totales" value={totalM} />
+            </View>
           </View>
 
-          <View className="items-center">
-            <DonutChart
-              size={140}
-              strokeWidth={14}
-              percent={gestacionPct}
-              label={t('common:Gestación') || 'Gestación'}
-              color="#2563EB"       // azul
-              trackColor="#E5E7EB"
-            />
+          {/* Gestación */}
+          <View className="flex-1 rounded-2xl p-3 shadow-sm bg-[#E9EDF2] border border-[#C8D0DA]">
+            <View className="items-center">
+              <DonutChart
+                size={140}
+                strokeWidth={22}
+                label={t('common:Gestación') || 'Gestación'}
+                segmentA={gestacion.alimentados}
+                segmentB={gestacion.noAlimentados}
+                colorA="#22C55E"
+                colorB="#EF4444"
+                lineCap="butt"
+                gapDegrees={0}
+                centerPercent={pctG}
+              />
+            </View>
+
+            <View className="mt-3">
+              <StatRow label="Alimentados" value={gestacion.alimentados} />
+              <StatRow label="No Alimentados" value={gestacion.noAlimentados} />
+              <View className="h-px bg-[#C8D0DA] my-1" />
+              <StatRow label="Totales" value={totalG} />
+            </View>
           </View>
         </View>
+
+        {/* ───────── Bloque único con lista scrollable interna ───────── */}
+        <View className="mt-6">
+          <Text className="text-slate-800 text-lg font-semibold mb-3">Incidencias</Text>
+
+          <View className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            {/* Cabecera resumen dentro del mismo bloque */}
+
+
+            {/* Lista scrollable interna (altura fija) */}
+            <View style={{ height: 260 }} className="px-4 py-3">
+              <FlatList
+                data={incidencias}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={renderIncidencia}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              // si la lista crece mucho, activa esto:
+              // initialNumToRender={6}
+              // windowSize={5}
+              />
+            </View>
+          </View>
+
+          {/* Botón: Tareas Programadas */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('TareasProgramadas')}
+            className="mt-4 bg-indigo-600 rounded-xl px-4 py-3 active:opacity-90"
+          >
+            <Text className="text-white text-center font-semibold">Tareas Programadas</Text>
+          </TouchableOpacity>
+        </View>
+        {/* ──────────────────────────────────────── */}
       </View>
-
-      {/* ====== resto de tu pantalla como la tenías ====== */}
-      <View className="flex-col h-full justify-center items-center">
-        <Text className="text-6xl text-slate-700 font-bold">DOSIMAC</Text>
-        <Text className="text-3xl text-slate-700 font-bold">CTIFEED</Text>
-
-        <View className="flex flex-row pt-10 space-x-1">
-          <View className="h-[80px] w-5 rounded-t-lg bg-red-600" />
-          <View className="h-[80px] w-5 rounded-t-lg bg-cyan-500" />
-          <View className="h-[80px] w-5 rounded-t-lg bg-cyan-600" />
-          <View className="h-[80px] w-5 rounded-t-lg bg-cyan-800" />
-        </View>
-
-        <View>
-          <View className="-mt-[110px] h-5 w-5 rounded-full bg-orange-400" />
-        </View>
-
-        <Divider className="w-44 bg-black my-10" />
-
-        {sfarm ? (
-          <View className="flex flex-col pt-6 px-6 py-4 rounded-xl border-gray-400">
-            <Text className="text-lg mb-2 font-bold text-blue-800 text-center">
-              {t('common:Instalación_seleccionada')}
-            </Text>
-            <Text className="text-lg text-center text-slate-700">{sfarm.name}</Text>
-            <Text className="text-lg text-center text-slate-700">{sfarm.location}</Text>
-          </View>
-        ) : (
-          <View className="flex flex-col pt-6 px-6 py-4 rounded-xl border-gray-400">
-            <Text className="text-lg mb-2 font-bold text-red-800 text-center">
-              {t('common:NoInstalacionSeleccionada')}
-            </Text>
-          </View>
-        )}
-      </View>
-    </View>
+    </ScrollView>
   );
 };
