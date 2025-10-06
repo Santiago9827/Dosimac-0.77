@@ -3,15 +3,7 @@ import { Text, View, ScrollView, FlatList, TouchableOpacity } from 'react-native
 import { HamburgerMenu } from '../../components/shared/HamburgerMenu';
 import { useTranslation } from 'react-i18next';
 import { DonutChart } from '../../components/shared/DonutChart';
-
-import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-
-// 👇 Define correctamente tu lista de rutas (sin "navigate: any")
-type RootStackParamList = {
-  Home: undefined;
-  TareasProgramadas: undefined;
-};
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 type Incidencia = {
   id: string | number;
@@ -20,14 +12,11 @@ type Incidencia = {
   descripcion: string;
 };
 
-type HomeNav = NavigationProp<RootStackParamList, 'Home'>;
-
 export const HomeScreen = () => {
   const { t } = useTranslation(['common']);
-  const navigation = useNavigation<HomeNav>(); // ✅ tipado correcto
+  const navigation = useNavigation<NavigationProp<any>>();
 
-
-  // ----- Indicadores (ejemplo) -----
+  // Indicadores (ejemplo)
   const maternidad = { alimentados: 180, noAlimentados: 20 };
   const gestacion = { alimentados: 135, noAlimentados: 115 };
 
@@ -44,29 +33,20 @@ export const HomeScreen = () => {
     </View>
   );
 
-  // ----- Incidencias (ejemplo) -----
+  // Incidencias (ejemplo)
   const incidencias: Incidencia[] = [
     { id: 1, area: 'Maternidad', corral: 'C-12', descripcion: 'Bebedero con caudal bajo.' },
     { id: 2, area: 'Gestación', corral: 'G-03', descripcion: 'Comedero bloqueado.' },
     { id: 3, area: 'Gestación', corral: 'G-07', descripcion: 'Sensor de paso intermitente.' },
-    { id: 4, area: 'Maternidad', corral: 'C-05', descripcion: 'Puerta sin cierre.', },
+    { id: 4, area: 'Maternidad', corral: 'C-05', descripcion: 'Puerta sin cierre.' },
     { id: 5, area: 'Gestación', corral: 'G-10', descripcion: 'Fallo de báscula.' },
-    // añade más para probar el scroll interno
   ];
 
-
-  const totales = incidencias.length;
-
-  // Estilos “pill” por área
   const pillClasses = (area: Incidencia['area']) =>
     area === 'Maternidad'
       ? 'bg-emerald-100 text-emerald-700'
       : 'bg-sky-100 text-sky-700';
 
-  // Color punto por estado
-
-
-  // Render de cada incidencia
   const renderIncidencia = ({ item }: { item: Incidencia }) => (
     <View className="rounded-xl p-4 bg-white border border-slate-200 mb-3">
       <View className="flex-row items-center justify-between mb-2">
@@ -77,8 +57,6 @@ export const HomeScreen = () => {
           <Text className="ml-2 text-slate-500 text-xs">
             Corral {item.corral}
           </Text>
-        </View>
-        <View className="flex-row items-center">
         </View>
       </View>
       <Text className="text-slate-800">{item.descripcion}</Text>
@@ -147,15 +125,11 @@ export const HomeScreen = () => {
           </View>
         </View>
 
-        {/* ───────── Bloque único con lista scrollable interna ───────── */}
+        {/* Bloque: Incidencias con lista interna */}
         <View className="mt-6">
           <Text className="text-slate-800 text-lg font-semibold mb-3">Incidencias</Text>
 
           <View className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            {/* Cabecera resumen dentro del mismo bloque */}
-
-
-            {/* Lista scrollable interna (altura fija) */}
             <View style={{ height: 260 }} className="px-4 py-3">
               <FlatList
                 data={incidencias}
@@ -163,22 +137,18 @@ export const HomeScreen = () => {
                 renderItem={renderIncidencia}
                 nestedScrollEnabled
                 showsVerticalScrollIndicator={false}
-              // si la lista crece mucho, activa esto:
-              // initialNumToRender={6}
-              // windowSize={5}
               />
             </View>
           </View>
 
           {/* Botón: Tareas Programadas */}
           <TouchableOpacity
-            onPress={() => navigation.navigate('TareasProgramadas')}
+            onPress={() => navigation.getParent()?.navigate('TareasProgramadas' as never)}
             className="mt-4 bg-indigo-600 rounded-xl px-4 py-3 active:opacity-90"
           >
             <Text className="text-white text-center font-semibold">Tareas Programadas</Text>
           </TouchableOpacity>
         </View>
-        {/* ──────────────────────────────────────── */}
       </View>
     </ScrollView>
   );

@@ -4,7 +4,7 @@
 import React from 'react';
 import { DrawerContentComponentProps, DrawerContentScrollView, DrawerItem, DrawerItemList, createDrawerNavigator } from '@react-navigation/drawer';
 import { globalColors } from '../theme/theme';
-import { Text, View, useWindowDimensions } from 'react-native';
+import { Text, View } from 'react-native';
 import { BottomTabNavigator } from './BottomTabNavigator';
 import { IonIcon } from '../components/shared/IonIcon';
 import { Divider } from 'react-native-paper';
@@ -21,10 +21,32 @@ import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { MaintenancePasswordScreen } from './MaintenancePasswordScreen';
 import { AWRStackNavigator } from './AWRStackNavigator';
 
+import { createStackNavigator } from '@react-navigation/stack';
+import TareasProgramadasScreen from './TareasProgramadasScreen';
+// 👇 Ajusta la ruta según tu proyecto
+
 const Drawer = createDrawerNavigator();
+const Stack = createStackNavigator();
+
+/** Stack que contiene los Tabs + TareasProgramadas */
+function TabsStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Tabs"
+        component={BottomTabNavigator}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TareasProgramadas"
+        component={TareasProgramadasScreen}
+        options={{ title: 'Tareas Programadas' }}
+      />
+    </Stack.Navigator>
+  );
+}
 
 export const SideMenuNavigator = () => {
-  const dimensions = useWindowDimensions();
   const { t } = useTranslation();
 
   return (
@@ -41,11 +63,13 @@ export const SideMenuNavigator = () => {
         drawerItemStyle: { borderRadius: 100, paddingHorizontal: 20 }
       }}
     >
+      {/* 👉 Ahora los Tabs van envueltos en TabsStack (que incluye TareasProgramadas) */}
       <Drawer.Screen
         name="Tabs"
-        component={BottomTabNavigator}
+        component={TabsStack}
         options={{ drawerIcon: ({ color }) => <IonIcon name="home-outline" color={color} />, title: t('common:Tabs') }}
       />
+
       <Drawer.Screen
         name="Register"
         component={DRStackNavigator}
@@ -68,7 +92,7 @@ export const SideMenuNavigator = () => {
         }}
       />
 
-      {/* RUTA REAL DE MANTENIMIENTO (oculta). Aquí está tu stack real */}
+      {/* Ruta real de Mantenimiento (oculta) */}
       <Drawer.Screen
         name="Maintenance"
         component={MaintenaceStackNavigator}
@@ -79,7 +103,7 @@ export const SideMenuNavigator = () => {
         }}
       />
 
-      {/* RUTA VISIBLE EN EL DRAWER -> PANTALLA DE CONTRASEÑA */}
+      {/* Entrada visible que pide contraseña */}
       <Drawer.Screen
         name="MaintenanceAccess"
         component={MaintenancePasswordScreen}
@@ -88,21 +112,21 @@ export const SideMenuNavigator = () => {
           drawerIcon: ({ color }) => <IonIcon name="build-outline" color={color} />
         }}
       />
+
       <Drawer.Screen
-  name="AWR-SAVED"
-  component={AWRStackNavigator}
-  options={{
-    drawerIcon: ({ color }) => <IonIcon name="radio-outline" color={color} />,
-    title: 'AWR escaneados',
-  }}
-/>
+        name="AWR-SAVED"
+        component={AWRStackNavigator}
+        options={{
+          drawerIcon: ({ color }) => <IonIcon name="radio-outline" color={color} />,
+          title: 'AWR escaneados',
+        }}
+      />
 
       {isDebugMode && (
         <>
           <Drawer.Screen options={{ drawerIcon: ({ color }) => (<IonIcon name="log-in-outline" color={color} />) }} name="Login" component={LoginScreen} />
           <Drawer.Screen options={{ drawerIcon: ({ color }) => (<IonIcon name="chatbubbles-outline" color={color} />) }} name="Language Settings" component={LanguageSettingsScreen} />
           <Drawer.Screen options={{ drawerItemStyle: { marginTop: 40, paddingHorizontal: 20, }, drawerLabel: "Debug options", drawerIcon: ({ color }) => (<IonIcon name="bug-outline" color={color} />) }} name="Debug" component={DebugNavigator} />
-          {/* Si antes mostrabas Maintenance aquí en debug, ya no hace falta porque ahora lo abrimos pasando por contraseña */}
         </>
       )}
     </Drawer.Navigator>
@@ -162,58 +186,3 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
     </DrawerContentScrollView>
   );
 };
-
-
-// const CustomDrawerContent = (props: DrawerContentComponentProps) => {
-//    // const navigation=useNavigation();
-//    return (
-
-//       <DrawerContentScrollView style={{ flex: 1, flexDirection: 'column' }} {...props}>
-//          {/* <View style={{
-//             height:200,
-//             backgroundColor:globalColors.primary,
-//             margin:30,
-//             borderRadius:50,
-
-//          }}
-//          /> */}
-//          {/* <DrawerItemList {...props} /> */}
-//          <View style={{ flex: 1 }}>
-
-//             <DrawerItemList {...props} />
-
-//          </View>
-
-//          {/* <Text>HOla</Text> */}
-
-//          {isDebugMode && (
-//             <View style={{ flex: 1, backgroundColor: 'white', marginTop: 300 }}>
-//                <Divider />
-
-//                <DrawerItem
-//                   // style={{flexDirection:'column-reverse'}}
-//                   label="CTIcontrol"
-//                   onPress={() => Linking.openURL('https://www.cticontrol.com')}
-//                //   onPress={() => navigation.navigate('Home Debug' as never)}
-
-//                />
-//                {/* <Button 
-//                title="Go somewhere" 
-//                   onPress={() => {
-//                   // Navigate using the `navigation` prop that you received
-//                   props.navigation.navigate('BLE Testing');
-//                   // props.navigation.navigate('Tag Reader');
-                  
-//                   //HomeDebugScreen()
-
-                  
-//                }}
-//             />
-//              */}
-//             </View>
-//          )}
-
-//       </DrawerContentScrollView>
-//    )
-
-// }
