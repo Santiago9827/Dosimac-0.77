@@ -23,6 +23,7 @@ import { AWRStackNavigator } from './AWRStackNavigator';
 
 import { createStackNavigator } from '@react-navigation/stack';
 import TareasProgramadasScreen from './TareasProgramadasScreen';
+import NoAlimentadosScreenMaternidad from './NoAlimentadosScreenMaternidad';
 // 👇 Ajusta la ruta según tu proyecto
 
 const Drawer = createDrawerNavigator();
@@ -42,6 +43,12 @@ function TabsStack() {
         component={TareasProgramadasScreen}
         options={{ title: 'Tareas Programadas' }}
       />
+      <Stack.Screen
+        name="NoAlimentadosMaternidad"
+        component={NoAlimentadosScreenMaternidad}
+        options={{ title: 'Animales no Alimentados' }}
+      />
+
     </Stack.Navigator>
   );
 }

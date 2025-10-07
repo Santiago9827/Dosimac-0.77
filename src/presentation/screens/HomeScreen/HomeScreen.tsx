@@ -1,10 +1,11 @@
 import React from 'react';
-import { Text, View, FlatList, TouchableOpacity } from 'react-native';
+import { Text, View, FlatList, TouchableOpacity, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HamburgerMenu } from '../../components/shared/HamburgerMenu';
 import { useTranslation } from 'react-i18next';
 import { DonutChart } from '../../components/shared/DonutChart';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type Incidencia = {
   id: string | number;
@@ -12,6 +13,11 @@ type Incidencia = {
   corral: string | number;
   descripcion: string;
 };
+
+// arriba del componente
+const CARD_BG = '#E9EDF2';      // <-- E9EDF2
+const CARD_BORDER = '#C8D0DA';  // <-- C8D0DA
+
 
 export const HomeScreen = () => {
   const { t } = useTranslation(['common']);
@@ -44,16 +50,46 @@ export const HomeScreen = () => {
     </View>
   );
 
+  const SectionTitle = ({ icon, text, count }: {
+    icon: string; text: string; count?: number;
+  }) => (
+    <View className="flex-row items-center justify-between mb-3">
+      <View className="flex-row items-center">
+        <Ionicons name={icon as any} size={18} color="#0f172a" />
+        <Text className="ml-2 text-slate-900 text-[18px] font-extrabold">{text}</Text>
+      </View>
+      {typeof count === 'number' && (
+        <View className="px-2 py-0.5 rounded-full bg-slate-200/70">
+          <Text className="text-xs text-slate-700">{count}</Text>
+        </View>
+      )}
+    </View>
+  );
+
   const renderIncidencia = ({ item }: { item: Incidencia }) => (
-    <View className="rounded-xl p-4 bg-white border border-slate-200 mb-3">
+    <Pressable
+      onPress={() => { }}
+      android_ripple={{ color: '#e5e7eb' }}
+      className="rounded-2xl p-4 bg-white border border-slate-200 mb-3"
+      style={{
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 1,
+      }}
+    >
       <View className="flex-row items-center">
         <Text className={`px-2 py-0.5 rounded-full text-xs font-semibold ${pillClasses(item.area)}`}>
           {item.area}
         </Text>
-        <Text className="ml-2 text-slate-500 text-xs">Corral {item.corral}</Text>
+        <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">
+          Corral {item.corral}
+        </Text>
       </View>
+
       <Text className="mt-2 text-slate-800">{item.descripcion}</Text>
-    </View>
+    </Pressable>
   );
 
   return (
@@ -61,17 +97,20 @@ export const HomeScreen = () => {
       <HamburgerMenu />
 
       <View className="px-5 pt-4 flex-1">
-        <Text className="text-slate-800 text-lg font-semibold mb-3">
-          {t('common:Indicadores') || 'Indicadores'}
-        </Text>
+        {/* Indicadores */}
+        <SectionTitle icon="analytics-outline" text={t('common:Indicadores') || 'Indicadores'} />
 
-        {/* Tarjetas indicadores */}
-        <View className="flex-row gap-3 mb-4">
-          <View className="flex-1 rounded-2xl p-3 shadow-sm bg-[#E9EDF2] border border-[#C8D0DA]">
+        {/* Tarjetas indicadores — separados y con fondo gris */}
+        <View className="flex-row mb-6">
+          {/* Maternidad */}
+          <View
+            className="flex-1 mr-3 rounded-2xl p-3 shadow-sm border overflow-hidden"
+            style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}
+          >
             <View className="items-center">
               <DonutChart
-                size={120}                 // un poco más compacto para que todo quepa sin scroll
-                strokeWidth={20}
+                size={120}
+                strokeWidth={22}
                 label={t('common:Maternidad') || 'Maternidad'}
                 segmentA={maternidad.alimentados}
                 segmentB={maternidad.noAlimentados}
@@ -85,16 +124,20 @@ export const HomeScreen = () => {
             <View className="mt-3">
               <StatRow label="Alimentados" value={maternidad.alimentados} />
               <StatRow label="No Alimentados" value={maternidad.noAlimentados} />
-              <View className="h-px bg-[#C8D0DA] my-1" />
+              <View className="h-px my-1" style={{ backgroundColor: '#C8D0DA' }} />
               <StatRow label="Totales" value={totalM} />
             </View>
           </View>
 
-          <View className="flex-1 rounded-2xl p-3 shadow-sm bg-[#E9EDF2] border border-[#C8D0DA]">
+          {/* Gestación */}
+          <View
+            className="flex-1 ml-3 rounded-2xl p-3 shadow-sm border overflow-hidden"
+            style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}
+          >
             <View className="items-center">
               <DonutChart
                 size={120}
-                strokeWidth={20}
+                strokeWidth={22}
                 label={t('common:Gestación') || 'Gestación'}
                 segmentA={gestacion.alimentados}
                 segmentB={gestacion.noAlimentados}
@@ -108,30 +151,39 @@ export const HomeScreen = () => {
             <View className="mt-3">
               <StatRow label="Alimentados" value={gestacion.alimentados} />
               <StatRow label="No Alimentados" value={gestacion.noAlimentados} />
-              <View className="h-px bg-[#C8D0DA] my-1" />
+              <View className="h-px my-1" style={{ backgroundColor: '#C8D0DA' }} />
               <StatRow label="Totales" value={totalG} />
             </View>
           </View>
         </View>
 
-        {/* Bloque Incidencias: ocupa el espacio libre y SOLO él scrollea */}
-        <Text className="text-slate-800 text-lg font-semibold mb-3">Incidencias</Text>
+        {/* Incidencias (mismo bloque con su scroll) */}
+        <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidencias.length} />
 
         <View className="flex-1 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden min-h-[160px]">
           <FlatList
             data={incidencias}
             keyExtractor={(item) => String(item.id)}
             renderItem={renderIncidencia}
-            showsVerticalScrollIndicator={true}
+            showsVerticalScrollIndicator
             contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}
+            ItemSeparatorComponent={() => <View className="h-px bg-slate-100" />}
           />
         </View>
 
-        {/* Botón pegado abajo */}
+        {/* CTA inferior */}
         <TouchableOpacity
           onPress={() => navigation.getParent()?.navigate('TareasProgramadas' as never)}
-          className="mt-4 bg-indigo-600 rounded-xl px-4 py-3 active:opacity-90"
-          style={{ marginBottom: insets.bottom + 8 }}
+          className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
+          style={{
+            backgroundColor: '#4F46E5',
+            marginBottom: insets.bottom + 8,
+            shadowColor: '#000',
+            shadowOpacity: 0.18,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 3,
+          }}
         >
           <Text className="text-white text-center font-semibold">Tareas Programadas</Text>
         </TouchableOpacity>

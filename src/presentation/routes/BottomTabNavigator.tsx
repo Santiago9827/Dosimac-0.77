@@ -18,7 +18,7 @@ import { MaternityStackNavigator } from './Mat-StackNavigator';
 import { isDebugMode } from '../../sharedTypes/globlaVars';
 import { useTranslation } from 'react-i18next';
 import { CTIFeedScreen } from '../screens/HomeScreen/CTIFeedScreen';
-import { MaternidadScren } from '../screens/HomeScreen/MaternidadScren';
+import MaternidadScren from '../screens/HomeScreen/MaternidadScren';
 
 
 const Tab = createBottomTabNavigator();
@@ -71,8 +71,9 @@ export const BottomTabNavigator = () => {
           tabBarIcon: ({ color }) => <IonIcon name="home-outline" color={color} />,
         }}
       />
-      <Tab.Screen name="Tab2" options={{ title: "Gestación", tabBarIcon: ({ color }) => (<IonIcon name="people-circle-outline" color={color} />) }} component={GestationScreen} />
-      <Tab.Screen name="Tab3" options={{ title: "Maternidad", tabBarIcon: ({ color }) => (<IonIcon name="person-circle-outline" color={color} />) }} component={MaternidadScren} />
+      <Tab.Screen name="Tab2" options={{ title: "Maternidad", tabBarIcon: ({ color }) => (<IonIcon name="person-circle-outline" color={color} />) }} component={MaternidadScren} />
+
+      <Tab.Screen name="Tab3" options={{ title: "Gestación", tabBarIcon: ({ color }) => (<IonIcon name="people-circle-outline" color={color} />) }} component={GestationScreen} />
       <Tab.Screen
         name="Tab4"
         component={CTIFeedScreen}
