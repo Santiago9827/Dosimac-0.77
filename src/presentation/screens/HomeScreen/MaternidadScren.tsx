@@ -154,10 +154,10 @@ export default function MaternidadScreen() {
 
     return (
         <View className="flex-1 bg-slate-50" style={{ paddingBottom: insets.bottom + 8 }}>
-            {/* Título */}
+            {/* Título
             <View className="px-5 pt-4 pb-2">
                 <Text className="text-slate-900 text-[24px] font-extrabold">Maternidad</Text>
-            </View>
+            </View> */}
 
             {/* Bloque 1: Donut + métricas */}
             <View className="px-5 mb-6">
@@ -169,7 +169,7 @@ export default function MaternidadScreen() {
                         {/* Izquierda (donut) */}
                         <View style={{ flex: LEFT_FLEX }} className="items-center pr-2">
                             <DonutChart
-                                size={118}
+                                size={124}
                                 strokeWidth={20}
                                 label="Maternidad"
                                 segmentA={maternidad.alimentados}
@@ -211,7 +211,7 @@ export default function MaternidadScreen() {
             <View className="px-5">
                 <View className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                     {/* Altura aumentada a 340 (scroll interno) */}
-                    <View style={{ height: 340 }} className="px-4 py-3">
+                    <View style={{ height: 380 }} className="px-4 py-3">
                         <FlatList
                             data={incidenciasMaternidad}
                             keyExtractor={(item) => String(item.id)}
