@@ -34,11 +34,11 @@ export default function MaternidadScreen() {
 
     // Incidencias SOLO de Maternidad
     const incidenciasMaternidad: Incidencia[] = [
-        { id: 1, area: 'Maternidad', corral: 'C-12', descripcion: 'Bebedero con caudal bajo.' },
-        { id: 2, area: 'Maternidad', corral: 'C-05', descripcion: 'Puerta sin cierre.' },
-        { id: 3, area: 'Maternidad', corral: 'C-07', descripcion: 'Sensor de paso intermitente.' },
-        { id: 4, area: 'Maternidad', corral: 'C-15', descripcion: 'Fallo de báscula.' },
-        { id: 5, area: 'Maternidad', corral: 'C-02', descripcion: 'Comedero bloqueado.' },
+        { id: 1, area: 'Maternidad', corral: '02', descripcion: 'Bebedero con caudal bajo.' },
+        { id: 2, area: 'Maternidad', corral: '05', descripcion: 'Puerta sin cierre.' },
+        { id: 3, area: 'Maternidad', corral: '07', descripcion: 'Sensor de paso intermitente.' },
+        { id: 4, area: 'Maternidad', corral: '15', descripcion: 'Fallo de báscula.' },
+        { id: 5, area: 'Maternidad', corral: '03', descripcion: 'Comedero bloqueado.' },
     ];
 
     const pillClasses = (a: Incidencia['area']) =>

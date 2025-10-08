@@ -126,9 +126,9 @@ export default function TareasProgramadasScreen() {
     }, []);
 
     const [tareas, setTareas] = useState<Tarea[]>([
-        { id: 1, corral: 'C-12', asignadoA: 'Juan Pérez', descripcion: 'Revisar bebederos y limpiar filtro.', done: false },
-        { id: 2, corral: 'G-03', asignadoA: 'Ana Gómez', descripcion: 'Desbloquear compuerta de comedero.', done: false },
-        { id: 3, corral: 'C-05', asignadoA: 'Luis Mateo', descripcion: 'Comprobar cierres y engrase de bisagras.', done: true },
+        { id: 1, corral: '12', asignadoA: 'Juan Pérez', descripcion: 'Revisar bebederos y limpiar filtro.', done: false },
+        { id: 2, corral: '03', asignadoA: 'Ana Gómez', descripcion: 'Desbloquear compuerta de comedero.', done: false },
+        { id: 3, corral: '05', asignadoA: 'Luis Mateo', descripcion: 'Comprobar cierres y engrase de bisagras.', done: true },
     ]);
 
     const sortedTareas = useMemo(() => {

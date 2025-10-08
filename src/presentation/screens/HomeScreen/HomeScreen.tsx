@@ -33,11 +33,11 @@ export const HomeScreen = () => {
   const pctG = totalG ? Math.round((gestacion.alimentados / totalG) * 100) : 0;
 
   const incidencias: Incidencia[] = [
-    { id: 1, area: 'Maternidad', corral: 'C-12', descripcion: 'Bebedero con caudal bajo.' },
-    { id: 2, area: 'Gestación', corral: 'G-03', descripcion: 'Comedero bloqueado.' },
-    { id: 3, area: 'Gestación', corral: 'G-07', descripcion: 'Sensor de paso intermitente.' },
-    { id: 4, area: 'Maternidad', corral: 'C-05', descripcion: 'Puerta sin cierre.' },
-    { id: 5, area: 'Gestación', corral: 'G-10', descripcion: 'Fallo de báscula.' },
+    { id: 1, area: 'Maternidad', corral: '12', descripcion: 'Bebedero con caudal bajo.' },
+    { id: 2, area: 'Gestación', corral: '03', descripcion: 'Comedero bloqueado.' },
+    { id: 3, area: 'Gestación', corral: '07', descripcion: 'Sensor de paso intermitente.' },
+    { id: 4, area: 'Maternidad', corral: '05', descripcion: 'Puerta sin cierre.' },
+    { id: 5, area: 'Gestación', corral: '10', descripcion: 'Fallo de báscula.' },
   ];
 
   const pillClasses = (a: Incidencia['area']) =>
