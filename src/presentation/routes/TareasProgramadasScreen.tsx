@@ -88,7 +88,8 @@ const TaskCard = ({
                             className="ml-2 w-8 h-8 rounded-full items-center justify-center"
                             android_ripple={{ color: '#e5e7eb' }}
                         >
-                            <Ionicons name="ellipsis-vertical" size={18} color="#64748b" />
+                            {/* //tamaño de los  3 puntos */}
+                            <Ionicons name="ellipsis-vertical" size={22} color="#64748b" />
                         </Pressable>
                     </View>
                 </View>

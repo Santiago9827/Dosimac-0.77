@@ -11,7 +11,7 @@ const CARD_BORDER = '#E2E8F0';
 
 // Layout proporciones
 const LEFT_FLEX = 35;  // donut
-const RIGHT_FLEX = 65; // datos
+const RIGHT_FLEX = 68; // datos
 const VALUE_W = 80;    // ancho fijo para alinear números
 const CHEVRON_W = 18;  // ancho fijo para chevron
 
@@ -74,7 +74,7 @@ export default function MaternidadScreen() {
                 <Comp
                     onPress={onPress}
                     android_ripple={onPress ? { color: '#e5e7eb' } : undefined}
-                    style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}
                 >
                     <Text
                         // sin truncado: envuelve si hace falta
@@ -162,15 +162,15 @@ export default function MaternidadScreen() {
             {/* Bloque 1: Donut + métricas */}
             <View className="px-5 mb-6">
                 <View
-                    className="rounded-2xl border p-4 shadow-sm overflow-hidden"
+                    className="rounded-2xl border p-5 shadow-sm overflow-hidden" // antes p-4
                     style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         {/* Izquierda (donut) */}
                         <View style={{ flex: LEFT_FLEX }} className="items-center pr-2">
                             <DonutChart
-                                size={124}
-                                strokeWidth={20}
+                                size={132}        // antes 124 (puedes probar 136 si te cabe)
+                                strokeWidth={22}  // antes 20, más “presencia”
                                 label="Maternidad"
                                 segmentA={maternidad.alimentados}
                                 segmentB={maternidad.noAlimentados}
@@ -181,6 +181,7 @@ export default function MaternidadScreen() {
                                 centerPercent={pct}
                             />
                         </View>
+
 
                         {/* Separador */}
                         <View className="w-px bg-slate-200 self-stretch mx-3" />
@@ -210,8 +211,8 @@ export default function MaternidadScreen() {
 
             <View className="px-5">
                 <View className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    {/* Altura aumentada a 340 (scroll interno) */}
-                    <View style={{ height: 380 }} className="px-4 py-3">
+                    {/* Altura aumentada */}
+                    <View style={{ height: 400 }} className="px-4 py-3">
                         <FlatList
                             data={incidenciasMaternidad}
                             keyExtractor={(item) => String(item.id)}
