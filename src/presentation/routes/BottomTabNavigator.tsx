@@ -71,7 +71,16 @@ export const BottomTabNavigator = () => {
           tabBarIcon: ({ color }) => <IonIcon name="home-outline" color={color} />,
         }}
       />
-      <Tab.Screen name="Tab2" options={{ title: "Maternidad", tabBarIcon: ({ color }) => (<IonIcon name="person-circle-outline" color={color} />) }} component={MaternidadScren} />
+      {/* <Tab.Screen name="Tab2" options={{ title: "Maternidad", tabBarIcon: ({ color }) => (<IonIcon name="person-circle-outline" color={color} />) }} component={MaternidadScren} /> */}
+      <Tab.Screen
+        name="MaternidadTab"
+        component={MaternityStackNavigator}
+        options={{
+          title: "Maternidad",
+          tabBarIcon: ({ color }) => (<IonIcon name="person-circle-outline" color={color} />),
+          headerShown: false, // el header lo lleva el stack
+        }}
+      />
 
       <Tab.Screen name="Tab3" options={{ title: "Gestación", tabBarIcon: ({ color }) => (<IonIcon name="people-circle-outline" color={color} />) }} component={GestationScreen} />
       <Tab.Screen

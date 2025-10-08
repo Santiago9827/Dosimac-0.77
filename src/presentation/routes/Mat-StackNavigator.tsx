@@ -9,59 +9,66 @@ import { MatAnimalNoFeeded } from '../screens/Maternity/Mat-AniNomalFeeded';
 import { MaternityFeedIssues } from '../screens/Maternity/Mat-FeedIssues';
 import { MatDeviceIssue } from '../screens/Maternity/Mat-DeviceIssue';
 import { MatCorralDetail } from '../screens/Maternity/Mat-CorralDetail';
+import CorralScreen from './CorralScreen';
+import MaternidadScreen from '../screens/HomeScreen/MaternidadScren';
 
 
 
 const MaternityStack = createStackNavigator();
 
 
-export const MaternityStackNavigator = ()=> {
-   
-   const navigator = useNavigation();
-   
+export const MaternityStackNavigator = () => {
 
-   useEffect(()=>{
+   const navigator = useNavigation();
+
+
+   useEffect(() => {
       navigator.setOptions({
-        headerShown: false,
+         headerShown: false,
          // headerStyle:{
          //     elevation:15,
          // },
-        
 
-        
-        
+
+
+
       });
-  
-    }, [navigator] );
-       
-  return (
-   <MaternityStack.Navigator 
-       
-      screenOptions={
-         {
-         // cardStyle: { backgroundColor: '#9FFFFF', borderRadius: 10},
-         // headerBackTitleVisible: true,
-         // headerLeft:()=>null,
-         // headerTitle:"fasdfasd  ",         
-         headerShown: false,
-         headerStyle:{
-            elevation:5,
-         },
 
-      }}
-   >
-      <MaternityStack.Screen name="MAT-HOME" component={MaternityScreen}  options={{title: 'Maternity',headerShown: true,headerStyle: { elevation: 5 },}}/>
-      <MaternityStack.Screen name="MAT-ANINOFEED" component={MatAnimalNoFeeded}  options={{title: 'No feed animals',headerShown: true,headerStyle: { elevation: 5 },}}/>
-      <MaternityStack.Screen name="MAT-FEEDISSUE" component={MaternityFeedIssues}  options={{title: 'Feed issue',headerShown: true,headerStyle: { elevation: 5 },}}/>
-      <MaternityStack.Screen name="MAT-DEVICEISSUE" component={MatDeviceIssue}  options={{title: 'Device issue',headerShown: true,headerStyle: { elevation: 5 },}}/>
-      <MaternityStack.Screen name="MAT-CORRALDETAIL"  component={MatCorralDetail} options={{title: 'Corral details',headerShown: true,headerStyle: { elevation: 5 },}}/>
-      {/* <DRegistationStack.Screen name="DR-SETUP" component={TopTabDrSetupNavigator} 
+   }, [navigator]);
+
+   return (
+      <MaternityStack.Navigator
+
+         screenOptions={
+            {
+               // cardStyle: { backgroundColor: '#9FFFFF', borderRadius: 10},
+               // headerBackTitleVisible: true,
+               // headerLeft:()=>null,
+               // headerTitle:"fasdfasd  ",         
+               headerShown: false,
+               headerStyle: {
+                  elevation: 5,
+               },
+
+            }}
+      >
+         <MaternityStack.Screen name="MAT-HOME" component={MaternidadScreen} options={{ title: 'Maternity', headerShown: true, headerStyle: { elevation: 5 }, }} />
+         <MaternityStack.Screen name="MAT-ANINOFEED" component={MatAnimalNoFeeded} options={{ title: 'No feed animals', headerShown: true, headerStyle: { elevation: 5 }, }} />
+         <MaternityStack.Screen name="MAT-FEEDISSUE" component={MaternityFeedIssues} options={{ title: 'Feed issue', headerShown: true, headerStyle: { elevation: 5 }, }} />
+         <MaternityStack.Screen name="MAT-DEVICEISSUE" component={MatDeviceIssue} options={{ title: 'Device issue', headerShown: true, headerStyle: { elevation: 5 }, }} />
+         <MaternityStack.Screen name="MAT-CORRALDETAIL" component={MatCorralDetail} options={{ title: 'Corral details', headerShown: true, headerStyle: { elevation: 5 }, }} />
+         <MaternityStack.Screen
+            name="MAT-CORRAL"
+            component={CorralScreen}
+            options={{ title: 'Corral', headerShown: true, headerStyle: { elevation: 5 } }}
+         />
+         {/* <DRegistationStack.Screen name="DR-SETUP" component={TopTabDrSetupNavigator} 
             options={{ title: 'Dosimac Setup',headerShown: true, headerLeft:()=>null,headerStyle:{elevation:5} }}
             //screenOptions={{}}
       /> */}
-      
-      
-   </MaternityStack.Navigator>
-    
-  );
+
+
+      </MaternityStack.Navigator>
+
+   );
 };

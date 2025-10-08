@@ -3,11 +3,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
 import TareasProgramadasScreen from './TareasProgramadasScreen';
 import NoAlimentadosScreenMaternidad from './NoAlimentadosScreenMaternidad';
+import CorralScreen from './CorralScreen';
 
 export type RootStackParamList = {
     Home: undefined;
     TareasProgramadas: undefined;
     NoAlimentadosMaternidad: undefined;
+    Corral: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -22,6 +24,9 @@ export default function AppNavigator() {
                 component={NoAlimentadosScreenMaternidad}
                 options={{ headerShown: false }}
             />
+            {/* <Stack.Screen name="Corral" component={CorralScreen} /> */}
+
+
 
         </Stack.Navigator>
     );

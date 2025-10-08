@@ -225,7 +225,7 @@ export default function MaternidadScreen() {
 
                 {/* CTA inferior: Ir al Corral */}
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('Corral' as never)} // <--- ajusta el nombre de la ruta si es distinto
+                    onPress={() => navigation.navigate('MAT-CORRAL' as never)}
                     className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
                     style={{
                         backgroundColor: '#4F46E5',
@@ -241,5 +241,6 @@ export default function MaternidadScreen() {
                 </TouchableOpacity>
             </View>
         </View>
+
     );
 }
