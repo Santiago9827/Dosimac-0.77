@@ -4,12 +4,14 @@ import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
 import TareasProgramadasScreen from './TareasProgramadasScreen';
 import NoAlimentadosScreenMaternidad from './NoAlimentadosScreenMaternidad';
 import CorralScreen from './CorralScreen';
+import NoAlimentadosGestacion from '../screens/Gestation/NoAlimentadosGestacion';
 
 export type RootStackParamList = {
     Home: undefined;
     TareasProgramadas: undefined;
     NoAlimentadosMaternidad: undefined;
     Corral: undefined;
+    NoAlimentadosGestacion: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -26,7 +28,11 @@ export default function AppNavigator() {
             />
             {/* <Stack.Screen name="Corral" component={CorralScreen} /> */}
 
-
+            <Stack.Screen
+                name="NoAlimentadosGestacion"
+                component={NoAlimentadosGestacion}
+                options={{ headerShown: false }}
+            />
 
         </Stack.Navigator>
     );

@@ -19,6 +19,8 @@ import { isDebugMode } from '../../sharedTypes/globlaVars';
 import { useTranslation } from 'react-i18next';
 import { CTIFeedScreen } from '../screens/HomeScreen/CTIFeedScreen';
 import MaternidadScren from '../screens/HomeScreen/MaternidadScren';
+import { GestationStackNavigator } from './GestationStackNavigator';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
 
 const Tab = createBottomTabNavigator();
@@ -82,7 +84,25 @@ export const BottomTabNavigator = () => {
         }}
       />
 
-      <Tab.Screen name="Tab3" options={{ title: "Gestación", tabBarIcon: ({ color }) => (<IonIcon name="people-circle-outline" color={color} />) }} component={GestationScreen} />
+      {/* <Tab.Screen name="Tab3" options={{ title: "Gestación", tabBarIcon: ({ color }) => (<IonIcon name="people-circle-outline" color={color} />) }} component={GestationScreen} /> */}
+      <Tab.Screen
+        name="GestacionTab"
+        component={GestationStackNavigator}
+        options={({ route }) => {
+          // nombre de la pantalla activa dentro del stack
+          const nested = getFocusedRouteNameFromRoute(route) ?? 'GES-HOME';
+
+          // oculta el header del tab en estas pantallas internas:
+          const hideHeader =
+            nested === 'GES-NOFEED' /* || nested === 'GES-CORRAL' ... si quieres */;
+
+          return {
+            title: 'Gestación',
+            tabBarIcon: ({ color }) => (<IonIcon name="people-circle-outline" color={color} />),
+            headerShown: !hideHeader,   // 👈 aquí la magia
+          };
+        }}
+      />
       <Tab.Screen
         name="Tab4"
         component={CTIFeedScreen}
