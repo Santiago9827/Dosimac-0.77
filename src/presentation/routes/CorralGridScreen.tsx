@@ -1,34 +1,49 @@
-// screens/Gestation/CorralGridScreen.tsx
-import React, { useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity } from 'react-native';
+// screens/Gestation/CorralGridScreen.tsx  (dual: tarjetas <-> tabla)
+import React, { useMemo, useState, useRef } from 'react';
+import {
+    View, Text, FlatList, TextInput, TouchableOpacity,
+    LayoutAnimation, Platform, UIManager, ScrollView, StyleSheet
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 
 type Animal = { corral: string; total: number; consumida: number };
 type Row = { corral: string; animales: number; noAlimentados: number; pct: number; ceColor: string };
 
 const DOT = '#64748B';
-const CARD_GAP = 12;           // ⬅️ separación entre tarjetas
+const CARD_GAP = 12;
 const CARD_BORDER = '#E2E8F0';
 const CARD_BG = 'white';
 
+// Animaciones Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+// —— Estilos auxiliares (tarjetas) ——
 const ROW_LABEL: any = { color: '#64748B', fontSize: 13 };
 const ROW_VALUE: any = { color: '#0f172a', fontWeight: '800', fontSize: 18, fontVariant: ['tabular-nums'], minWidth: 24, textAlign: 'right' };
 const HR: any = { height: 1, backgroundColor: '#E2E8F0', marginVertical: 8, opacity: 0.9 };
 
-const Progress = ({ percent }: { percent: number }) => {
+// —— Barra progreso común ——
+const Progress = ({ percent, height = 18 }: { percent: number; height?: number }) => {
     const p = Math.max(0, Math.min(100, Math.round(percent)));
     return (
-        <View style={{ height: 18, borderRadius: 9, backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
-            <View style={{ width: `${p}%`, height: '100%', backgroundColor: '#22C55E', borderRadius: 9 }} />
-            <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: '#111827', fontWeight: '700', fontSize: 12 }}>{p}%</Text>
+        <View style={{ height, borderRadius: height / 2, backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
+            <View style={{ width: `${p}%`, height: '100%', backgroundColor: '#22C55E', borderRadius: height / 2 }} />
+            <View style={[StyleSheet.absoluteFillObject, { alignItems: 'center', justifyContent: 'center' }]}>
+                <Text style={{ color: '#111827', fontWeight: '700', fontSize: Math.max(12, Math.round(height * 0.6)) }}>{p}%</Text>
             </View>
         </View>
     );
 };
 
 export default function CorralGridScreen() {
-    // Demo
+    const navigation = useNavigation<NavigationProp<any>>();
+    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+    const [query, setQuery] = useState('');
+
+    // Demo (igual que antes, truncado por brevedad)
     const animals: Animal[] = [
         { corral: '01', total: 2837, consumida: 2000 },
         { corral: '01', total: 1400, consumida: 900 },
@@ -145,52 +160,40 @@ export default function CorralGridScreen() {
         { corral: '82', total: 3000, consumida: 1500 },
         { corral: '83', total: 1600, consumida: 400 },
     ];
-    const [query, setQuery] = useState('');
 
+    // Agregación -> filas
     const rows = useMemo<Row[]>(() => {
         const map = new Map<string, Row>();
         for (const a of animals) {
             const r = map.get(a.corral) ?? { corral: a.corral, animales: 0, noAlimentados: 0, pct: 0, ceColor: DOT };
             r.animales += 1;
             if (a.consumida === 0) r.noAlimentados += 1;
-            // acumular para % (usamos suma simple)
-            const prevTotal = (r as any)._t ?? 0;
-            const prevCons = (r as any)._c ?? 0;
-            (r as any)._t = prevTotal + a.total;
-            (r as any)._c = prevCons + a.consumida;
+            const t = (r as any)._t ?? 0; const c = (r as any)._c ?? 0;
+            (r as any)._t = t + a.total; (r as any)._c = c + a.consumida;
             map.set(a.corral, r);
         }
         const out = Array.from(map.values()).map(r => {
-            const t = (r as any)._t ?? 0;
-            const c = (r as any)._c ?? 0;
+            const t = (r as any)._t ?? 0; const c = (r as any)._c ?? 0;
             return { ...r, pct: t > 0 ? (c / t) * 100 : 0 };
         });
         out.sort((a, b) => a.corral.localeCompare(b.corral, undefined, { numeric: true }));
         return out;
     }, [animals]);
 
-    const filtered = useMemo(
-        () => rows.filter(r => r.corral.includes(query.trim())),
-        [rows, query]
-    );
+    const filtered = useMemo(() => rows.filter(r => r.corral.includes(query.trim())), [rows, query]);
 
-    const renderItem = ({ item }: { item: Row }) => (
+    const toggleView = () => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setViewMode(v => (v === 'grid' ? 'table' : 'grid'));
+    };
+
+    // ======== TARJETAS ========
+    const renderCard = ({ item }: { item: Row }) => (
         <View
             style={{
-                flex: 1,
-                borderWidth: 1,
-                borderColor: CARD_BORDER,
-                backgroundColor: CARD_BG,
-                borderRadius: 16,
-                padding: 14,
-                // ⬇️ hueco vertical entre tarjetas
-                marginBottom: CARD_GAP,
-                // sombra ligera
-                shadowColor: '#000',
-                shadowOpacity: 0.07,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 3 },
-                elevation: 1,
+                flex: 1, borderWidth: 1, borderColor: CARD_BORDER, backgroundColor: CARD_BG, borderRadius: 16,
+                padding: 14, marginBottom: CARD_GAP, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 8,
+                shadowOffset: { width: 0, height: 3 }, elevation: 1,
             }}
         >
             {/* Cabecera */}
@@ -202,49 +205,214 @@ export default function CorralGridScreen() {
                 <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: DOT, opacity: 0.95 }} />
             </View>
 
-            {/* Métricas: Animales | No alimentados */}
+            {/* Métricas */}
             <View style={{ marginTop: 10 }}>
-                {/* Fila: Animales */}
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={ROW_LABEL}>Animales</Text>
-                    <View style={{ flex: 1 }} />
+                    <Text style={ROW_LABEL}>Animales</Text><View style={{ flex: 1 }} />
                     <Text style={ROW_VALUE}>{item.animales}</Text>
                 </View>
-
                 <View style={HR} />
-
-                {/* Fila: No alimentados */}
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={ROW_LABEL}>No alimentados</Text>
-                    <View style={{ flex: 1 }} />
+                    <Text style={ROW_LABEL}>No alimentados</Text><View style={{ flex: 1 }} />
                     <Text style={ROW_VALUE}>{item.noAlimentados}</Text>
                 </View>
             </View>
 
-            {/* % alimentado */}
             <Text style={{ color: '#64748B', marginTop: 12, marginBottom: 6, fontSize: 13 }}>% alimentado</Text>
             <Progress percent={item.pct} />
         </View>
     );
 
+    // ======== TABLA (idéntica a tu CorralTablaScreen) ========
+    // Constantes de escala/medidas de la tabla
+    const SEP = '#E2E8F0';
+    const SCALE = 1.12;
+    const W_LEFT = Math.round(100 * SCALE);
+    const W_COL = Math.round(100 * SCALE);
+    const W_PCT = Math.round(160 * SCALE);
+    const W_CE = Math.round(44 * SCALE);
+    const ROW_H = Math.round(48 * SCALE);
+    const HEAD_H = Math.round(50 * SCALE);
+    const HEAD_FS = Math.round(14 * SCALE);
+    const ROW_FS = Math.round(14 * SCALE);
+    const PADX = Math.round(10 * SCALE);
+    const PROG_H = Math.round(18 * SCALE);
+    const BODY_MAX_VISIBLE_ROWS = 10;
+    const TABLE_BODY_MAX_H = BODY_MAX_VISIBLE_ROWS * ROW_H;
+
+    const HeaderCell = ({ w, center, children }: { w: number; center?: boolean; children: React.ReactNode }) => (
+        <View style={{ width: w, paddingHorizontal: PADX, height: HEAD_H, justifyContent: 'center' }}>
+            <Text style={{ color: '#334155', fontWeight: '700', fontSize: HEAD_FS, textAlign: center ? 'center' : 'left' }} numberOfLines={1}>
+                {children}
+            </Text>
+        </View>
+    );
+
+    const CellText = ({ w, center, strong, children }: { w: number; center?: boolean; strong?: boolean; children: React.ReactNode }) => (
+        <View style={{ width: w, paddingHorizontal: PADX, alignItems: center ? 'center' : 'flex-start' }}>
+            <Text style={{ color: '#0f172a', fontWeight: strong ? '700' : '500', fontVariant: ['tabular-nums'], fontSize: ROW_FS }} numberOfLines={1}>
+                {children}
+            </Text>
+        </View>
+    );
+
+    const VSep = () => <View style={{ width: 1, alignSelf: 'stretch', backgroundColor: SEP }} />;
+
+    const CEDot = ({ color = DOT }) => (
+        <View style={{ width: W_CE, alignItems: 'center' }}>
+            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: color }} />
+        </View>
+    );
+
+    const TableView = ({ data }: { data: Row[] }) => {
+        const headerRightRef = useRef<ScrollView>(null);
+        const bodyRightRef = useRef<ScrollView>(null);
+
+        const onBodyHScroll = (e: any) => {
+            headerRightRef.current?.scrollTo({ x: e.nativeEvent.contentOffset.x, animated: false });
+        };
+
+        return (
+            <View
+                style={{
+                    marginHorizontal: 20,
+                    marginTop: 12,
+                    borderRadius: 16,
+                    backgroundColor: 'white',
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    overflow: 'hidden',
+                }}
+            >
+                {/* HEADER */}
+                <View style={{ flexDirection: 'row', backgroundColor: '#F1F5F9', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
+                    {/* izquierda fija */}
+                    <HeaderCell w={W_LEFT} center>Corral</HeaderCell>
+                    <VSep />
+                    {/* derecha sincronizada */}
+                    <ScrollView ref={headerRightRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator>
+                        <View style={{ flexDirection: 'row' }}>
+                            <HeaderCell w={W_COL} center>Animales</HeaderCell>
+                            <VSep />
+                            <HeaderCell w={W_COL} center>No alim.</HeaderCell>
+                            <VSep />
+                            <HeaderCell w={W_PCT} center>% alimentado</HeaderCell>
+                            <VSep />
+                            <HeaderCell w={W_CE} center>CE</HeaderCell>
+                        </View>
+                    </ScrollView>
+                </View>
+
+                {/* BODY -> scroll vertical + un solo horizontal para TODAS las filas */}
+                <View style={{ maxHeight: TABLE_BODY_MAX_H }}>
+                    <ScrollView showsVerticalScrollIndicator>
+                        <View style={{ flexDirection: 'row' }}>
+                            {/* Columna izquierda fija */}
+                            <View style={{ width: W_LEFT }}>
+                                {data.map((r, idx) => (
+                                    <View
+                                        key={`L-${r.corral}`}
+                                        style={{
+                                            height: ROW_H,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            paddingHorizontal: PADX,
+                                            backgroundColor: idx % 2 ? '#FFFFFF' : '#FCFDFE',
+                                            borderBottomWidth: idx === data.length - 1 ? 0 : 1,
+                                            borderBottomColor: SEP,
+                                        }}
+                                    >
+                                        <Ionicons name="home-outline" size={Math.round(16 * SCALE)} color="#0f172a" />
+                                        <Text style={{ marginLeft: 6, color: '#0f172a', fontWeight: '600', fontSize: ROW_FS }} numberOfLines={1}>
+                                            {`${r.corral}`}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+
+                            <VSep />
+
+                            {/* Derecha: banda horizontal con TODAS las filas */}
+                            <ScrollView
+                                ref={bodyRightRef}
+                                horizontal
+                                onScroll={onBodyHScroll}
+                                scrollEventThrottle={16}
+                                showsHorizontalScrollIndicator
+                            >
+                                <View>
+                                    {data.map((r, idx) => (
+                                        <View
+                                            key={`R-${r.corral}`}
+                                            style={{
+                                                height: ROW_H,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                backgroundColor: idx % 2 ? '#FFFFFF' : '#FCFDFE',
+                                                borderBottomWidth: idx === data.length - 1 ? 0 : 1,
+                                                borderBottomColor: SEP,
+                                            }}
+                                        >
+                                            <CellText w={W_COL} center strong>{r.animales}</CellText>
+                                            <VSep />
+                                            <CellText w={W_COL} center>{r.noAlimentados}</CellText>
+                                            <VSep />
+                                            <View style={{ width: W_PCT, overflow: 'hidden' }}>
+                                                <View style={{ marginHorizontal: 8 }}>
+                                                    <Progress percent={r.pct} height={PROG_H} />
+                                                </View>
+                                            </View>
+                                            <VSep />
+                                            <View style={{ width: W_CE, alignItems: 'center' }}>
+                                                <CEDot color={r.ceColor} />
+                                            </View>
+                                        </View>
+                                    ))}
+                                </View>
+                            </ScrollView>
+                        </View>
+                    </ScrollView>
+                </View>
+            </View>
+        );
+    };
+
     return (
         <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-            {/* Título + buscador */}
+            {/* Título + toggle + buscador */}
             <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
-                <Text style={{ color: '#0f172a', fontSize: 22, fontWeight: '900' }}>Resumen por corral</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={{ color: '#0f172a', fontSize: 22, fontWeight: '900' }}>Resumen por corral</Text>
+
+                    {/* Botón de cambio sin navegar */}
+                    <TouchableOpacity
+                        onPress={toggleView}
+                        activeOpacity={0.85}
+                        style={{
+                            flexDirection: 'row', alignItems: 'center',
+                            paddingHorizontal: 10, paddingVertical: 6,
+                            borderRadius: 12, backgroundColor: 'white',
+                            borderWidth: 1, borderColor: '#CBD5E1'
+                        }}
+                    >
+                        <Ionicons
+                            name={viewMode === 'grid' ? 'list-outline' : 'grid-outline'}
+                            size={18}
+                            color="#4F46E5"
+                        />
+                        <Text style={{ marginLeft: 6, color: '#4F46E5', fontWeight: '600' }}>
+                            {viewMode === 'grid' ? 'Tabla' : 'Tarjetas'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
 
                 {/* Buscador */}
                 <View
                     style={{
                         marginTop: 12,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: 'white',
-                        borderWidth: 1,
-                        borderColor: '#E2E8F0',
-                        borderRadius: 16,
-                        paddingHorizontal: 12,
-                        height: 46,
+                        flexDirection: 'row', alignItems: 'center',
+                        backgroundColor: 'white', borderWidth: 1, borderColor: '#E2E8F0',
+                        borderRadius: 16, paddingHorizontal: 12, height: 46,
                     }}
                 >
                     <Ionicons name="search-outline" size={18} color="#64748B" />
@@ -263,17 +431,20 @@ export default function CorralGridScreen() {
                 </View>
             </View>
 
-            {/* Grid */}
-            <FlatList
-                data={filtered}
-                keyExtractor={(it) => it.corral}
-                numColumns={2}
-                renderItem={renderItem}
-                // ⬇️ padding alrededor y separación horizontal entre columnas
-                contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 }}
-                columnWrapperStyle={{ gap: CARD_GAP }}   // ⬅️ más separación entre columnas
-                showsVerticalScrollIndicator={false}
-            />
+            {/* Contenido según modo */}
+            {viewMode === 'grid' ? (
+                <FlatList
+                    data={filtered}
+                    keyExtractor={(it) => it.corral}
+                    numColumns={2}
+                    renderItem={renderCard}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 }}
+                    columnWrapperStyle={{ gap: CARD_GAP }}
+                    showsVerticalScrollIndicator={false}
+                />
+            ) : (
+                <TableView data={filtered} />
+            )}
         </View>
     );
 }
