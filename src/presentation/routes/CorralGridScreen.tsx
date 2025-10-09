@@ -277,6 +277,7 @@ export default function CorralGridScreen() {
                 style={{
                     marginHorizontal: 20,
                     marginTop: 12,
+                    marginBottom: 20,              // ⬅️ margen inferior para “cerrar” la tabla
                     borderRadius: 16,
                     backgroundColor: 'white',
                     borderWidth: 1,
@@ -286,11 +287,16 @@ export default function CorralGridScreen() {
             >
                 {/* HEADER */}
                 <View style={{ flexDirection: 'row', backgroundColor: '#F1F5F9', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
-                    {/* izquierda fija */}
                     <HeaderCell w={W_LEFT} center>Corral</HeaderCell>
                     <VSep />
-                    {/* derecha sincronizada */}
-                    <ScrollView ref={headerRightRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator>
+                    <ScrollView
+                        ref={headerRightRef}
+                        horizontal
+                        scrollEnabled={false}
+                        showsHorizontalScrollIndicator
+                        bounces={false}
+                        overScrollMode="never"
+                    >
                         <View style={{ flexDirection: 'row' }}>
                             <HeaderCell w={W_COL} center>Animales</HeaderCell>
                             <VSep />
@@ -303,9 +309,18 @@ export default function CorralGridScreen() {
                     </ScrollView>
                 </View>
 
-                {/* BODY -> scroll vertical + un solo horizontal para TODAS las filas */}
+                {/* BODY -> scroll vertical interno */}
                 <View style={{ maxHeight: TABLE_BODY_MAX_H }}>
-                    <ScrollView showsVerticalScrollIndicator>
+                    {data.length === 0 && (
+                        <View style={{ padding: 20, alignItems: 'center' }}>
+                            <Text style={{ color: '#64748B' }}>No se han encontrado corrales</Text>
+                        </View>
+                    )}
+                    <ScrollView
+                        showsVerticalScrollIndicator
+                        bounces={false}                // ⬅️ sin rebote
+                        overScrollMode="never"         // ⬅️ sin glow/overscroll
+                    >
                         <View style={{ flexDirection: 'row' }}>
                             {/* Columna izquierda fija */}
                             <View style={{ width: W_LEFT }}>
@@ -319,7 +334,7 @@ export default function CorralGridScreen() {
                                             paddingHorizontal: PADX,
                                             backgroundColor: idx % 2 ? '#FFFFFF' : '#FCFDFE',
                                             borderBottomWidth: idx === data.length - 1 ? 0 : 1,
-                                            borderBottomColor: SEP,
+                                            borderBottomColor: '#E2E8F0',
                                         }}
                                     >
                                         <Ionicons name="home-outline" size={Math.round(16 * SCALE)} color="#0f172a" />
@@ -339,6 +354,8 @@ export default function CorralGridScreen() {
                                 onScroll={onBodyHScroll}
                                 scrollEventThrottle={16}
                                 showsHorizontalScrollIndicator
+                                bounces={false}             // ⬅️ sin rebote
+                                overScrollMode="never"
                             >
                                 <View>
                                     {data.map((r, idx) => (
@@ -350,7 +367,7 @@ export default function CorralGridScreen() {
                                                 alignItems: 'center',
                                                 backgroundColor: idx % 2 ? '#FFFFFF' : '#FCFDFE',
                                                 borderBottomWidth: idx === data.length - 1 ? 0 : 1,
-                                                borderBottomColor: SEP,
+                                                borderBottomColor: '#E2E8F0',
                                             }}
                                         >
                                             <CellText w={W_COL} center strong>{r.animales}</CellText>
@@ -376,7 +393,6 @@ export default function CorralGridScreen() {
             </View>
         );
     };
-
     return (
         <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
             {/* Título + toggle + buscador */}
@@ -441,10 +457,19 @@ export default function CorralGridScreen() {
                     contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 }}
                     columnWrapperStyle={{ gap: CARD_GAP }}
                     showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={() => (
+                        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+                            <Ionicons name="search-outline" size={18} color="#94A3B8" />
+                            <Text style={{ color: '#64748B', marginTop: 6 }}>
+                                No se han encontrado corrales
+                            </Text>
+                        </View>
+                    )}
                 />
             ) : (
                 <TableView data={filtered} />
             )}
+
         </View>
     );
 }
