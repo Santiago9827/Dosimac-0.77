@@ -138,7 +138,7 @@ export const GestationScreen = () => {
 
               {/* Botón pequeño: Ver corral */}
               <TouchableOpacity
-                onPress={() => navigation.navigate('Corral' as never)}
+                onPress={() => navigation.navigate('GES-CORRAL' as never)}
                 className="self-end mt-2 flex-row items-center px-3 py-2 rounded-xl bg-white border"
                 style={{ borderColor: '#CBD5E1' }}
                 activeOpacity={0.9}

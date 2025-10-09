@@ -80,7 +80,7 @@ export default function NoAlimentadosGestacion() {
         { crotal: '333444555666777', corral: '10', total: 2200, consumida: 1100 },
         { crotal: '666555444333222', corral: '11', total: 2400, consumida: 600, },
         { crotal: '121212121212121', corral: '12', total: 2000, consumida: 100, },
-        { crotal: '343434343434343', corral: '13', total: 1950, consumida: 0, },
+        { crotal: '343434343434343', corral: '13', total: 1950, consumida: 2000, },
         { crotal: '565656565656565', corral: '14', total: 1800, consumida: 50, },
         { crotal: '787878787878787', corral: '15', total: 2200, consumida: 2200, },
         { crotal: '909090909090909', corral: '16', total: 2500, consumida: 1250, },

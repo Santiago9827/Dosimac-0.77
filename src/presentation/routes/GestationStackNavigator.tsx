@@ -3,6 +3,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { GestationScreen } from '../screens/Gestation/Gestation';
 import NoAlimentadosGestacion from '../screens/Gestation/NoAlimentadosGestacion';
+import CorralTablaScreen from './CorralTablaScreen';
 
 export type GestationStackParamList = {
     'GES-HOME': undefined;
@@ -25,11 +26,11 @@ export const GestationStackNavigator = () => {
                 component={NoAlimentadosGestacion}
                 options={{ title: 'No alimentados · Gestación', headerShown: true }}
             />
-            {/* <Stack.Screen
-        name="GES-CORRAL"
-        component={CorralScreen}
-        options={{ title: 'Ir al corral' }}
-      /> */}
+            <Stack.Screen
+                name="GES-CORRAL"
+                component={CorralTablaScreen}
+                options={{ title: 'Corrales' }}
+            />
         </Stack.Navigator>
     );
 };
