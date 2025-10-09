@@ -9,11 +9,10 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 const CARD_BG = '#F1F5F9';
 const CARD_BORDER = '#E2E8F0';
 
-// Layout proporciones (mismos que Maternidad)
-const LEFT_FLEX = 35;  // donut
-const RIGHT_FLEX = 68; // datos
-const VALUE_W = 80;    // ancho fijo para alinear números
-const CHEVRON_W = 18;  // ancho fijo para chevron
+const LEFT_FLEX = 35;
+const RIGHT_FLEX = 68;
+const VALUE_W = 80;
+const CHEVRON_W = 18;
 
 type DatosGestacion = { alimentados: number; noAlimentados: number };
 
@@ -21,17 +20,15 @@ export const GestationScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp<any>>();
 
-  // Datos demo — cámbialos por los reales
   const gestacion: DatosGestacion = { alimentados: 135, noAlimentados: 115 };
   const total = gestacion.alimentados + gestacion.noAlimentados;
   const pct = total ? Math.round((gestacion.alimentados / total) * 100) : 0;
 
-  const DANGER = '#DC2626'; // rojo
-  const OK = '#16A34A';     // verde
+  const DANGER = '#DC2626';
+  const OK = '#16A34A';
   const noAl = gestacion.noAlimentados;
-  const noAlColor = noAl === 0 ? OK : DANGER; // verde si 0, rojo si > 0
+  const noAlColor = noAl === 0 ? OK : DANGER;
 
-  // Fila reutilizable (igual que en Maternidad)
   const Row = ({
     label,
     value,
@@ -93,7 +90,6 @@ export const GestationScreen = () => {
 
   return (
     <View className="flex-1 bg-slate-50" style={{ paddingBottom: insets.bottom + 8 }}>
-      {/* Bloque 1: Donut + métricas (Gestación) */}
       <View className="px-5 mt-4">
         <View
           className="rounded-2xl border p-5 shadow-sm overflow-hidden"
@@ -129,23 +125,39 @@ export const GestationScreen = () => {
                 divider
                 action
                 onPress={() => navigation.navigate('GES-NOFEED')}
-
                 labelColor={noAlColor}
                 valueColor={noAlColor}
               />
 
               <Row label="Totales animales" value={total} strong divider />
 
-              {/* Botón pequeño: Ver corral */}
-              <TouchableOpacity
-                onPress={() => navigation.navigate('GES-CORRAL' as never)}
-                className="self-end mt-2 flex-row items-center px-3 py-2 rounded-xl bg-white border"
-                style={{ borderColor: '#CBD5E1' }}
-                activeOpacity={0.9}
-              >
-                <Ionicons name="navigate-outline" size={16} color="#4F46E5" />
-                <Text className="ml-1.5 text-indigo-600 font-semibold">Ver corral</Text>
-              </TouchableOpacity>
+              {/* === Botones de navegación === */}
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                {/* Vista tabla (la que ya tenías) */}
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('GES-CORRAL' as never)}
+                  className="flex-row items-center px-3 py-2 rounded-xl bg-white border"
+                  style={{ borderColor: '#CBD5E1' }}
+                  activeOpacity={0.9}
+                >
+                  <Ionicons name="list-outline" size={16} color="#4F46E5" />
+                  <Text className="ml-1.5 text-indigo-600 font-semibold">Corrales (tabla)</Text>
+                </TouchableOpacity>
+
+                {/* Espacio */}
+                <View style={{ width: 8 }} />
+
+                {/* Nueva vista en tarjetas (grid tipo PCComponentes) */}
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('GES-CORRALPC' as never)}
+                  className="flex-row items-center px-3 py-2 rounded-xl bg-white border"
+                  style={{ borderColor: '#CBD5E1' }}
+                  activeOpacity={0.9}
+                >
+                  <Ionicons name="grid-outline" size={16} color="#4F46E5" />
+                  <Text className="ml-1.5 text-indigo-600 font-semibold">Corrales (tarjetas)</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>

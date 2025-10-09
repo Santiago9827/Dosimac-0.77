@@ -4,11 +4,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { GestationScreen } from '../screens/Gestation/Gestation';
 import NoAlimentadosGestacion from '../screens/Gestation/NoAlimentadosGestacion';
 import CorralTablaScreen from './CorralTablaScreen';
+import CorralGridScreen from './CorralGridScreen';
 
 export type GestationStackParamList = {
     'GES-HOME': undefined;
     'GES-NOFEED': undefined;
     'GES-CORRAL': undefined;
+    'GES-CORRALPC': undefined;
 };
 
 const Stack = createStackNavigator<GestationStackParamList>();
@@ -31,6 +33,12 @@ export const GestationStackNavigator = () => {
                 component={CorralTablaScreen}
                 options={{ title: 'Corrales' }}
             />
+            <Stack.Screen
+                name="GES-CORRALPC"
+                component={CorralGridScreen}
+                options={{ title: 'Corrales' }}
+            />
+
         </Stack.Navigator>
     );
 };
