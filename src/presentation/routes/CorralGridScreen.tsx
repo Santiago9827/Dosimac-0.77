@@ -11,6 +11,10 @@ const CARD_GAP = 12;           // ⬅️ separación entre tarjetas
 const CARD_BORDER = '#E2E8F0';
 const CARD_BG = 'white';
 
+const ROW_LABEL: any = { color: '#64748B', fontSize: 13 };
+const ROW_VALUE: any = { color: '#0f172a', fontWeight: '800', fontSize: 18, fontVariant: ['tabular-nums'], minWidth: 24, textAlign: 'right' };
+const HR: any = { height: 1, backgroundColor: '#E2E8F0', marginVertical: 8, opacity: 0.9 };
+
 const Progress = ({ percent }: { percent: number }) => {
     const p = Math.max(0, Math.min(100, Math.round(percent)));
     return (
@@ -199,24 +203,21 @@ export default function CorralGridScreen() {
             </View>
 
             {/* Métricas: Animales | No alimentados */}
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 }}>
-                {/* Animales */}
-                <View style={{ flex: 1, paddingRight: 8 }}>
-                    <Text style={{ color: '#64748B', fontSize: 12 }}>Animales</Text>
-                    <Text style={{ color: '#0f172a', fontWeight: '800', fontSize: 18, marginTop: 2 }}>{item.animales}</Text>
+            <View style={{ marginTop: 10 }}>
+                {/* Fila: Animales */}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={ROW_LABEL}>Animales</Text>
+                    <View style={{ flex: 1 }} />
+                    <Text style={ROW_VALUE}>{item.animales}</Text>
                 </View>
 
-                <View style={{ width: 1, backgroundColor: CARD_BORDER, alignSelf: 'stretch' }} />
+                <View style={HR} />
 
-                {/* ⬇️ “No alimentados” COMPLETO y con posible salto de línea */}
-                <View style={{ flex: 1, paddingLeft: 8, alignItems: 'flex-end' }}>
-                    <Text
-                        style={{ color: '#64748B', fontSize: 12, textAlign: 'right', flexShrink: 1 }}
-                        numberOfLines={2}
-                    >
-                        No alimentados
-                    </Text>
-                    <Text style={{ color: '#0f172a', fontWeight: '800', fontSize: 18, marginTop: 2 }}>{item.noAlimentados}</Text>
+                {/* Fila: No alimentados */}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={ROW_LABEL}>No alimentados</Text>
+                    <View style={{ flex: 1 }} />
+                    <Text style={ROW_VALUE}>{item.noAlimentados}</Text>
                 </View>
             </View>
 
