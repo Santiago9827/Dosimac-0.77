@@ -94,7 +94,7 @@ export const BottomTabNavigator = () => {
 
           // oculta el header del tab en estas pantallas internas:
           const hideHeader =
-            nested === 'GES-NOFEED' /* || nested === 'GES-CORRAL' ... si quieres */;
+            nested === 'GES-NOFEED' || nested === 'GES-CORRAL';
 
           return {
             title: 'Gestación',

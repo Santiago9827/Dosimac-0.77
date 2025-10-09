@@ -21,10 +21,36 @@ const W_COL = 100;  // Animales / No alim
 const W_PCT = 160;  // % alimentado
 const W_CE = 44;   // CE
 const ROW_H = 48;
+const HEAD_H = 52;      // alto del header (más grande)
+const HEAD_FS = 14;     // tamaño de letra del header
 
-const HeaderCell = ({ w, center, children }: { w: number; center?: boolean; children: React.ReactNode }) => (
-    <View style={{ width: w, paddingHorizontal: 10 }}>
-        <Text style={{ color: '#334155', fontWeight: '700', fontSize: 12, textAlign: center ? 'center' : 'left' }} numberOfLines={1}>
+
+const HeaderCell = ({
+    w,
+    center,
+    children,
+}: {
+    w: number;
+    center?: boolean;
+    children: React.ReactNode;
+}) => (
+    <View
+        style={{
+            width: w,
+            height: HEAD_H,              // ← alto grande del header
+            justifyContent: 'center',    // ← centra vertical
+            paddingHorizontal: 10,
+        }}
+    >
+        <Text
+            style={{
+                color: '#0f172a',
+                fontWeight: '800',
+                fontSize: HEAD_FS,         // ← texto más grande
+                textAlign: center ? 'center' : 'left', // ← centrado opcional
+            }}
+            numberOfLines={1}
+        >
             {children}
         </Text>
     </View>
@@ -134,7 +160,7 @@ export default function CorralTablaScreen() {
                 {/* HEADER */}
                 <View style={{ flexDirection: 'row', backgroundColor: '#F1F5F9', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
                     {/* izquierda fija */}
-                    <HeaderCell w={W_LEFT}>Corral</HeaderCell>
+                    <HeaderCell w={W_LEFT} center>Corral</HeaderCell>
                     <VSep />
                     {/* derecha sincronizada */}
                     <ScrollView
