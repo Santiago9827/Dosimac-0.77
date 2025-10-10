@@ -3,7 +3,8 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
     View, Text, FlatList, TouchableOpacity, StyleSheet,
-    LayoutAnimation, Platform, UIManager
+    LayoutAnimation, Platform, UIManager,
+    Modal
 } from 'react-native';
 import { useRoute, useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -138,6 +139,13 @@ export default function CorralDetalleScreen() {
         }
         return copy;
     }, [baseData, order]);
+    useEffect(() => {
+        if (Platform.OS === 'ios') {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        }
+        listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }, [order]);
+
 
     useEffect(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -162,9 +170,65 @@ export default function CorralDetalleScreen() {
             : order === 'crotalAsc' ? 'Orden: Crotal'
                 : '';
 
+    // dentro de CorralDetalleScreen(), justo antes del return:
+    const ListHeader = () => (
+        <View>
+            {order !== 'none' && (
+                <View style={{ marginBottom: 8 }}>
+                    <View
+                        style={{
+                            alignSelf: 'flex-start',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: 999,
+                            backgroundColor: '#ECFEFF',
+                            borderWidth: 1,
+                            borderColor: '#A5F3FC',
+                        }}
+                    >
+                        <Ionicons name="funnel-outline" size={14} color="#0E7490" />
+                        <Text style={{ color: '#0E7490', fontWeight: '700' }}>
+                            {order === 'pctAsc' ? 'Orden: % alimentado ↑' : 'Orden: Crotal'}
+                        </Text>
+                        <TouchableOpacity onPress={() => setOrder('none')} style={{ marginLeft: 4 }}>
+                            <Ionicons name="close" size={14} color="#0E7490" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
+
+            {/* Tarjeta resumen */}
+            <View
+                style={{
+                    marginBottom: 10,
+                    padding: 14,
+                    backgroundColor: 'white',
+                    borderWidth: 1,
+                    borderColor: CARD_BORDER,
+                    borderRadius: 16,
+                }}
+            >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <Text style={{ color: '#64748B' }}>Animales</Text>
+                    <Text style={{ color: '#0f172a', fontWeight: '800' }}>{stats.total}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <Text style={{ color: '#64748B' }}>No alimentados</Text>
+                    <Text style={{ color: '#0f172a', fontWeight: '800' }}>{stats.noAlimentados}</Text>
+                </View>
+                <Text style={{ color: '#64748B', marginTop: 6, marginBottom: 6 }}>% alimentado medio</Text>
+                <Progress percent={stats.pctMedio} />
+            </View>
+        </View>
+    );
+
+
     return (
         <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-            {/* Header con embudo */}
+            {/* Header fijo con embudo */}
             <View
                 onLayout={(e) => setHeaderBox({ y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height })}
                 style={{
@@ -176,7 +240,6 @@ export default function CorralDetalleScreen() {
                     justifyContent: 'space-between',
                 }}
             >
-                {/* IZQ: back + título */}
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8, marginRight: 6 }}>
                         <Ionicons name="chevron-back" size={22} color="#0f172a" />
@@ -187,7 +250,6 @@ export default function CorralDetalleScreen() {
                     </Text>
                 </View>
 
-                {/* DER: embudo */}
                 <TouchableOpacity
                     onPress={() => setMenuOpen(v => !v)}
                     style={{
@@ -201,7 +263,7 @@ export default function CorralDetalleScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* Chip cuando hay orden activo */}
+            {/* Chip de orden (fijo) */}
             {order !== 'none' && (
                 <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
                     <View
@@ -219,7 +281,9 @@ export default function CorralDetalleScreen() {
                         }}
                     >
                         <Ionicons name="funnel-outline" size={14} color="#0E7490" />
-                        <Text style={{ color: '#0E7490', fontWeight: '700' }}>{orderLabel}</Text>
+                        <Text style={{ color: '#0E7490', fontWeight: '700' }}>
+                            {order === 'pctAsc' ? 'Orden: % alimentado ↑' : 'Orden: Crotal'}
+                        </Text>
                         <TouchableOpacity onPress={() => setOrder('none')} style={{ marginLeft: 4 }}>
                             <Ionicons name="close" size={14} color="#0E7490" />
                         </TouchableOpacity>
@@ -227,7 +291,7 @@ export default function CorralDetalleScreen() {
                 </View>
             )}
 
-            {/* Resumen */}
+            {/* Tarjeta resumen (fija) */}
             <View
                 style={{
                     marginHorizontal: 16,
@@ -251,11 +315,12 @@ export default function CorralDetalleScreen() {
                 <Progress percent={stats.pctMedio} />
             </View>
 
-            {/* Lista */}
+            {/* Lista (sin ListHeaderComponent) */}
             <FlatList
                 ref={listRef}
                 data={dataSorted}
-                keyExtractor={(item) => `${corral}-${item._idx}`} // clave estable por índice original
+                keyExtractor={(item) => `${corral}-${item._idx}`}
+                removeClippedSubviews={false}                 // evita huecos en Android
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
                 renderItem={({ item }) => {
                     const p = pct(item);
@@ -316,15 +381,22 @@ export default function CorralDetalleScreen() {
                 )}
             />
 
-            {/* Menú flotante en la capa superior (siempre al final para zIndex correcto) */}
-            {menuOpen && (
-                <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { zIndex: 1000 }]}>
-                    {/* Overlay para cerrar */}
+            {/* Menú flotante (igual que tenías) */}
+            <Modal
+                visible={menuOpen}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={() => setMenuOpen(false)}  // necesario en Android
+            >
+                <View style={{ flex: 1 }}>
+                    {/* Clic fuera para cerrar */}
                     <TouchableOpacity
-                        style={[StyleSheet.absoluteFill, { zIndex: 1000 }]}
-                        onPress={() => setMenuOpen(false)}
+                        style={StyleSheet.absoluteFill}
                         activeOpacity={1}
+                        onPress={() => setMenuOpen(false)}
                     />
+
                     {/* Menú */}
                     <View
                         style={{
@@ -340,7 +412,6 @@ export default function CorralDetalleScreen() {
                             shadowOpacity: 0.1,
                             shadowRadius: 12,
                             shadowOffset: { width: 0, height: 6 },
-                            zIndex: 1001,
                             elevation: 12,
                             overflow: 'hidden',
                         }}
@@ -349,9 +420,9 @@ export default function CorralDetalleScreen() {
                             Filtros
                         </Text>
 
-                        {/* Opción: No alimentados (orden % ↑) */}
+                        {/* No alimentados (% ↑) */}
                         <TouchableOpacity
-                            onPress={applyOrderPctAsc}
+                            onPress={() => { setOrder('pctAsc'); setMenuOpen(false); }}
                             activeOpacity={0.8}
                             style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
                         >
@@ -360,9 +431,9 @@ export default function CorralDetalleScreen() {
                             {order === 'pctAsc' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
                         </TouchableOpacity>
 
-                        {/* Opción: Crotal (letras primero) */}
+                        {/* Crotal (letras primero) */}
                         <TouchableOpacity
-                            onPress={applyOrderCrotalAsc}
+                            onPress={() => { setOrder('crotalAsc'); setMenuOpen(false); }}
                             activeOpacity={0.8}
                             style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
                         >
@@ -373,17 +444,18 @@ export default function CorralDetalleScreen() {
 
                         {order !== 'none' && (
                             <TouchableOpacity
-                                onPress={clearOrder}
+                                onPress={() => { setOrder('none'); setMenuOpen(false); }}
                                 activeOpacity={0.8}
                                 style={{ paddingHorizontal: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center' }}
                             >
                                 <Ionicons name="close-circle-outline" size={16} color="#0f172a" style={{ marginRight: 10 }} />
-                                <Text style={{ color: '#0f172a' }}>Quitar fltro</Text>
+                                <Text style={{ color: '#0f172a' }}>Quitar filtro</Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 </View>
-            )}
+            </Modal>
         </SafeAreaView>
     );
+
 }
