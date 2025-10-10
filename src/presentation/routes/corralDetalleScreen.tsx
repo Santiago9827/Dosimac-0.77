@@ -3,8 +3,7 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
     View, Text, FlatList, TouchableOpacity, StyleSheet,
-    LayoutAnimation, Platform, UIManager,
-    Modal
+    LayoutAnimation, Platform, UIManager, Modal
 } from 'react-native';
 import { useRoute, useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -85,8 +84,9 @@ export default function CorralDetalleScreen() {
     const animals: Animal[] = route.params?.animals ?? [];
 
     // ── Estado de orden y menú ─────────────────────────────────────────────
-    type Order = 'none' | 'pctAsc' | 'crotalAsc';
-    const [order, setOrder] = useState<Order>('none');
+    type SortKey = 'none' | 'pct' | 'crotal';
+    type SortDir = 'asc' | 'desc';
+    const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'none', dir: 'asc' });
     const [menuOpen, setMenuOpen] = useState(false);
     const [headerBox, setHeaderBox] = useState({ y: 0, h: 0 });
 
@@ -114,117 +114,37 @@ export default function CorralDetalleScreen() {
         return { total, noAlimentados, pctMedio };
     }, [animals]);
 
-    // Datos ordenados según opción
+    // Datos ordenados según opción + dirección
     const dataSorted = useMemo(() => {
         const copy = [...baseData];
-        if (order === 'pctAsc') {
-            copy.sort((a, b) => pct(a) - pct(b));
-        } else if (order === 'crotalAsc') {
+        const dir = sort.dir === 'asc' ? 1 : -1;
+
+        if (sort.key === 'pct') {
+            copy.sort((a, b) => dir * (pct(a) - pct(b)));
+        } else if (sort.key === 'crotal') {
             copy.sort((a, b) => {
                 const A = splitCrotal(a._crotal);
                 const B = splitCrotal(b._crotal);
 
-                // letras primero
-                if (A.hasLetters !== B.hasLetters) return A.hasLetters ? -1 : 1;
-
+                if (A.hasLetters !== B.hasLetters) return dir * (A.hasLetters ? -1 : 1);
                 if (A.hasLetters && B.hasLetters) {
                     const byLetters = A.letters.localeCompare(B.letters);
-                    if (byLetters !== 0) return byLetters;
-                    return cmpNumStrAsc(A.digits, B.digits);
+                    if (byLetters !== 0) return dir * byLetters;
+                    return dir * cmpNumStrAsc(A.digits, B.digits);
                 }
-
-                // ambos sin letras: por número
-                return cmpNumStrAsc(A.digits, B.digits);
+                return dir * cmpNumStrAsc(A.digits, B.digits);
             });
         }
         return copy;
-    }, [baseData, order]);
+    }, [baseData, sort]);
+
+    // Animar solo en iOS y subir al top al cambiar orden
     useEffect(() => {
         if (Platform.OS === 'ios') {
             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         }
         listRef.current?.scrollToOffset({ offset: 0, animated: true });
-    }, [order]);
-
-
-    useEffect(() => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        listRef.current?.scrollToOffset({ offset: 0, animated: true });
-    }, [order]);
-
-    const applyOrderPctAsc = () => {
-        setOrder('pctAsc');
-        setMenuOpen(false);
-    };
-    const applyOrderCrotalAsc = () => {
-        setOrder('crotalAsc');
-        setMenuOpen(false);
-    };
-    const clearOrder = () => {
-        setOrder('none');
-        setMenuOpen(false);
-    };
-
-    const orderLabel =
-        order === 'pctAsc' ? 'Orden: % alimentado ↑'
-            : order === 'crotalAsc' ? 'Orden: Crotal'
-                : '';
-
-    // dentro de CorralDetalleScreen(), justo antes del return:
-    const ListHeader = () => (
-        <View>
-            {order !== 'none' && (
-                <View style={{ marginBottom: 8 }}>
-                    <View
-                        style={{
-                            alignSelf: 'flex-start',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 6,
-                            paddingHorizontal: 10,
-                            paddingVertical: 6,
-                            borderRadius: 999,
-                            backgroundColor: '#ECFEFF',
-                            borderWidth: 1,
-                            borderColor: '#A5F3FC',
-                        }}
-                    >
-                        <Ionicons name="funnel-outline" size={14} color="#0E7490" />
-                        <Text style={{ color: '#0E7490', fontWeight: '700' }}>
-                            {order === 'pctAsc' ? 'Orden: % alimentado ↑' : 'Orden: Crotal'}
-                        </Text>
-                        <TouchableOpacity onPress={() => setOrder('none')} style={{ marginLeft: 4 }}>
-                            <Ionicons name="close" size={14} color="#0E7490" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            )}
-
-            {/* Tarjeta resumen */}
-            <View
-                style={{
-                    marginBottom: 10,
-                    padding: 14,
-                    backgroundColor: 'white',
-                    borderWidth: 1,
-                    borderColor: CARD_BORDER,
-                    borderRadius: 16,
-                }}
-            >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <Text style={{ color: '#64748B' }}>Animales</Text>
-                    <Text style={{ color: '#0f172a', fontWeight: '800' }}>{stats.total}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <Text style={{ color: '#64748B' }}>No alimentados</Text>
-                    <Text style={{ color: '#0f172a', fontWeight: '800' }}>{stats.noAlimentados}</Text>
-                </View>
-                <Text style={{ color: '#64748B', marginTop: 6, marginBottom: 6 }}>% alimentado medio</Text>
-                <Progress percent={stats.pctMedio} />
-            </View>
-        </View>
-    );
-
+    }, [sort]);
 
     return (
         <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
@@ -263,8 +183,8 @@ export default function CorralDetalleScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* Chip de orden (fijo) */}
-            {order !== 'none' && (
+            {/* Chip de orden (fijo) con toggle asc/desc */}
+            {sort.key !== 'none' && (
                 <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
                     <View
                         style={{
@@ -282,9 +202,19 @@ export default function CorralDetalleScreen() {
                     >
                         <Ionicons name="funnel-outline" size={14} color="#0E7490" />
                         <Text style={{ color: '#0E7490', fontWeight: '700' }}>
-                            {order === 'pctAsc' ? 'Orden: % alimentado ↑' : 'Orden: Crotal'}
+                            {sort.key === 'pct' ? 'Orden: % alimentado' : 'Orden: Crotal'}
                         </Text>
-                        <TouchableOpacity onPress={() => setOrder('none')} style={{ marginLeft: 4 }}>
+
+                        {/* Botón ↑ / ↓ */}
+                        <TouchableOpacity
+                            onPress={() => setSort(s => s.key === 'none' ? s : { ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' })}
+                            style={{ paddingHorizontal: 6, paddingVertical: 2 }}
+                        >
+                            <Ionicons name={sort.dir === 'asc' ? 'arrow-up' : 'arrow-down'} size={14} color="#0E7490" />
+                        </TouchableOpacity>
+
+                        {/* Cerrar chip */}
+                        <TouchableOpacity onPress={() => setSort({ key: 'none', dir: 'asc' })} style={{ marginLeft: 4 }}>
                             <Ionicons name="close" size={14} color="#0E7490" />
                         </TouchableOpacity>
                     </View>
@@ -315,12 +245,12 @@ export default function CorralDetalleScreen() {
                 <Progress percent={stats.pctMedio} />
             </View>
 
-            {/* Lista (sin ListHeaderComponent) */}
+            {/* Lista */}
             <FlatList
                 ref={listRef}
                 data={dataSorted}
                 keyExtractor={(item) => `${corral}-${item._idx}`}
-                removeClippedSubviews={false}                 // evita huecos en Android
+                removeClippedSubviews={false}
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
                 renderItem={({ item }) => {
                     const p = pct(item);
@@ -342,7 +272,10 @@ export default function CorralDetalleScreen() {
                                         ID {String(displayId)}
                                     </Text>
                                 </View>
-                                <Text style={{ color: '#0f172a', fontWeight: '700', fontVariant: ['tabular-nums'], letterSpacing: 0.3 }} numberOfLines={1}>
+                                <Text
+                                    style={{ color: '#0f172a', fontWeight: '700', fontVariant: ['tabular-nums'], letterSpacing: 0.3 }}
+                                    numberOfLines={1}
+                                >
                                     Crotal {item._crotal}
                                 </Text>
                             </View>
@@ -381,13 +314,13 @@ export default function CorralDetalleScreen() {
                 )}
             />
 
-            {/* Menú flotante (igual que tenías) */}
+            {/* Menú flotante */}
             <Modal
                 visible={menuOpen}
                 transparent
                 animationType="fade"
                 statusBarTranslucent
-                onRequestClose={() => setMenuOpen(false)}  // necesario en Android
+                onRequestClose={() => setMenuOpen(false)}
             >
                 <View style={{ flex: 1 }}>
                     {/* Clic fuera para cerrar */}
@@ -420,31 +353,35 @@ export default function CorralDetalleScreen() {
                             Filtros
                         </Text>
 
-                        {/* No alimentados (% ↑) */}
+                        {/* No alimentados (empieza asc) */}
                         <TouchableOpacity
-                            onPress={() => { setOrder('pctAsc'); setMenuOpen(false); }}
+                            onPress={() => { setSort({ key: 'pct', dir: 'asc' }); setMenuOpen(false); }}
                             activeOpacity={0.8}
                             style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
                         >
                             <Ionicons name="trending-down-outline" size={16} color="#0f172a" style={{ marginRight: 10 }} />
-                            <Text style={{ color: '#0f172a', flex: 1 }}>No alimentados (% ↑)</Text>
-                            {order === 'pctAsc' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
+                            <Text style={{ color: '#0f172a', flex: 1 }}>
+                                No alimentados ({sort.key === 'pct' ? (sort.dir === 'asc' ? '↑' : '↓') : '↑'})
+                            </Text>
+                            {sort.key === 'pct' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
                         </TouchableOpacity>
 
-                        {/* Crotal (letras primero) */}
+                        {/* Crotal (empieza asc) */}
                         <TouchableOpacity
-                            onPress={() => { setOrder('crotalAsc'); setMenuOpen(false); }}
+                            onPress={() => { setSort({ key: 'crotal', dir: 'asc' }); setMenuOpen(false); }}
                             activeOpacity={0.8}
                             style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
                         >
                             <Ionicons name="pricetags-outline" size={16} color="#0f172a" style={{ marginRight: 10 }} />
-                            <Text style={{ color: '#0f172a', flex: 1 }}>Crotal</Text>
-                            {order === 'crotalAsc' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
+                            <Text style={{ color: '#0f172a', flex: 1 }}>
+                                Crotal ({sort.key === 'crotal' ? (sort.dir === 'asc' ? '↑' : '↓') : '↑'})
+                            </Text>
+                            {sort.key === 'crotal' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
                         </TouchableOpacity>
 
-                        {order !== 'none' && (
+                        {sort.key !== 'none' && (
                             <TouchableOpacity
-                                onPress={() => { setOrder('none'); setMenuOpen(false); }}
+                                onPress={() => { setSort({ key: 'none', dir: 'asc' }); setMenuOpen(false); }}
                                 activeOpacity={0.8}
                                 style={{ paddingHorizontal: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center' }}
                             >
@@ -457,5 +394,4 @@ export default function CorralDetalleScreen() {
             </Modal>
         </SafeAreaView>
     );
-
 }
