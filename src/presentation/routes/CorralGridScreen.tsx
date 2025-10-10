@@ -187,9 +187,20 @@ export default function CorralGridScreen() {
         setViewMode(v => (v === 'grid' ? 'table' : 'grid'));
     };
 
+    // 👉 Navegar al detalle del corral
+    const goToCorral = (corralId: string) => {
+        const animalsOfCorral = animals.filter(a => a.corral === corralId);
+        navigation.navigate('GES-CORRAL-DETALLE', {
+            corral: corralId,
+            animals: animalsOfCorral,
+        });
+    };
+
     // ======== TARJETAS ========
     const renderCard = ({ item }: { item: Row }) => (
-        <View
+        <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => goToCorral(item.corral)}
             style={{
                 flex: 1, borderWidth: 1, borderColor: CARD_BORDER, backgroundColor: CARD_BG, borderRadius: 16,
                 padding: 14, marginBottom: CARD_GAP, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 8,
@@ -220,11 +231,10 @@ export default function CorralGridScreen() {
 
             <Text style={{ color: '#64748B', marginTop: 12, marginBottom: 6, fontSize: 13 }}>% alimentado</Text>
             <Progress percent={item.pct} />
-        </View>
+        </TouchableOpacity>
     );
 
-    // ======== TABLA (idéntica a tu CorralTablaScreen) ========
-    // Constantes de escala/medidas de la tabla
+    // ======== TABLA ========
     const SEP = '#E2E8F0';
     const SCALE = 1.12;
     const W_LEFT = Math.round(100 * SCALE);
@@ -264,7 +274,7 @@ export default function CorralGridScreen() {
         </View>
     );
 
-    const TableView = ({ data }: { data: Row[] }) => {
+    const TableView = ({ data, onRowPress }: { data: Row[]; onRowPress: (corral: string) => void }) => {
         const headerRightRef = useRef<ScrollView>(null);
         const bodyRightRef = useRef<ScrollView>(null);
 
@@ -277,7 +287,7 @@ export default function CorralGridScreen() {
                 style={{
                     marginHorizontal: 20,
                     marginTop: 12,
-                    marginBottom: 20,              // ⬅️ margen inferior para “cerrar” la tabla
+                    marginBottom: 20,
                     borderRadius: 16,
                     backgroundColor: 'white',
                     borderWidth: 1,
@@ -309,24 +319,22 @@ export default function CorralGridScreen() {
                     </ScrollView>
                 </View>
 
-                {/* BODY -> scroll vertical interno */}
+                {/* BODY */}
                 <View style={{ maxHeight: TABLE_BODY_MAX_H }}>
                     {data.length === 0 && (
                         <View style={{ padding: 20, alignItems: 'center' }}>
                             <Text style={{ color: '#64748B' }}>No se han encontrado corrales</Text>
                         </View>
                     )}
-                    <ScrollView
-                        showsVerticalScrollIndicator
-                        bounces={false}                // ⬅️ sin rebote
-                        overScrollMode="never"         // ⬅️ sin glow/overscroll
-                    >
+                    <ScrollView showsVerticalScrollIndicator bounces={false} overScrollMode="never">
                         <View style={{ flexDirection: 'row' }}>
-                            {/* Columna izquierda fija */}
+                            {/* Columna izquierda fija (TOUCHABLE) */}
                             <View style={{ width: W_LEFT }}>
                                 {data.map((r, idx) => (
-                                    <View
+                                    <TouchableOpacity
                                         key={`L-${r.corral}`}
+                                        activeOpacity={0.8}
+                                        onPress={() => onRowPress(r.corral)}
                                         style={{
                                             height: ROW_H,
                                             flexDirection: 'row',
@@ -341,7 +349,7 @@ export default function CorralGridScreen() {
                                         <Text style={{ marginLeft: 6, color: '#0f172a', fontWeight: '600', fontSize: ROW_FS }} numberOfLines={1}>
                                             {`${r.corral}`}
                                         </Text>
-                                    </View>
+                                    </TouchableOpacity>
                                 ))}
                             </View>
 
@@ -354,13 +362,15 @@ export default function CorralGridScreen() {
                                 onScroll={onBodyHScroll}
                                 scrollEventThrottle={16}
                                 showsHorizontalScrollIndicator
-                                bounces={false}             // ⬅️ sin rebote
+                                bounces={false}
                                 overScrollMode="never"
                             >
                                 <View>
                                     {data.map((r, idx) => (
-                                        <View
+                                        <TouchableOpacity
                                             key={`R-${r.corral}`}
+                                            activeOpacity={0.8}
+                                            onPress={() => onRowPress(r.corral)}
                                             style={{
                                                 height: ROW_H,
                                                 flexDirection: 'row',
@@ -383,7 +393,7 @@ export default function CorralGridScreen() {
                                             <View style={{ width: W_CE, alignItems: 'center' }}>
                                                 <CEDot color={r.ceColor} />
                                             </View>
-                                        </View>
+                                        </TouchableOpacity>
                                     ))}
                                 </View>
                             </ScrollView>
@@ -393,6 +403,7 @@ export default function CorralGridScreen() {
             </View>
         );
     };
+
     return (
         <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
             {/* Título + toggle + buscador */}
@@ -416,9 +427,6 @@ export default function CorralGridScreen() {
                             size={18}
                             color="#4F46E5"
                         />
-                        <Text style={{ marginLeft: 6, color: '#4F46E5', fontWeight: '600' }}>
-                            {viewMode === 'grid' ? 'Tabla' : 'Tarjetas'}
-                        </Text>
                     </TouchableOpacity>
                 </View>
 
@@ -434,7 +442,7 @@ export default function CorralGridScreen() {
                     <Ionicons name="search-outline" size={18} color="#64748B" />
                     <TextInput
                         style={{ flex: 1, marginLeft: 8, color: '#0f172a' }}
-                        placeholder="Buscar corral (ej. 10)"
+                        placeholder="Buscar corral"
                         placeholderTextColor="#94A3B8"
                         value={query}
                         onChangeText={setQuery}
@@ -467,9 +475,8 @@ export default function CorralGridScreen() {
                     )}
                 />
             ) : (
-                <TableView data={filtered} />
+                <TableView data={filtered} onRowPress={goToCorral} />
             )}
-
         </View>
     );
 }

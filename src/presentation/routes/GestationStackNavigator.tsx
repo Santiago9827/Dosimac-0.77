@@ -5,12 +5,14 @@ import { GestationScreen } from '../screens/Gestation/Gestation';
 import NoAlimentadosGestacion from '../screens/Gestation/NoAlimentadosGestacion';
 import CorralTablaScreen from './CorralTablaScreen';
 import CorralGridScreen from './CorralGridScreen';
+import CorralDetalleScreen from './corralDetalleScreen';
 
 export type GestationStackParamList = {
     'GES-HOME': undefined;
     'GES-NOFEED': undefined;
     'GES-CORRAL': undefined;
     'GES-CORRALPC': undefined;
+    'GES-CORRAL-DETALLE': { corralId: string };
 };
 
 const Stack = createStackNavigator<GestationStackParamList>();
@@ -28,15 +30,21 @@ export const GestationStackNavigator = () => {
                 component={NoAlimentadosGestacion}
                 options={{ title: 'No alimentados · Gestación', headerShown: true }}
             />
-            <Stack.Screen
+            {/* <Stack.Screen
                 name="GES-CORRAL"
                 component={CorralTablaScreen}
                 options={{ title: 'Corrales' }}
-            />
+            /> */}
             <Stack.Screen
                 name="GES-CORRALPC"
                 component={CorralGridScreen}
                 options={{ title: 'Corrales' }}
+            />
+
+            <Stack.Screen
+                name="GES-CORRAL-DETALLE"
+                component={CorralDetalleScreen}
+                options={{ headerShown: false }} // usamos el header custom del detalle
             />
 
         </Stack.Navigator>

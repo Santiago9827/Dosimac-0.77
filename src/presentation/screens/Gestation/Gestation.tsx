@@ -134,7 +134,7 @@ export const GestationScreen = () => {
               {/* === Botones de navegación === */}
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
                 {/* Vista tabla (la que ya tenías) */}
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   onPress={() => navigation.navigate('GES-CORRAL' as never)}
                   className="flex-row items-center px-3 py-2 rounded-xl bg-white border"
                   style={{ borderColor: '#CBD5E1' }}
@@ -142,7 +142,7 @@ export const GestationScreen = () => {
                 >
                   <Ionicons name="list-outline" size={16} color="#4F46E5" />
                   <Text className="ml-1.5 text-indigo-600 font-semibold">Corrales (tabla)</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
                 {/* Espacio */}
                 <View style={{ width: 8 }} />
@@ -155,7 +155,7 @@ export const GestationScreen = () => {
                   activeOpacity={0.9}
                 >
                   <Ionicons name="grid-outline" size={16} color="#4F46E5" />
-                  <Text className="ml-1.5 text-indigo-600 font-semibold">Corrales (tarjetas)</Text>
+                  <Text className="ml-1.5 text-indigo-600 font-semibold">Corrales</Text>
                 </TouchableOpacity>
               </View>
             </View>
