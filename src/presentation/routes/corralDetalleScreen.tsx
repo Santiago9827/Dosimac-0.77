@@ -9,6 +9,12 @@ import { useRoute, useNavigation, NavigationProp } from '@react-navigation/nativ
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import MaterialCommunityIcons from 'react-native-vector-icons/FontAwesome6';
+// import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+
+
+// import Entypo from 'react-native-vector-icons/Entypo';
+
 // Animaciones Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -84,7 +90,7 @@ export default function CorralDetalleScreen() {
     const animals: Animal[] = route.params?.animals ?? [];
 
     // ── Estado de orden y menú ─────────────────────────────────────────────
-    type SortKey = 'none' | 'pct' | 'crotal';
+    type SortKey = 'none' | 'pct' | 'crotal' | 'dias';
     type SortDir = 'asc' | 'desc';
     const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'none', dir: 'asc' });
     const [menuOpen, setMenuOpen] = useState(false);
@@ -134,6 +140,8 @@ export default function CorralDetalleScreen() {
                 }
                 return dir * cmpNumStrAsc(A.digits, B.digits);
             });
+        } else if (sort.key === 'dias') {
+            copy.sort((a, b) => dir * (a._dias - b._dias));
         }
         return copy;
     }, [baseData, sort]);
@@ -183,39 +191,54 @@ export default function CorralDetalleScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* Chip de orden (fijo) con toggle asc/desc */}
+            {/* Chip de orden (fijo) con toggle tocando TODO el chip */}
             {sort.key !== 'none' && (
                 <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
-                    <View
-                        style={{
-                            alignSelf: 'flex-start',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 6,
-                            paddingHorizontal: 10,
-                            paddingVertical: 6,
-                            borderRadius: 999,
-                            backgroundColor: '#ECFEFF',
-                            borderWidth: 1,
-                            borderColor: '#A5F3FC',
-                        }}
-                    >
-                        <Ionicons name="funnel-outline" size={14} color="#0E7490" />
-                        <Text style={{ color: '#0E7490', fontWeight: '700' }}>
-                            {sort.key === 'pct' ? 'Orden: % alimentado' : 'Orden: Crotal'}
-                        </Text>
-
-                        {/* Botón ↑ / ↓ */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {/* Chip entero = toggle ASC/DSC */}
                         <TouchableOpacity
-                            onPress={() => setSort(s => s.key === 'none' ? s : { ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' })}
-                            style={{ paddingHorizontal: 6, paddingVertical: 2 }}
+                            activeOpacity={0.85}
+                            onPress={() =>
+                                setSort(s => (s.key === 'none' ? s : { ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' }))
+                            }
+                            style={{
+                                alignSelf: 'flex-start',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                                borderRadius: 999,
+                                backgroundColor: '#ECFEFF',
+                                borderWidth: 1,
+                                borderColor: '#A5F3FC',
+                            }}
                         >
-                            <Ionicons name={sort.dir === 'asc' ? 'arrow-up' : 'arrow-down'} size={14} color="#0E7490" />
+                            {/* Flecha gorda y larga al INICIO */}
+                            <Ionicons
+                                name={sort.dir === 'asc' ? 'arrow-up' : 'arrow-down'}
+                                size={22}            // súbelo a 24 si quieres aún más presencia
+                                color="#0E7490"
+                                style={{ marginRight: 4 }}
+                            />
+
+                            <Ionicons name="funnel-outline" size={16} color="#0E7490" />
+                            <Text style={{ color: '#0E7490', fontWeight: '800', marginLeft: 6 }}>
+                                {sort.key === 'pct'
+                                    ? 'Orden: % alimentado'
+                                    : sort.key === 'dias'
+                                        ? 'Orden: Días inseminación'
+                                        : 'Orden: Crotal'}
+                            </Text>
+
                         </TouchableOpacity>
 
-                        {/* Cerrar chip */}
-                        <TouchableOpacity onPress={() => setSort({ key: 'none', dir: 'asc' })} style={{ marginLeft: 4 }}>
-                            <Ionicons name="close" size={14} color="#0E7490" />
+                        {/* Botón para quitar el filtro */}
+                        <TouchableOpacity
+                            onPress={() => setSort({ key: 'none', dir: 'asc' })}
+                            style={{ marginLeft: 10, padding: 6 }}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                            <Ionicons name="close" size={16} color="#0E7490" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -359,7 +382,7 @@ export default function CorralDetalleScreen() {
                             activeOpacity={0.8}
                             style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
                         >
-                            <Ionicons name="trending-down-outline" size={16} color="#0f172a" style={{ marginRight: 10 }} />
+                            <Ionicons name="trending-down-outline" size={20} color="#0f172a" style={{ marginRight: 10 }} />
                             <Text style={{ color: '#0f172a', flex: 1 }}>
                                 No alimentados ({sort.key === 'pct' ? (sort.dir === 'asc' ? '↑' : '↓') : '↑'})
                             </Text>
@@ -372,12 +395,26 @@ export default function CorralDetalleScreen() {
                             activeOpacity={0.8}
                             style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
                         >
-                            <Ionicons name="pricetags-outline" size={16} color="#0f172a" style={{ marginRight: 10 }} />
+                            <Ionicons name="pricetags-outline" size={20} color="#0f172a" style={{ marginRight: 10 }} />
                             <Text style={{ color: '#0f172a', flex: 1 }}>
                                 Crotal ({sort.key === 'crotal' ? (sort.dir === 'asc' ? '↑' : '↓') : '↑'})
                             </Text>
                             {sort.key === 'crotal' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
                         </TouchableOpacity>
+
+                        {/* Días inseminación (empieza DESC) */}
+                        <TouchableOpacity
+                            onPress={() => { setSort({ key: 'dias', dir: 'desc' }); setMenuOpen(false); }}
+                            activeOpacity={0.8}
+                            style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
+                        >
+                            <Ionicons name="calendar-outline" size={20} color="#0f172a" style={{ marginRight: 10 }} />
+                            <Text style={{ color: '#0f172a', flex: 1 }}>
+                                Días inseminación ({sort.key === 'dias' ? (sort.dir === 'asc' ? '↑' : '↓') : '↓'})
+                            </Text>
+                            {sort.key === 'dias' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
+                        </TouchableOpacity>
+
 
                         {sort.key !== 'none' && (
                             <TouchableOpacity
