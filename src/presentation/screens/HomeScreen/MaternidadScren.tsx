@@ -9,6 +9,14 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 const CARD_BG = '#F1F5F9';
 const CARD_BORDER = '#E2E8F0';
 
+// === Paleta del bloque de incidencias (igual que Home) ===
+const INCIDENT_BLOCK_BG = 'rbg (255 , 255, 255)'; // fondo oscuro del bloque
+const INCIDENT_ITEM_BG = '#FEE2E2'; // tarjeta rojo suave
+const INCIDENT_ITEM_BORDER = '#FECACA'; // borde suave (no gris)
+const INCIDENT_PILL_BG = '#FCA5A5'; // pill más fuerte
+const INCIDENT_PILL_TEXT = '#7F1D1D'; // texto de la pill
+const INCIDENT_RIPPLE = 'rgba(127, 29, 29, 0.18)';
+
 // Layout proporciones
 const LEFT_FLEX = 35;  // donut
 const RIGHT_FLEX = 68; // datos
@@ -77,7 +85,6 @@ export default function MaternidadScreen() {
                     style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}
                 >
                     <Text
-                        // sin truncado: envuelve si hace falta
                         style={{
                             flex: 1,
                             color: labelColor ?? '#475569',
@@ -127,12 +134,15 @@ export default function MaternidadScreen() {
         </View>
     );
 
+    // === Tarjeta de incidencia con la nueva paleta (y ripple rojo) ===
     const renderIncidencia = ({ item }: { item: Incidencia }) => (
         <Pressable
             onPress={() => { }}
-            android_ripple={{ color: '#e5e7eb' }}
-            className="rounded-2xl p-4 bg-white border border-slate-200 mb-3"
+            android_ripple={{ color: INCIDENT_RIPPLE }}
+            className="rounded-2xl p-4 border"
             style={{
+                backgroundColor: INCIDENT_ITEM_BG,
+                borderColor: INCIDENT_ITEM_BORDER,
                 shadowColor: '#000',
                 shadowOpacity: 0.05,
                 shadowRadius: 6,
@@ -141,36 +151,34 @@ export default function MaternidadScreen() {
             }}
         >
             <View className="flex-row items-center">
-                <Text className={`px-2 py-0.5 rounded-full text-xs font-semibold ${pillClasses(item.area)}`}>
+                <Text
+                    className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                    style={{ backgroundColor: INCIDENT_PILL_BG, color: INCIDENT_PILL_TEXT }}
+                >
                     {item.area}
                 </Text>
                 <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">
                     Corral {item.corral}
                 </Text>
             </View>
-            <Text className="mt-2 text-slate-800">{item.descripcion}</Text>
+            <Text className="mt-2 text-slate-900">{item.descripcion}</Text>
         </Pressable>
     );
 
     return (
         <View className="flex-1 bg-slate-50" style={{ paddingBottom: insets.bottom + 8 }}>
-            {/* Título
-            <View className="px-5 pt-4 pb-2">
-                <Text className="text-slate-900 text-[24px] font-extrabold">Maternidad</Text>
-            </View> */}
-
             {/* Bloque 1: Donut + métricas */}
             <View className="px-5 mb-6">
                 <View
-                    className="rounded-2xl border p-5 shadow-sm overflow-hidden" // antes p-4
+                    className="rounded-2xl border p-5 shadow-sm overflow-hidden"
                     style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         {/* Izquierda (donut) */}
                         <View style={{ flex: LEFT_FLEX }} className="items-center pr-2">
                             <DonutChart
-                                size={132}        // antes 124 (puedes probar 136 si te cabe)
-                                strokeWidth={22}  // antes 20, más “presencia”
+                                size={132}
+                                strokeWidth={22}
                                 label="Maternidad"
                                 segmentA={maternidad.alimentados}
                                 segmentB={maternidad.noAlimentados}
@@ -181,7 +189,6 @@ export default function MaternidadScreen() {
                                 centerPercent={pct}
                             />
                         </View>
-
 
                         {/* Separador */}
                         <View className="w-px bg-slate-200 self-stretch mx-3" />
@@ -206,21 +213,28 @@ export default function MaternidadScreen() {
                 </View>
             </View>
 
-            {/* Bloque 2: Incidencias */}
+            {/* Bloque 2: Incidencias (misma UX que Home, con scroll interno) */}
             <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasMaternidad.length} />
 
-            <View className="px-5">
-                <View className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    {/* Altura aumentada */}
-                    <View style={{ height: 400 }} className="px-4 py-3">
-                        <FlatList
-                            data={incidenciasMaternidad}
-                            keyExtractor={(item) => String(item.id)}
-                            renderItem={renderIncidencia}
-                            showsVerticalScrollIndicator
-                            ItemSeparatorComponent={() => <View className="h-px bg-slate-100" />}
-                        />
-                    </View>
+            <View className="px-5" style={{ flex: 1 }}>
+                <View
+                    className="rounded-2xl overflow-hidden"
+                    style={{
+                        backgroundColor: INCIDENT_BLOCK_BG,
+                        paddingVertical: 12,
+                        paddingHorizontal: 12,
+                        borderWidth: 0,         // sin borde -> sin “lianas”
+                        flex: 1,                // ocupa el espacio y permite scroll interno
+                    }}
+                >
+                    <FlatList
+                        data={incidenciasMaternidad}
+                        keyExtractor={(item) => String(item.id)}
+                        renderItem={renderIncidencia}
+                        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                        showsVerticalScrollIndicator
+                        contentContainerStyle={{ paddingBottom: 4 }}
+                    />
                 </View>
 
                 {/* CTA inferior: Ir al Corral */}
@@ -241,6 +255,5 @@ export default function MaternidadScreen() {
                 </TouchableOpacity>
             </View>
         </View>
-
     );
 }

@@ -8,6 +8,14 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 const CARD_BG = '#F1F5F9';
 const CARD_BORDER = '#E2E8F0';
 
+// === Paleta del bloque de incidencias (igual que Home/Maternidad) ===
+const INCIDENT_BLOCK_BG = 'rbg (255, 255 , 255)';
+const INCIDENT_ITEM_BG = '#FEE2E2';
+const INCIDENT_ITEM_BORDER = '#FECACA';
+const INCIDENT_PILL_BG = '#FCA5A5';
+const INCIDENT_PILL_TEXT = '#7F1D1D';
+const INCIDENT_RIPPLE = 'rgba(127, 29, 29, 0.18)';
+
 const LEFT_FLEX = 35;
 const RIGHT_FLEX = 68;
 const VALUE_W = 80;
@@ -153,12 +161,15 @@ export const GestationScreen = () => {
     </View>
   );
 
+  // === Tarjeta de incidencia con la nueva paleta ===
   const renderIncidencia = ({ item }: { item: Incidencia }) => (
     <Pressable
       onPress={() => { }}
-      android_ripple={{ color: '#e5e7eb' }}
-      className="rounded-2xl p-4 bg-white border border-slate-200 mb-3"
+      android_ripple={{ color: INCIDENT_RIPPLE }}
+      className="rounded-2xl p-4 border"
       style={{
+        backgroundColor: INCIDENT_ITEM_BG,
+        borderColor: INCIDENT_ITEM_BORDER,
         shadowColor: '#000',
         shadowOpacity: 0.05,
         shadowRadius: 6,
@@ -167,14 +178,17 @@ export const GestationScreen = () => {
       }}
     >
       <View className="flex-row items-center">
-        <Text className={`px-2 py-0.5 rounded-full text-xs font-semibold ${pillClasses()}`}>
+        <Text
+          className="px-2 py-0.5 rounded-full text-xs font-semibold"
+          style={{ backgroundColor: INCIDENT_PILL_BG, color: INCIDENT_PILL_TEXT }}
+        >
           {item.area}
         </Text>
         <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">
           Corral {item.corral}
         </Text>
       </View>
-      <Text className="mt-2 text-slate-800">{item.descripcion}</Text>
+      <Text className="mt-2 text-slate-900">{item.descripcion}</Text>
     </Pressable>
   );
 
@@ -219,8 +233,6 @@ export const GestationScreen = () => {
                 valueColor={noAlColor}
               />
               <Row label="Totales animales" value={total} strong divider />
-
-              {/* CTA dentro del card (opcional) */}
               <NavRow
                 label="Ver corrales"
                 icon="grid-outline"
@@ -231,23 +243,30 @@ export const GestationScreen = () => {
         </View>
       </View>
 
-      {/* Bloque 2: Incidencias (solo Gestación) */}
+      {/* Bloque 2: Incidencias (scroll interno) */}
       <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasGestacion.length} />
-      <View className="px-5">
-        <View className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <View style={{ height: 340 }} className="px-4 py-3">
-            <FlatList
-              data={incidenciasGestacion}
-              keyExtractor={(item) => String(item.id)}
-              renderItem={renderIncidencia}
-              showsVerticalScrollIndicator
-              ItemSeparatorComponent={() => <View className="h-px bg-slate-100" />}
-            />
-          </View>
+      <View className="px-5" style={{ flex: 1 }}>
+        <View
+          className="rounded-2xl overflow-hidden"
+          style={{
+            backgroundColor: INCIDENT_BLOCK_BG,
+            paddingVertical: 12,
+            paddingHorizontal: 12,
+            borderWidth: 0,
+            flex: 1, // ocupa el espacio y permite scroll interno
+          }}
+        >
+          <FlatList
+            data={incidenciasGestacion}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={renderIncidencia}
+            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+            showsVerticalScrollIndicator
+            contentContainerStyle={{ paddingBottom: 4 }}
+          />
         </View>
 
-
-        {/* CTA inferior: Ir al Corral (ajusta la ruta cuando tengas la nueva pantalla) */}
+        {/* CTA inferior */}
         <TouchableOpacity
           onPress={() => navigation.navigate('GES-CORRALPC' as never)}
           className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
