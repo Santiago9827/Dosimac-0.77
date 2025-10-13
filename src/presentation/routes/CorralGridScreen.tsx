@@ -11,6 +11,9 @@ type Animal = { corral: string; total: number; consumida: number };
 type Row = { corral: string; animales: number; noAlimentados: number; pct: number; ceColor: string };
 
 const DOT = '#64748B';
+const DOT_GREEN = '#22C55E';
+const DOT_RED = '#EF4444';
+
 const CARD_GAP = 12;
 const CARD_BORDER = '#E2E8F0';
 const CARD_BG = 'white';
@@ -24,6 +27,12 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const ROW_LABEL: any = { color: '#64748B', fontSize: 13 };
 const ROW_VALUE: any = { color: '#0f172a', fontWeight: '800', fontSize: 18, fontVariant: ['tabular-nums'], minWidth: 24, textAlign: 'right' };
 const HR: any = { height: 1, backgroundColor: '#E2E8F0', marginVertical: 8, opacity: 0.9 };
+
+const colorForCorral = (id: string) => {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+    return (h & 1) === 0 ? DOT_GREEN : DOT_RED; // mitad verde, mitad rojo
+};
 
 // —— Barra progreso común ——
 const Progress = ({ percent, height = 18 }: { percent: number; height?: number }) => {
@@ -165,7 +174,7 @@ export default function CorralGridScreen() {
     const rows = useMemo<Row[]>(() => {
         const map = new Map<string, Row>();
         for (const a of animals) {
-            const r = map.get(a.corral) ?? { corral: a.corral, animales: 0, noAlimentados: 0, pct: 0, ceColor: DOT };
+            const r = map.get(a.corral) ?? { corral: a.corral, animales: 0, noAlimentados: 0, pct: 0, ceColor: '#64748B' };
             r.animales += 1;
             if (a.consumida === 0) r.noAlimentados += 1;
             const t = (r as any)._t ?? 0; const c = (r as any)._c ?? 0;
@@ -174,11 +183,16 @@ export default function CorralGridScreen() {
         }
         const out = Array.from(map.values()).map(r => {
             const t = (r as any)._t ?? 0; const c = (r as any)._c ?? 0;
-            return { ...r, pct: t > 0 ? (c / t) * 100 : 0 };
+            return {
+                ...r,
+                pct: t > 0 ? (c / t) * 100 : 0,
+                ceColor: colorForCorral(r.corral), // <<--- color verde/rojo
+            };
         });
         out.sort((a, b) => a.corral.localeCompare(b.corral, undefined, { numeric: true }));
         return out;
     }, [animals]);
+
 
     const filtered = useMemo(() => rows.filter(r => r.corral.includes(query.trim())), [rows, query]);
 
@@ -213,7 +227,7 @@ export default function CorralGridScreen() {
                     <Ionicons name="home-outline" size={16} color="#0f172a" />
                     <Text style={{ marginLeft: 6, color: '#0f172a', fontWeight: '800', fontSize: 18 }}>{item.corral}</Text>
                 </View>
-                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: DOT, opacity: 0.95 }} />
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: item.ceColor, opacity: 0.95 }} />
             </View>
 
             {/* Métricas */}

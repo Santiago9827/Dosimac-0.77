@@ -52,7 +52,7 @@ export const MaternityStackNavigator = () => {
 
             }}
       >
-         <MaternityStack.Screen name="MAT-HOME" component={MaternidadScreen} options={{ title: 'Maternity', headerShown: true, headerStyle: { elevation: 5 }, }} />
+         <MaternityStack.Screen name="MAT-HOME" component={MaternidadScreen} options={{ title: 'Maternidad', headerShown: true, headerStyle: { elevation: 5 }, }} />
          <MaternityStack.Screen name="MAT-ANINOFEED" component={MatAnimalNoFeeded} options={{ title: 'No feed animals', headerShown: true, headerStyle: { elevation: 5 }, }} />
          <MaternityStack.Screen name="MAT-FEEDISSUE" component={MaternityFeedIssues} options={{ title: 'Feed issue', headerShown: true, headerStyle: { elevation: 5 }, }} />
          <MaternityStack.Screen name="MAT-DEVICEISSUE" component={MatDeviceIssue} options={{ title: 'Device issue', headerShown: true, headerStyle: { elevation: 5 }, }} />

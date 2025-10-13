@@ -14,10 +14,17 @@ type Incidencia = {
   descripcion: string;
 };
 
-// arriba del componente
-const CARD_BG = '#E9EDF2';      // <-- E9EDF2
-const CARD_BORDER = '#C8D0DA';  // <-- C8D0DA
+// Rutas (ajusta los nombres si tus tabs se llaman distinto)
+// HomeScreen.tsx
 
+// Opción A: con constantes
+const TAB_MATERNIDAD = 'MaternidadTab';
+const TAB_GESTACION = 'GestacionTab';
+
+
+
+const CARD_BG = '#E9EDF2';
+const CARD_BORDER = '#C8D0DA';
 
 export const HomeScreen = () => {
   const { t } = useTranslation(['common']);
@@ -92,6 +99,9 @@ export const HomeScreen = () => {
     </Pressable>
   );
 
+  const goMaternidad = () => navigation.getParent()?.navigate(TAB_MATERNIDAD as never);
+  const goGestacion = () => navigation.getParent()?.navigate(TAB_GESTACION as never);
+
   return (
     <View className="flex-1 bg-slate-50">
       <HamburgerMenu />
@@ -100,64 +110,74 @@ export const HomeScreen = () => {
         {/* Indicadores */}
         <SectionTitle icon="analytics-outline" text={t('common:Indicadores') || 'Indicadores'} />
 
-        {/* Tarjetas indicadores — separados y con fondo gris */}
+        {/* Tarjetas indicadores -> ahora SON BOTONES */}
         <View className="flex-row mb-6">
-          {/* Maternidad */}
-          <View
-            className="flex-1 mr-3 rounded-2xl p-3 shadow-sm border overflow-hidden"
-            style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}
+          {/* Maternidad (botón) */}
+          <Pressable
+            onPress={goMaternidad}
+            android_ripple={{ color: '#dbeafe' }}
+            className="flex-1 mr-3 rounded-2xl overflow-hidden"
+            accessibilityRole="button"
+            accessibilityLabel="Ir a Maternidad"
           >
-            <View className="items-center">
-              <DonutChart
-                size={120}
-                strokeWidth={22}
-                label={t('common:Maternidad') || 'Maternidad'}
-                segmentA={maternidad.alimentados}
-                segmentB={maternidad.noAlimentados}
-                colorA="#22C55E"
-                colorB="#EF4444"
-                lineCap="butt"
-                gapDegrees={0}
-                centerPercent={pctM}
-              />
+            <View className="p-3 shadow-sm border" style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}>
+              <View className="items-center">
+                <DonutChart
+                  size={120}
+                  strokeWidth={22}
+                  label={t('common:Maternidad') || 'Maternidad'}
+                  segmentA={maternidad.alimentados}
+                  segmentB={maternidad.noAlimentados}
+                  colorA="#22C55E"
+                  colorB="#EF4444"
+                  lineCap="butt"
+                  gapDegrees={0}
+                  centerPercent={pctM}
+                />
+              </View>
+              <View className="mt-3">
+                <StatRow label="Alimentados" value={maternidad.alimentados} />
+                <StatRow label="No Alimentados" value={maternidad.noAlimentados} />
+                <View className="h-px my-1" style={{ backgroundColor: '#C8D0DA' }} />
+                <StatRow label="Totales" value={totalM} />
+              </View>
             </View>
-            <View className="mt-3">
-              <StatRow label="Alimentados" value={maternidad.alimentados} />
-              <StatRow label="No Alimentados" value={maternidad.noAlimentados} />
-              <View className="h-px my-1" style={{ backgroundColor: '#C8D0DA' }} />
-              <StatRow label="Totales" value={totalM} />
-            </View>
-          </View>
+          </Pressable>
 
-          {/* Gestación */}
-          <View
-            className="flex-1 ml-3 rounded-2xl p-3 shadow-sm border overflow-hidden"
-            style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}
+          {/* Gestación (botón) */}
+          <Pressable
+            onPress={goGestacion}
+            android_ripple={{ color: '#dbeafe' }}
+            className="flex-1 ml-3 rounded-2xl overflow-hidden"
+            accessibilityRole="button"
+            accessibilityLabel="Ir a Gestación"
           >
-            <View className="items-center">
-              <DonutChart
-                size={120}
-                strokeWidth={22}
-                label={t('common:Gestación') || 'Gestación'}
-                segmentA={gestacion.alimentados}
-                segmentB={gestacion.noAlimentados}
-                colorA="#22C55E"
-                colorB="#EF4444"
-                lineCap="butt"
-                gapDegrees={0}
-                centerPercent={pctG}
-              />
+            <View className="p-3 shadow-sm border" style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}>
+              <View className="items-center">
+                <DonutChart
+                  size={120}
+                  strokeWidth={22}
+                  label={t('common:Gestación') || 'Gestación'}
+                  segmentA={gestacion.alimentados}
+                  segmentB={gestacion.noAlimentados}
+                  colorA="#22C55E"
+                  colorB="#EF4444"
+                  lineCap="butt"
+                  gapDegrees={0}
+                  centerPercent={pctG}
+                />
+              </View>
+              <View className="mt-3">
+                <StatRow label="Alimentados" value={gestacion.alimentados} />
+                <StatRow label="No Alimentados" value={gestacion.noAlimentados} />
+                <View className="h-px my-1" style={{ backgroundColor: '#C8D0DA' }} />
+                <StatRow label="Totales" value={totalG} />
+              </View>
             </View>
-            <View className="mt-3">
-              <StatRow label="Alimentados" value={gestacion.alimentados} />
-              <StatRow label="No Alimentados" value={gestacion.noAlimentados} />
-              <View className="h-px my-1" style={{ backgroundColor: '#C8D0DA' }} />
-              <StatRow label="Totales" value={totalG} />
-            </View>
-          </View>
+          </Pressable>
         </View>
 
-        {/* Incidencias (mismo bloque con su scroll) */}
+        {/* Incidencias */}
         <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidencias.length} />
 
         <View className="flex-1 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden min-h-[160px]">
