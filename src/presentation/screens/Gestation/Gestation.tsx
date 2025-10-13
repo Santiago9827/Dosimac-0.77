@@ -245,33 +245,66 @@ export const GestationScreen = () => {
 
       {/* Bloque 2: Incidencias (scroll interno) */}
       <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasGestacion.length} />
-      <View className="px-5" style={{ flex: 1 }}>
+
+      <View className="px-5">
+        {/* contenedor blanco, sin bordes, con scroll interno */}
         <View
           className="rounded-2xl overflow-hidden"
           style={{
-            backgroundColor: INCIDENT_BLOCK_BG,
+            backgroundColor: '#FFFFFF',
             paddingVertical: 12,
             paddingHorizontal: 12,
-            borderWidth: 0,
-            flex: 1, // ocupa el espacio y permite scroll interno
           }}
         >
-          <FlatList
-            data={incidenciasGestacion}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={renderIncidencia}
-            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-            showsVerticalScrollIndicator
-            contentContainerStyle={{ paddingBottom: 4 }}
-          />
+          <View style={{ height: 340 }}>
+            <FlatList
+              data={incidenciasGestacion}
+              keyExtractor={(item) => String(item.id)}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => { }}
+                  android_ripple={{ color: 'rgba(127, 29, 29, 0.18)' }}
+                  className="rounded-2xl p-4 border"
+                  style={{
+                    backgroundColor: '#FEE2E2', // rojo MUY suave
+                    borderColor: '#FECACA',     // borde suave
+                    shadowColor: '#000',
+                    shadowOpacity: 0.05,
+                    shadowRadius: 6,
+                    shadowOffset: { width: 0, height: 2 },
+                    elevation: 1,
+                  }}
+                >
+                  <View className="flex-row items-center">
+                    {/* pill roja más fuerte */}
+                    <Text
+                      className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                      style={{ backgroundColor: '#FCA5A5', color: '#7F1D1D' }}
+                    >
+                      {item.area}
+                    </Text>
+
+                    {/* pill neutra del corral */}
+                    <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">
+                      Corral {item.corral}
+                    </Text>
+                  </View>
+
+                  <Text className="mt-2 text-slate-900">{item.descripcion}</Text>
+                </Pressable>
+              )}
+              showsVerticalScrollIndicator
+              ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+            />
+          </View>
         </View>
 
-        {/* CTA inferior */}
+        {/* CTA inferior: Ir al Corral (igual que tenías) */}
         <TouchableOpacity
           onPress={() => navigation.navigate('GES-CORRALPC' as never)}
           className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
           style={{
-            backgroundColor: BRAND,
+            backgroundColor: '#4F46E5',
             marginBottom: insets.bottom + 8,
             shadowColor: '#000',
             shadowOpacity: 0.18,
@@ -283,6 +316,7 @@ export const GestationScreen = () => {
           <Text className="text-white text-center font-semibold">Ir al Corral</Text>
         </TouchableOpacity>
       </View>
+
     </View>
   );
 };
