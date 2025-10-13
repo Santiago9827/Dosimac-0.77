@@ -246,6 +246,7 @@ export const GestationScreen = () => {
           </View>
         </View>
 
+
         {/* CTA inferior: Ir al Corral (ajusta la ruta cuando tengas la nueva pantalla) */}
         <TouchableOpacity
           onPress={() => navigation.navigate('GES-CORRALPC' as never)}
