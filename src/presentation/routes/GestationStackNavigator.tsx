@@ -3,7 +3,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { GestationScreen } from '../screens/Gestation/Gestation';
 import NoAlimentadosGestacion from '../screens/Gestation/NoAlimentadosGestacion';
-import CorralTablaScreen from './CorralTablaScreen';
+// import CorralTablaScreen from './CorralTablaScreen';
 import CorralGridScreen from './CorralGridScreen';
 import CorralDetalleScreen from './corralDetalleScreen';
 
