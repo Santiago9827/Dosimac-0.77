@@ -8,12 +8,8 @@ import {
 import { useRoute, useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Dimensions, Alert } from 'react-native';
 
-import MaterialCommunityIcons from 'react-native-vector-icons/FontAwesome6';
-// import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
-
-
-// import Entypo from 'react-native-vector-icons/Entypo';
 
 // Animaciones Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -95,6 +91,22 @@ export default function CorralDetalleScreen() {
     const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'none', dir: 'asc' });
     const [menuOpen, setMenuOpen] = useState(false);
     const [headerBox, setHeaderBox] = useState({ y: 0, h: 0 });
+
+    const [itemMenu, setItemMenu] = useState<{
+        visible: boolean;
+        x: number;
+        y: number;
+        item?: RenderAnimal;
+    }>({ visible: false, x: 0, y: 0 });
+
+    const openItemMenu = (item: RenderAnimal, e: any) => {
+        const { pageX, pageY } = e.nativeEvent;
+        setItemMenu({ visible: true, x: pageX, y: pageY, item });
+    };
+
+    const closeItemMenu = () => setItemMenu({ visible: false, x: 0, y: 0, item: undefined });
+
+
 
     // Enriquecemos una sola vez por dataset (mantiene fallbacks estables)
     const baseData: RenderAnimal[] = useMemo(
@@ -288,6 +300,7 @@ export default function CorralDetalleScreen() {
                             }}
                         >
                             {/* ID + Crotal */}
+                            {/* ID + Crotal */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Ionicons name="paw-outline" size={16} color="#0f172a" />
@@ -295,13 +308,27 @@ export default function CorralDetalleScreen() {
                                         ID {String(displayId)}
                                     </Text>
                                 </View>
-                                <Text
-                                    style={{ color: '#0f172a', fontWeight: '700', fontVariant: ['tabular-nums'], letterSpacing: 0.3 }}
-                                    numberOfLines={1}
-                                >
-                                    Crotal {item._crotal}
-                                </Text>
+
+                                {/* Crotal + 3 puntitos */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text
+                                        style={{ color: '#0f172a', fontWeight: '700', fontVariant: ['tabular-nums'], letterSpacing: 0.3 }}
+                                        numberOfLines={1}
+                                    >
+                                        Crotal {item._crotal}
+                                    </Text>
+
+                                    <TouchableOpacity
+                                        onPress={(e) => openItemMenu(item, e)}
+                                        style={{ marginLeft: 8, padding: 6 }}
+                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons name="ellipsis-vertical" size={18} color="#64748B" />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
+
 
                             {/* Días + Curva */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -336,6 +363,69 @@ export default function CorralDetalleScreen() {
                     </View>
                 )}
             />
+
+            {/* Menú contextual del ítem */}
+            <Modal
+                visible={itemMenu.visible}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeItemMenu}
+            >
+                <View style={{ flex: 1 }}>
+                    {/* Clic fuera para cerrar */}
+                    <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={closeItemMenu} />
+
+                    {/* Cálculo simple de posición */}
+                    {(() => {
+                        const W = Dimensions.get('window').width;
+                        const MENU_W = 200;
+                        const left = Math.min(Math.max(itemMenu.x - MENU_W + 24, 12), W - MENU_W - 12);
+                        const top = Math.max(itemMenu.y + 6, 80);
+
+                        return (
+                            <View
+                                style={{
+                                    position: 'absolute',
+                                    top,
+                                    left,
+                                    width: MENU_W,
+                                    backgroundColor: 'white',
+                                    borderWidth: 1,
+                                    borderColor: '#E2E8F0',
+                                    borderRadius: 12,
+                                    shadowColor: '#000',
+                                    shadowOpacity: 0.1,
+                                    shadowRadius: 12,
+                                    shadowOffset: { width: 0, height: 6 },
+                                    elevation: 12,
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                <Text style={{ paddingHorizontal: 12, paddingVertical: 10, color: '#64748B', fontWeight: '700' }}>
+                                    Acciones
+                                </Text>
+
+                                {/* Acción: Buscar */}
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        closeItemMenu();
+                                        Alert.alert('Buscar', `Buscar por crotal: ${itemMenu.item?._crotal}`);
+                                        // Si luego quieres navegar:
+                                        // navigation.navigate('Buscar' as never, { q: itemMenu.item?._crotal } as never);
+                                    }}
+                                    activeOpacity={0.8}
+                                    style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
+                                >
+                                    <Ionicons name="search-outline" size={18} color="#0f172a" style={{ marginRight: 10 }} />
+                                    <Text style={{ color: '#0f172a' }}>Buscar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        );
+                    })()}
+                </View>
+            </Modal>
+
 
             {/* Menú flotante */}
             <Modal

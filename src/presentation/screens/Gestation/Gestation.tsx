@@ -9,7 +9,7 @@ const CARD_BG = '#F1F5F9';
 const CARD_BORDER = '#E2E8F0';
 
 // === Paleta del bloque de incidencias (igual que Home/Maternidad) ===
-const INCIDENT_BLOCK_BG = 'rbg (255, 255 , 255)';
+const INCIDENT_BLOCK_BG = 'rbg(255, 255 , 255)';
 const INCIDENT_ITEM_BG = '#FEE2E2';
 const INCIDENT_ITEM_BORDER = '#FECACA';
 const INCIDENT_PILL_BG = '#FCA5A5';
@@ -247,16 +247,15 @@ export const GestationScreen = () => {
       <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasGestacion.length} />
 
       <View className="px-5">
-        {/* contenedor blanco, sin bordes, con scroll interno */}
         <View
           className="rounded-2xl overflow-hidden"
           style={{
             backgroundColor: '#FFFFFF',
-            paddingVertical: 12,
-            paddingHorizontal: 12,
+            paddingVertical: 8,   // antes 12
+            paddingHorizontal: 8, // antes 12
           }}
         >
-          <View style={{ height: 340 }}>
+          <View style={{ maxHeight: 320 /* antes 280 */ }}>
             <FlatList
               data={incidenciasGestacion}
               keyExtractor={(item) => String(item.id)}
@@ -264,10 +263,12 @@ export const GestationScreen = () => {
                 <Pressable
                   onPress={() => { }}
                   android_ripple={{ color: 'rgba(127, 29, 29, 0.18)' }}
-                  className="rounded-2xl p-4 border"
+                  className="rounded-2xl border"
                   style={{
-                    backgroundColor: '#FEE2E2', // rojo MUY suave
-                    borderColor: '#FECACA',     // borde suave
+                    backgroundColor: '#FEE2E2',
+                    borderColor: '#FECACA',
+                    paddingVertical: 12, // antes p-4
+                    paddingHorizontal: 14,
                     shadowColor: '#000',
                     shadowOpacity: 0.05,
                     shadowRadius: 6,
@@ -276,15 +277,12 @@ export const GestationScreen = () => {
                   }}
                 >
                   <View className="flex-row items-center">
-                    {/* pill roja más fuerte */}
                     <Text
                       className="px-2 py-0.5 rounded-full text-xs font-semibold"
                       style={{ backgroundColor: '#FCA5A5', color: '#7F1D1D' }}
                     >
                       {item.area}
                     </Text>
-
-                    {/* pill neutra del corral */}
                     <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">
                       Corral {item.corral}
                     </Text>
@@ -294,29 +292,62 @@ export const GestationScreen = () => {
                 </Pressable>
               )}
               showsVerticalScrollIndicator
-              ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+              ItemSeparatorComponent={() => <View style={{ height: 8 }} />} // antes 10
+              contentContainerStyle={{ paddingVertical: 2 }}               // alinea mejor
             />
           </View>
         </View>
 
-        {/* CTA inferior: Ir al Corral (igual que tenías) */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate('GES-CORRALPC' as never)}
-          className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
+        {/* --- CTAs en una sola fila, mismo alto y gap corto --- */}
+        <View
           style={{
-            backgroundColor: '#4F46E5',
-            marginBottom: insets.bottom + 8,
-            shadowColor: '#000',
-            shadowOpacity: 0.18,
-            shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 3,
+            flexDirection: 'row',
+            gap: 12,                // separación pequeña entre botones
+            marginTop: 12,
+            marginBottom: insets.bottom + 8, // mueve aquí el bottom
           }}
         >
-          <Text className="text-white text-center font-semibold">Ir al Corral</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('GES-CORRALPC' as never)}
+            activeOpacity={0.9}
+            style={{
+              flex: 1,
+              height: 48,
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#4F46E5',
+              shadowColor: '#000',
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              shadowOffset: { width: 0, height: 3 },
+              elevation: 2,
+            }}
+          >
+            <Text className="text-white font-semibold">Ir al Corral</Text>
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            onPress={() => navigation.navigate('GES-CORRALPC' as never)}
+            activeOpacity={0.9}
+            style={{
+              flex: 1,
+              height: 48,
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#4F46E5',
+              shadowColor: '#000',
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              shadowOffset: { width: 0, height: 3 },
+              elevation: 2,
+            }}
+          >
+            <Text className="text-white font-semibold">Operaciones</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
