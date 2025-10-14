@@ -2,8 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
-    KeyboardAvoidingView, Platform, Alert,
-    ScrollView,
+    KeyboardAvoidingView, Platform, Alert, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -17,6 +16,17 @@ type NFCRecord = {
     payloadHex?: string;
 };
 
+// === tipos mínimos que usa CorralDetalleScreen ===
+type Animal = {
+    id?: string | number;
+    crotal?: string;
+    diaInseminacion?: number;
+    curva?: string;
+    corral: string;
+    total: number;
+    consumida: number;
+};
+
 export default function CorralScreen() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation<NavigationProp<any>>();
@@ -26,10 +36,12 @@ export default function CorralScreen() {
     const [lastTag, setLastTag] = useState<any | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    // 👇 nuevo: modo de simulación (por defecto SIN animales)
+    const [demo, setDemo] = useState<'empty' | 'with'>('empty');
+
     useEffect(() => {
         NfcManager.start().catch(() => { });
         return () => {
-            // Limpieza
             NfcManager.setEventListener(NfcEvents.DiscoverTag, null as any);
             NfcManager.unregisterTagEvent().catch(() => { });
         };
@@ -52,12 +64,7 @@ export default function CorralScreen() {
                         try { uri = Ndef.uri.decodePayload(Uint8Array.from(record.payload)); } catch { }
                     }
                 }
-                return {
-                    tnf: record.tnf,
-                    text,
-                    uri,
-                    payloadHex: fmtHex(record.payload),
-                };
+                return { tnf: record.tnf, text, uri, payloadHex: fmtHex(record.payload) };
             });
         } catch {
             return [];
@@ -70,23 +77,18 @@ export default function CorralScreen() {
         if (txt && txt.trim()) return txt.trim();
         const firstUri = records.find(r => r.uri)?.uri;
         if (firstUri && firstUri.trim()) return firstUri.trim();
-        if (tag?.id) return tag.id; // UID como fallback
+        if (tag?.id) return tag.id;
         return '';
     };
 
-    // ⬇️ ESTE handler sí se llamará ahora
+    // === NFC handlers ===
     const handleTag = useCallback(async (tag: any) => {
-        console.log('NFC tag', tag);
         setLastTag(tag);
         const value = pickCorralFromTag(tag);
         if (value) setCorral(value);
-
-        // iOS: mensaje opcional
         if (Platform.OS === 'ios') {
             try { await NfcManager.setAlertMessageIOS?.('Etiqueta detectada'); } catch { }
         }
-
-        // Detener tras 1ª lectura
         try { await NfcManager.unregisterTagEvent(); } catch { }
         setScanning(false);
     }, []);
@@ -100,14 +102,10 @@ export default function CorralScreen() {
             const enabled = await NfcManager.isEnabled();
             if (!enabled) {
                 if (Platform.OS === 'android') {
-                    Alert.alert(
-                        'NFC desactivado',
-                        'Activa el NFC en Ajustes para escanear etiquetas.',
-                        [
-                            { text: 'Cancelar', style: 'cancel' },
-                            { text: 'Abrir Ajustes', onPress: () => NfcManager.goToNfcSetting?.() },
-                        ]
-                    );
+                    Alert.alert('NFC desactivado', 'Activa el NFC en Ajustes para escanear etiquetas.', [
+                        { text: 'Cancelar', style: 'cancel' },
+                        { text: 'Abrir Ajustes', onPress: () => NfcManager.goToNfcSetting?.() },
+                    ]);
                 } else {
                     setErrorMsg('NFC desactivado.');
                 }
@@ -117,9 +115,8 @@ export default function CorralScreen() {
             setLastTag(null);
             setScanning(true);
 
-            // ⚠️ PATRÓN CORRECTO: listener + registerTagEvent SIN callback
             NfcManager.setEventListener(NfcEvents.DiscoverTag, handleTag);
-            await NfcManager.registerTagEvent(); // <- sin argumentos
+            await NfcManager.registerTagEvent(); // sin callback
         } catch (e: any) {
             setScanning(false);
             setErrorMsg(e?.message || 'No se pudo iniciar el escaneo.');
@@ -132,6 +129,47 @@ export default function CorralScreen() {
         setScanning(false);
     }, []);
 
+    // === Generador demo: estable por corral (hash simple) ===
+    const hash = (s: string) => [...s].reduce((a, c) => a + c.charCodeAt(0), 0);
+
+    const buildAnimalsDemo = (code: string, mode: 'empty' | 'with'): Animal[] => {
+        if (mode === 'empty') return [];
+        const seed = hash(code || 'X');
+        const n = 4;
+        const items: Animal[] = [];
+        for (let i = 0; i < n; i++) {
+            const total = [1400, 1500, 1600, 1700][(seed + i) % 4];
+            const ratios = [0.70, 0.64, 0.55, 0.82];
+            const consumida = Math.round(total * ratios[(seed + i) % ratios.length]);
+            const crotalBase = 100000000000 + ((seed % 90) * 1000) + (i + 1);
+            items.push({
+                id: i + 1,
+                crotal: String(crotalBase),
+                diaInseminacion: 20 + ((seed + i * 7) % 60),
+                curva: 'DEFECTO',
+                corral: code,
+                total,
+                consumida,
+            });
+        }
+        return items;
+    };
+
+    // === Buscar: navega al detalle con datos simulados según demo ===
+    const onBuscar = () => {
+        const code = corral.trim();
+        if (!code) return;
+
+        const animals = buildAnimalsDemo(code, demo); // lo que ya tienes
+
+        if (animals.length === 0) {
+            navigation.navigate('CorralSinAnimales', { corral: code });
+        } else {
+            navigation.navigate('CorralDetalle', { corral: code, animals });
+        }
+    };
+    ;
+
     return (
         <KeyboardAvoidingView
             className="flex-1 bg-slate-50"
@@ -139,24 +177,19 @@ export default function CorralScreen() {
             keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
             style={{ paddingBottom: insets.bottom + 8 }}
         >
-            {/* 👇 Scroll en todo el contenido de la pantalla */}
             <ScrollView
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator
                 contentContainerStyle={{
                     paddingHorizontal: 20,
                     paddingTop: 16,
-                    paddingBottom: 24 + insets.bottom, // espacio extra al final
+                    paddingBottom: 24 + insets.bottom,
                 }}
             >
-                {/* Título y subtítulo */}
+                {/* Título */}
                 <View>
-                    <Text className="text-slate-900 text-[22px] font-extrabold">
-                        Elige cómo identificar el corral
-                    </Text>
-                    <Text className="text-slate-500 mt-1">
-                        Introduce el código o usa el escáner NFC.
-                    </Text>
+                    <Text className="text-slate-900 text-[22px] font-extrabold">Elige cómo identificar el corral</Text>
+                    <Text className="text-slate-500 mt-1">Introduce el código o usa el escáner NFC.</Text>
                 </View>
 
                 {/* Campo de entrada */}
@@ -170,18 +203,45 @@ export default function CorralScreen() {
                         <TextInput
                             value={corral}
                             onChangeText={setCorral}
-                            placeholder="Ej: C-12"
+                            placeholder=""
                             placeholderTextColor="#94A3B8"
                             className="flex-1 ml-2 text-slate-900"
                             autoCapitalize="characters"
                             autoCorrect={false}
                             returnKeyType="search"
+                            onSubmitEditing={onBuscar}
                         />
                         {corral ? (
                             <TouchableOpacity onPress={() => setCorral('')}>
                                 <Ionicons name="close-circle" size={18} color="#94A3B8" />
                             </TouchableOpacity>
                         ) : null}
+                    </View>
+
+                    {/* Selector de modo demo */}
+                    <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                        <TouchableOpacity
+                            onPress={() => setDemo('empty')}
+                            activeOpacity={0.9}
+                            style={{
+                                paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
+                                borderWidth: 1, borderColor: demo === 'empty' ? '#A5B4FC' : '#E2E8F0',
+                                backgroundColor: demo === 'empty' ? '#EEF2FF' : '#FFFFFF', marginRight: 8,
+                            }}
+                        >
+                            <Text style={{ color: '#3730A3', fontWeight: '700' }}>Demo: Sin animales</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setDemo('with')}
+                            activeOpacity={0.9}
+                            style={{
+                                paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
+                                borderWidth: 1, borderColor: demo === 'with' ? '#A5B4FC' : '#E2E8F0',
+                                backgroundColor: demo === 'with' ? '#EEF2FF' : '#FFFFFF',
+                            }}
+                        >
+                            <Text style={{ color: '#3730A3', fontWeight: '700' }}>Demo: Con animales</Text>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Botón Escanear / Detener */}
@@ -203,12 +263,9 @@ export default function CorralScreen() {
 
                     {errorMsg ? <Text className="mt-2 text-red-600">{errorMsg}</Text> : null}
 
-                    {/* Resultado en la MISMA pantalla */}
+                    {/* Resultado de la etiqueta (debug) */}
                     {lastTag ? (
-                        <View
-                            className="mt-3 rounded-2xl border p-3 bg-white"
-                            style={{ borderColor: '#E2E8F0' }}
-                        >
+                        <View className="mt-3 rounded-2xl border p-3 bg-white" style={{ borderColor: '#E2E8F0' }}>
                             <Text className="text-slate-800 font-semibold mb-2">Etiqueta detectada</Text>
                             <Text className="text-slate-600">
                                 ID/UID: <Text className="font-semibold">{lastTag?.id || '—'}</Text>
@@ -239,7 +296,6 @@ export default function CorralScreen() {
                                 <Text className="text-slate-500 mt-1">Sin NDEF o no legible.</Text>
                             )}
 
-                            {/* Debug crudo */}
                             <View className="mt-2">
                                 <Text className="text-slate-500 text-xs">RAW:</Text>
                                 <Text className="text-slate-800 text-xs" selectable>
@@ -252,6 +308,7 @@ export default function CorralScreen() {
                     {/* Botón Buscar */}
                     <TouchableOpacity
                         disabled={!corral.trim()}
+                        onPress={onBuscar}
                         className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
                         style={{
                             backgroundColor: corral.trim() ? '#4F46E5' : '#C7D2FE',

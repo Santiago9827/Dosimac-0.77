@@ -221,7 +221,7 @@ export default function MaternidadScreen() {
                     className="rounded-2xl overflow-hidden"
                     style={{ backgroundColor: INCIDENT_BLOCK_BG, paddingVertical: 12, paddingHorizontal: 12, ...SHADOW }}
                 >
-                    <View style={{ height: 400 }}>
+                    <View style={{ height: 380 }}>
                         <FlatList
                             data={incidenciasMaternidad}
                             keyExtractor={(item) => String(item.id)}
