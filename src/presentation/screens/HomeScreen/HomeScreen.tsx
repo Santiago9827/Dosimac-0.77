@@ -19,20 +19,30 @@ type Incidencia = {
 const TAB_MATERNIDAD = 'MaternidadTab';
 const TAB_GESTACION = 'GestacionTab';
 
-// Indicadores
-const CARD_BG = '#E9EDF2';
-const CARD_BORDER = '#C8D0DA';
+/** ====== Design tokens (UI limpia/pro) ====== */
+const SURFACE_BG = '#F6F8FC';   // fondo app
+const CARD_BG = '#FFFFFF';   // fondo de cards
+const CARD_BORDER = '#E6EAF2';   // borde sutil de cards
+const BRAND = '#4F46E5';   // color de acción
 
 /** ====== INCIDENCIAS (tema rojo) ======
  *  Ajusta SOLO estos 5 si quieres variar la intensidad.
  */
-const BLOCK_BG_DARK = "rgb(255, 255, 255)"
-const ITEM_BG_SOFT = '#FEE2E2';      // rojo MUY suave (fondo de cada tarjeta)
-const ITEM_BORDER_SOFT = '#FECACA';      // borde suave de cada tarjeta
-const PILL_BG_STRONG = '#FCA5A5';      // pill un poco más fuerte que la tarjeta
-const PILL_TEXT_STRONG = '#7F1D1D';      // texto de la pill (rojo oscuro)
+const BLOCK_BG_DARK = '#FFFFFF';    // superficie del bloque
+const ITEM_BG_SOFT = '#FEE2E2';    // fondo de cada tarjeta
+const ITEM_BORDER_SOFT = '#FECACA';    // borde suave de cada tarjeta
+const PILL_BG_STRONG = '#FCA5A5';    // pill un poco más fuerte
+const PILL_TEXT_STRONG = '#7F1D1D';    // texto de la pill
 
 const RIPPLE_RED = 'rgba(127, 29, 29, 0.18)'; // ripple sutil rojo
+
+const SHADOW = {
+  shadowColor: '#000',
+  shadowOpacity: 0.06,
+  shadowRadius: 8,
+  shadowOffset: { width: 0, height: 3 },
+  elevation: 1,
+};
 
 export const HomeScreen = () => {
   const { t } = useTranslation(['common']);
@@ -56,8 +66,8 @@ export const HomeScreen = () => {
   ];
 
   const StatRow = ({ label, value }: { label: string; value: number }) => (
-    <View className="flex-row justify-between w-full mt-1">
-      <Text className="text-slate-600">{label}</Text>
+    <View className="flex-row justify-between w-full mt-1.5">
+      <Text className="text-slate-700">{label}</Text>
       <Text className="text-slate-900 font-semibold">{value}</Text>
     </View>
   );
@@ -78,36 +88,25 @@ export const HomeScreen = () => {
     </View>
   );
 
-  // === Tarjeta de incidencia (fondo rojo suave, sin “lianas”) ===
+  // Tarjeta de incidencia (rojo suave, sin bordes del contenedor)
   const renderIncidencia = ({ item }: { item: Incidencia }) => (
     <Pressable
       onPress={() => { }}
       android_ripple={{ color: RIPPLE_RED }}
       className="rounded-2xl p-4 border"
-      style={{
-        backgroundColor: ITEM_BG_SOFT,
-        borderColor: ITEM_BORDER_SOFT,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 1,
-      }}
+      style={{ backgroundColor: ITEM_BG_SOFT, borderColor: ITEM_BORDER_SOFT, ...SHADOW }}
     >
       <View className="flex-row items-center">
-        {/* pill roja más fuerte */}
         <Text
           className="px-2 py-0.5 rounded-full text-xs font-semibold"
           style={{ backgroundColor: PILL_BG_STRONG, color: PILL_TEXT_STRONG }}
         >
           {item.area}
         </Text>
-        {/* pill neutra para el corral */}
         <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">
           Corral {item.corral}
         </Text>
       </View>
-
       <Text className="mt-2 text-slate-900">{item.descripcion}</Text>
     </Pressable>
   );
@@ -116,7 +115,7 @@ export const HomeScreen = () => {
   const goGestacion = () => navigation.getParent()?.navigate(TAB_GESTACION as never);
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1" style={{ backgroundColor: SURFACE_BG }}>
       <HamburgerMenu />
 
       <View className="px-5 pt-4 flex-1">
@@ -133,7 +132,10 @@ export const HomeScreen = () => {
             accessibilityRole="button"
             accessibilityLabel="Ir a Maternidad"
           >
-            <View className="p-3 shadow-sm border" style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}>
+            <View
+              className="p-4 border rounded-2xl"
+              style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER, ...SHADOW }}
+            >
               <View className="items-center">
                 <DonutChart
                   size={120}
@@ -151,7 +153,7 @@ export const HomeScreen = () => {
               <View className="mt-3">
                 <StatRow label="Alimentados" value={maternidad.alimentados} />
                 <StatRow label="No Alimentados" value={maternidad.noAlimentados} />
-                <View className="h-px my-1" style={{ backgroundColor: '#C8D0DA' }} />
+                <View className="h-px my-2" style={{ backgroundColor: CARD_BORDER }} />
                 <StatRow label="Totales" value={totalM} />
               </View>
             </View>
@@ -165,7 +167,10 @@ export const HomeScreen = () => {
             accessibilityRole="button"
             accessibilityLabel="Ir a Gestación"
           >
-            <View className="p-3 shadow-sm border" style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}>
+            <View
+              className="p-4 border rounded-2xl"
+              style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER, ...SHADOW }}
+            >
               <View className="items-center">
                 <DonutChart
                   size={120}
@@ -183,7 +188,7 @@ export const HomeScreen = () => {
               <View className="mt-3">
                 <StatRow label="Alimentados" value={gestacion.alimentados} />
                 <StatRow label="No Alimentados" value={gestacion.noAlimentados} />
-                <View className="h-px my-1" style={{ backgroundColor: '#C8D0DA' }} />
+                <View className="h-px my-2" style={{ backgroundColor: CARD_BORDER }} />
                 <StatRow label="Totales" value={totalG} />
               </View>
             </View>
@@ -193,21 +198,22 @@ export const HomeScreen = () => {
         {/* Incidencias */}
         <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidencias.length} />
 
-        {/* Bloque con fondo oscuro y tarjetas suaves */}
+        {/* Bloque con superficie blanca y tarjetas suaves */}
         <View
           className="flex-1 rounded-2xl min-h-[160px]"
           style={{
             backgroundColor: BLOCK_BG_DARK,
             paddingVertical: 12,
             paddingHorizontal: 12,
-            borderWidth: 0,        // sin borde -> adiós “lianas”
+            borderWidth: 0,
+            ...SHADOW,
           }}
         >
           <FlatList
             data={incidencias}
             keyExtractor={(item) => String(item.id)}
             renderItem={renderIncidencia}
-            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
             contentContainerStyle={{ paddingBottom: 4 }}
             showsVerticalScrollIndicator
           />
@@ -218,7 +224,7 @@ export const HomeScreen = () => {
           onPress={() => navigation.getParent()?.navigate('TareasProgramadas' as never)}
           className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
           style={{
-            backgroundColor: '#4F46E5',
+            backgroundColor: BRAND,
             marginBottom: insets.bottom + 8,
             shadowColor: '#000',
             shadowOpacity: 0.18,

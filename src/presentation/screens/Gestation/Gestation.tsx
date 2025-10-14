@@ -1,3 +1,4 @@
+// screens/Gestation/GestationScreen.tsx
 import React from 'react';
 import { View, Text, Pressable, FlatList, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -5,16 +6,25 @@ import { DonutChart } from '../../components/shared/DonutChart';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const CARD_BG = '#F1F5F9';
-const CARD_BORDER = '#E2E8F0';
+/** ====== Tokens de diseño (coherentes con Home/Maternidad) ====== */
+const SURFACE_BG = '#F6F8FC';   // fondo de pantalla
+const CARD_BG = '#FFFFFF';   // fondo de la card
+const CARD_BORDER = '#E6EAF2';   // borde sutil
+const BRAND = '#4F46E5';
 
-// === Paleta del bloque de incidencias (igual que Home/Maternidad) ===
-const INCIDENT_BLOCK_BG = 'rbg(255, 255 , 255)';
 const INCIDENT_ITEM_BG = '#FEE2E2';
 const INCIDENT_ITEM_BORDER = '#FECACA';
 const INCIDENT_PILL_BG = '#FCA5A5';
 const INCIDENT_PILL_TEXT = '#7F1D1D';
 const INCIDENT_RIPPLE = 'rgba(127, 29, 29, 0.18)';
+
+const SHADOW = {
+  shadowColor: '#000',
+  shadowOpacity: 0.06,
+  shadowRadius: 8,
+  shadowOffset: { width: 0, height: 3 },
+  elevation: 1,
+};
 
 const LEFT_FLEX = 35;
 const RIGHT_FLEX = 68;
@@ -47,12 +57,8 @@ export const GestationScreen = () => {
     { id: 5, area: 'Gestación', corral: '12', descripcion: 'Puerta sin cierre.' },
   ];
 
-  const pillClasses = () => 'bg-sky-100 text-sky-700';
-
   const DANGER = '#DC2626';
   const OK = '#16A34A';
-  const BRAND = '#4F46E5';
-
   const noAl = gestacion.noAlimentados;
   const noAlColor = noAl === 0 ? OK : DANGER;
 
@@ -79,7 +85,7 @@ export const GestationScreen = () => {
     const Comp: any = onPress ? Pressable : View;
     return (
       <>
-        {divider ? <View className="h-px bg-slate-200 opacity-80" /> : null}
+        {divider ? <View className="h-px" style={{ backgroundColor: CARD_BORDER }} /> : null}
         <Comp
           onPress={onPress}
           android_ripple={onPress ? { color: '#e5e7eb' } : undefined}
@@ -129,7 +135,7 @@ export const GestationScreen = () => {
     divider?: boolean;
   }) => (
     <>
-      {divider ? <View className="h-px bg-slate-200 opacity-80" /> : null}
+      {divider ? <View className="h-px" style={{ backgroundColor: CARD_BORDER }} /> : null}
       <Pressable
         onPress={onPress}
         android_ripple={{ color: '#e5e7eb' }}
@@ -161,20 +167,18 @@ export const GestationScreen = () => {
     </View>
   );
 
-  // === Tarjeta de incidencia con la nueva paleta ===
+  // Tarjeta de incidencia
   const renderIncidencia = ({ item }: { item: Incidencia }) => (
     <Pressable
       onPress={() => { }}
       android_ripple={{ color: INCIDENT_RIPPLE }}
-      className="rounded-2xl p-4 border"
+      className="rounded-2xl border"
       style={{
         backgroundColor: INCIDENT_ITEM_BG,
         borderColor: INCIDENT_ITEM_BORDER,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        ...SHADOW,
       }}
     >
       <View className="flex-row items-center">
@@ -193,12 +197,12 @@ export const GestationScreen = () => {
   );
 
   return (
-    <View className="flex-1 bg-slate-50" style={{ paddingBottom: insets.bottom + 8 }}>
+    <View className="flex-1" style={{ backgroundColor: SURFACE_BG, paddingBottom: insets.bottom + 8 }}>
       {/* Bloque 1: Donut + métricas */}
       <View className="px-5 mt-4 mb-6">
         <View
-          className="rounded-2xl border p-5 shadow-sm overflow-hidden"
-          style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}
+          className="rounded-2xl border p-5 overflow-hidden"
+          style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER, ...SHADOW }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {/* Donut */}
@@ -218,7 +222,7 @@ export const GestationScreen = () => {
             </View>
 
             {/* Separador */}
-            <View className="w-px bg-slate-200 self-stretch mx-3" />
+            <View className="w-px self-stretch mx-3" style={{ backgroundColor: CARD_BORDER }} />
 
             {/* Métricas + CTA */}
             <View style={{ flex: RIGHT_FLEX }} className="pr-1">
@@ -233,6 +237,7 @@ export const GestationScreen = () => {
                 valueColor={noAlColor}
               />
               <Row label="Totales animales" value={total} strong divider />
+
               <NavRow
                 label="Ver corrales"
                 icon="grid-outline"
@@ -249,62 +254,27 @@ export const GestationScreen = () => {
       <View className="px-5">
         <View
           className="rounded-2xl overflow-hidden"
-          style={{
-            backgroundColor: '#FFFFFF',
-            paddingVertical: 8,   // antes 12
-            paddingHorizontal: 8, // antes 12
-          }}
+          style={{ backgroundColor: '#FFFFFF', paddingVertical: 8, paddingHorizontal: 8, ...SHADOW }}
         >
-          <View style={{ maxHeight: 320 /* antes 280 */ }}>
+          <View style={{ maxHeight: 320 }}>
             <FlatList
               data={incidenciasGestacion}
               keyExtractor={(item) => String(item.id)}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => { }}
-                  android_ripple={{ color: 'rgba(127, 29, 29, 0.18)' }}
-                  className="rounded-2xl border"
-                  style={{
-                    backgroundColor: '#FEE2E2',
-                    borderColor: '#FECACA',
-                    paddingVertical: 12, // antes p-4
-                    paddingHorizontal: 14,
-                    shadowColor: '#000',
-                    shadowOpacity: 0.05,
-                    shadowRadius: 6,
-                    shadowOffset: { width: 0, height: 2 },
-                    elevation: 1,
-                  }}
-                >
-                  <View className="flex-row items-center">
-                    <Text
-                      className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ backgroundColor: '#FCA5A5', color: '#7F1D1D' }}
-                    >
-                      {item.area}
-                    </Text>
-                    <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">
-                      Corral {item.corral}
-                    </Text>
-                  </View>
-
-                  <Text className="mt-2 text-slate-900">{item.descripcion}</Text>
-                </Pressable>
-              )}
+              renderItem={renderIncidencia}
               showsVerticalScrollIndicator
-              ItemSeparatorComponent={() => <View style={{ height: 8 }} />} // antes 10
-              contentContainerStyle={{ paddingVertical: 2 }}               // alinea mejor
+              ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+              contentContainerStyle={{ paddingVertical: 2 }}
             />
           </View>
         </View>
 
-        {/* --- CTAs en una sola fila, mismo alto y gap corto --- */}
+        {/* CTAs alineados */}
         <View
           style={{
             flexDirection: 'row',
-            gap: 12,                // separación pequeña entre botones
+            gap: 12,
             marginTop: 12,
-            marginBottom: insets.bottom + 8, // mueve aquí el bottom
+            marginBottom: insets.bottom + 8,
           }}
         >
           <TouchableOpacity
@@ -316,7 +286,7 @@ export const GestationScreen = () => {
               borderRadius: 12,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: '#4F46E5',
+              backgroundColor: BRAND,
               shadowColor: '#000',
               shadowOpacity: 0.12,
               shadowRadius: 6,
@@ -328,7 +298,7 @@ export const GestationScreen = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('GES-CORRALPC' as never)}
+            onPress={() => navigation.navigate('GES-CORRALPC' as never) /* ajusta ruta si tienes pantalla de Ops */}
             activeOpacity={0.9}
             style={{
               flex: 1,
@@ -336,7 +306,7 @@ export const GestationScreen = () => {
               borderRadius: 12,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: '#4F46E5',
+              backgroundColor: BRAND,
               shadowColor: '#000',
               shadowOpacity: 0.12,
               shadowRadius: 6,

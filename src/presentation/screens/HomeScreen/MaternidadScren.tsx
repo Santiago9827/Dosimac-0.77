@@ -6,16 +6,26 @@ import { DonutChart } from '../../components/shared/DonutChart';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const CARD_BG = '#F1F5F9';
-const CARD_BORDER = '#E2E8F0';
+/** ====== Tokens de diseño (coherentes con Home) ====== */
+const SURFACE_BG = '#F6F8FC';   // fondo de pantalla
+const CARD_BG = '#FFFFFF';   // fondo de la card
+const CARD_BORDER = '#E6EAF2';   // borde sutil de la card
+const BRAND = '#4F46E5';
 
-// === Paleta del bloque de incidencias (igual que Home) ===
-const INCIDENT_BLOCK_BG = 'rbg (255 , 255, 255)'; // fondo oscuro del bloque
-const INCIDENT_ITEM_BG = '#FEE2E2'; // tarjeta rojo suave
-const INCIDENT_ITEM_BORDER = '#FECACA'; // borde suave (no gris)
-const INCIDENT_PILL_BG = '#FCA5A5'; // pill más fuerte
-const INCIDENT_PILL_TEXT = '#7F1D1D'; // texto de la pill
+const INCIDENT_BLOCK_BG = '#FFFFFF'; // superficie del bloque
+const INCIDENT_ITEM_BG = '#FEE2E2';
+const INCIDENT_ITEM_BORDER = '#FECACA';
+const INCIDENT_PILL_BG = '#FCA5A5';
+const INCIDENT_PILL_TEXT = '#7F1D1D';
 const INCIDENT_RIPPLE = 'rgba(127, 29, 29, 0.18)';
+
+const SHADOW = {
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
+};
 
 // Layout proporciones
 const LEFT_FLEX = 35;  // donut
@@ -47,16 +57,12 @@ export default function MaternidadScreen() {
         { id: 3, area: 'Maternidad', corral: '07', descripcion: 'Sensor de paso intermitente.' },
         { id: 4, area: 'Maternidad', corral: '15', descripcion: 'Fallo de báscula.' },
         { id: 5, area: 'Maternidad', corral: '03', descripcion: 'Comedero bloqueado.' },
-        { id: 6, area: 'Maternidad', corral: '2008', descripcion: 'Fallo coemdero.' },
+        { id: 6, area: 'Maternidad', corral: '2008', descripcion: 'Fallo comedero.' },
         { id: 7, area: 'Maternidad', corral: '2009', descripcion: 'Fallo sensor.' },
-
     ];
 
-    const pillClasses = (a: Incidencia['area']) =>
-        a === 'Maternidad' ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700';
-
-    const DANGER = '#DC2626'; // red-600
-    const OK = '#16A34A';     // green-600
+    const DANGER = '#DC2626';
+    const OK = '#16A34A';
 
     // ------- ROW (métricas) -------
     const Row = ({
@@ -81,7 +87,7 @@ export default function MaternidadScreen() {
         const Comp: any = onPress ? Pressable : View;
         return (
             <>
-                {divider ? <View className="h-px bg-slate-200 opacity-80" /> : null}
+                {divider ? <View className="h-px" style={{ backgroundColor: CARD_BORDER }} /> : null}
                 <Comp
                     onPress={onPress}
                     android_ripple={onPress ? { color: '#e5e7eb' } : undefined}
@@ -120,7 +126,7 @@ export default function MaternidadScreen() {
 
     // color dinámico para "No Alimentados"
     const noAl = maternidad.noAlimentados;
-    const noAlColor = noAl === 0 ? OK : DANGER; // verde si 0, rojo si >0
+    const noAlColor = noAl === 0 ? OK : DANGER;
 
     // ------- UI -------
     const SectionTitle = ({ icon, text, count }: { icon: string; text: string; count?: number }) => (
@@ -137,21 +143,13 @@ export default function MaternidadScreen() {
         </View>
     );
 
-    // === Tarjeta de incidencia con la nueva paleta (y ripple rojo) ===
+    // Tarjeta incidencia (tema rojo suave, sin “lianas”)
     const renderIncidencia = ({ item }: { item: Incidencia }) => (
         <Pressable
             onPress={() => { }}
             android_ripple={{ color: INCIDENT_RIPPLE }}
             className="rounded-2xl p-4 border"
-            style={{
-                backgroundColor: INCIDENT_ITEM_BG,
-                borderColor: INCIDENT_ITEM_BORDER,
-                shadowColor: '#000',
-                shadowOpacity: 0.05,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: 1,
-            }}
+            style={{ backgroundColor: INCIDENT_ITEM_BG, borderColor: INCIDENT_ITEM_BORDER, ...SHADOW }}
         >
             <View className="flex-row items-center">
                 <Text
@@ -169,12 +167,12 @@ export default function MaternidadScreen() {
     );
 
     return (
-        <View className="flex-1 bg-slate-50" style={{ paddingBottom: insets.bottom + 8 }}>
+        <View className="flex-1" style={{ backgroundColor: SURFACE_BG, paddingBottom: insets.bottom + 8 }}>
             {/* Bloque 1: Donut + métricas */}
             <View className="px-5 mb-6">
                 <View
-                    className="rounded-2xl border p-5 shadow-sm overflow-hidden"
-                    style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER }}
+                    className="rounded-2xl border p-5 overflow-hidden"
+                    style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER, ...SHADOW }}
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         {/* Izquierda (donut) */}
@@ -194,12 +192,11 @@ export default function MaternidadScreen() {
                         </View>
 
                         {/* Separador */}
-                        <View className="w-px bg-slate-200 self-stretch mx-3" />
+                        <View className="w-px self-stretch mx-3" style={{ backgroundColor: CARD_BORDER }} />
 
                         {/* Derecha (métricas) */}
                         <View style={{ flex: RIGHT_FLEX }} className="pr-1">
                             <Row label="Alimentados" value={maternidad.alimentados} />
-
                             <Row
                                 label="No Alimentados"
                                 value={noAl}
@@ -209,7 +206,6 @@ export default function MaternidadScreen() {
                                 labelColor={noAlColor}
                                 valueColor={noAlColor}
                             />
-
                             <Row label="Totales animales" value={total} strong divider />
                         </View>
                     </View>
@@ -220,64 +216,28 @@ export default function MaternidadScreen() {
             <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasMaternidad.length} />
 
             <View className="px-5">
-                {/* === contenedor blanco, sin bordes, con scroll interno === */}
+                {/* contenedor blanco, sin borde, con scroll interno */}
                 <View
                     className="rounded-2xl overflow-hidden"
-                    style={{
-                        backgroundColor: '#FFFFFF',
-                        paddingVertical: 12,
-                        paddingHorizontal: 12,
-                    }}
+                    style={{ backgroundColor: INCIDENT_BLOCK_BG, paddingVertical: 12, paddingHorizontal: 12, ...SHADOW }}
                 >
                     <View style={{ height: 400 }}>
                         <FlatList
                             data={incidenciasMaternidad}
                             keyExtractor={(item) => String(item.id)}
-                            renderItem={({ item }) => (
-                                <Pressable
-                                    onPress={() => { }}
-                                    android_ripple={{ color: 'rgba(127, 29, 29, 0.18)' }}
-                                    className="rounded-2xl p-4 border"
-                                    style={{
-                                        backgroundColor: '#FEE2E2', // rojo MUY suave
-                                        borderColor: '#FECACA',     // borde suave
-                                        shadowColor: '#000',
-                                        shadowOpacity: 0.05,
-                                        shadowRadius: 6,
-                                        shadowOffset: { width: 0, height: 2 },
-                                        elevation: 1,
-                                    }}
-                                >
-                                    <View className="flex-row items-center">
-                                        {/* pill roja más fuerte */}
-                                        <Text
-                                            className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                                            style={{ backgroundColor: '#FCA5A5', color: '#7F1D1D' }}
-                                        >
-                                            {item.area}
-                                        </Text>
-
-                                        {/* pill neutra del corral */}
-                                        <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">
-                                            Corral {item.corral}
-                                        </Text>
-                                    </View>
-
-                                    <Text className="mt-2 text-slate-900">{item.descripcion}</Text>
-                                </Pressable>
-                            )}
+                            renderItem={renderIncidencia}
+                            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                             showsVerticalScrollIndicator
-                            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
                         />
                     </View>
                 </View>
 
-                {/* CTA inferior: Ir al Corral (igual que tenías) */}
+                {/* CTA inferior */}
                 <TouchableOpacity
                     onPress={() => navigation.navigate('MAT-CORRAL' as never)}
                     className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
                     style={{
-                        backgroundColor: '#4F46E5',
+                        backgroundColor: BRAND,
                         marginBottom: insets.bottom + 8,
                         shadowColor: '#000',
                         shadowOpacity: 0.18,
@@ -289,7 +249,6 @@ export default function MaternidadScreen() {
                     <Text className="text-white text-center font-semibold">Ir al Corral</Text>
                 </TouchableOpacity>
             </View>
-
         </View>
     );
 }
