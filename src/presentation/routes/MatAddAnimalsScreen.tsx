@@ -20,10 +20,10 @@ export default function MatAddAnimalsScreen() {
     const route = useRoute<any>();
     const { corral } = (route.params || {}) as RouteParams;
 
-    // 🔌 AWR300 store (ya lo tienes)
+    // AWR300 store 
     const { isConnected, startReading, lastTag, error } = useAwrConn();
 
-    // Cola de crotales (sin duplicados)
+    // Cola de crotales sin duplicados
     const [input, setInput] = useState('');
     const [cola, setCola] = useState<string[]>([]);
 
@@ -47,7 +47,7 @@ export default function MatAddAnimalsScreen() {
         if (lastTag) addCrotal(lastTag);
     }, [lastTag, addCrotal]);
 
-    // Iniciar lectura al entrar (si ya estás conectado, solo asegura la suscripción)
+    // Iniciar lectura al entrar si ya estás conectado, solo asegura la suscripción
     useFocusEffect(
         useCallback(() => {
             startReading().catch(() => { });
@@ -65,17 +65,27 @@ export default function MatAddAnimalsScreen() {
     const onEnviar = () => {
         if (cola.length === 0) return;
 
+        const total = cola.length;
 
-        const animals = cola.map((crotal, idx) => ({
-            id: idx + 1,
-            crotal,
-            corral: String(corral),
-            total: 0,
-            consumida: 0,
-            curva: 'DEFECTO',
-        }));
 
-        navigation.navigate('MAT-CORRALDETAIL' as never, { corral, animals } as never);
+        // const animals = cola.map((crotal, idx) => ({
+        //     id: idx + 1,
+        //     crotal,
+        //     corral: String(corral),
+        //     total: 0,
+        //     consumida: 0,
+        //     curva: 'DEFECTO',
+        // }));
+
+        navigation.navigate({
+            name: 'CorralSinAnimales',
+            params: {
+                corral,
+                stats: { total, noFeed: total },
+            },
+            // esto evita apilar otra pantalla y ACTUALIZA la anterior
+            merge: true,
+        } as never);
     };
 
     const encabezado = useMemo(() => (

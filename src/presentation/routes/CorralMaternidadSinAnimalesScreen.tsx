@@ -1,4 +1,3 @@
-// CorralMaternidadSinAnimalesScreen.tsx
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -6,7 +5,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type RouteParams = {
     corral?: string | number;
-    // opcional por si algún día pasas datos reales
     stats?: { total?: number; noFeed?: number };
 };
 
@@ -30,7 +28,7 @@ export default function CorralMaternidadSinAnimalesScreen() {
     const route = useRoute<any>();
     const { corral, stats }: RouteParams = route.params ?? {};
 
-    // Si no llegan stats, dejamos todo a 0 (caso “sin animales”)
+    // Si no llegan stats, dejamos todo a 0
     const { total, noFeed, pct } = useMemo(() => {
         const total = Number(stats?.total ?? 0);
         const noFeed = Number(stats?.noFeed ?? 0);
@@ -45,7 +43,7 @@ export default function CorralMaternidadSinAnimalesScreen() {
                 className="rounded-2xl border p-4 bg-white"
                 style={{ borderColor: CARD_BORDER }}
             >
-                {/* Cabecera: icono + nombre + dot rojo (como en el listado) */}
+                {/* Cabecera*/}
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                         <Ionicons name="home-outline" size={18} color="#0f172a" />
@@ -53,25 +51,25 @@ export default function CorralMaternidadSinAnimalesScreen() {
                             {String(corral ?? '—')}
                         </Text>
                     </View>
-                    {/* Dot (estado) */}
+                    {/* (estado) */}
                     <View style={{ width: 8, height: 8, borderRadius: 999, backgroundColor: DOT_RED }} />
                 </View>
 
-                {/* Fila: Animales */}
+                {/* Animales */}
                 <View style={{ paddingVertical: 6 }}>
                     <Text style={{ color: '#64748B', marginBottom: 6 }}>Animales</Text>
                     <View style={{ height: 1, backgroundColor: CARD_BORDER, opacity: 0.8 }} />
                     <Text style={{ color: '#0f172a', fontWeight: '800', textAlign: 'right', marginTop: 6 }}>{total}</Text>
                 </View>
 
-                {/* Fila: No alimentados */}
+                {/* No alimentados */}
                 <View style={{ paddingVertical: 6 }}>
                     <Text style={{ color: '#64748B', marginBottom: 6 }}>No alimentados</Text>
                     <View style={{ height: 1, backgroundColor: CARD_BORDER, opacity: 0.8 }} />
                     <Text style={{ color: '#0f172a', fontWeight: '800', textAlign: 'right', marginTop: 6 }}>{noFeed}</Text>
                 </View>
 
-                {/* Fila: % alimentado con barra */}
+                {/* % alimentado con barra */}
                 <View style={{ paddingTop: 8 }}>
                     <Text style={{ color: '#64748B', marginBottom: 6 }}>% alimentado</Text>
                     <Progress percent={pct} />

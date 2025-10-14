@@ -168,7 +168,7 @@ export default function CorralScreen() {
             navigation.navigate('CorralDetalle', { corral: code, animals });
         }
     };
-    ;
+
 
     return (
         <KeyboardAvoidingView
