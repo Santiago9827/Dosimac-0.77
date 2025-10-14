@@ -156,18 +156,28 @@ export default function CorralScreen() {
     };
 
     // === Buscar: navega al detalle con datos simulados según demo ===
+    // CorralScreen.tsx (dentro del handler de Buscar)
     const onBuscar = () => {
-        const code = corral.trim();
-        if (!code) return;
+        const code = corral.trim() || '—';
 
-        const animals = buildAnimalsDemo(code, demo); // lo que ya tienes
-
-        if (animals.length === 0) {
-            navigation.navigate('CorralSinAnimales', { corral: code });
-        } else {
-            navigation.navigate('CorralDetalle', { corral: code, animals });
+        if (demo === 'with') {
+            // simula que el corral existe y tiene animales
+            const total = 4;      // lo que quieras para la demo
+            const noFeed = 1;     // p.ej. 1 sin alimentar
+            navigation.navigate('CorralConAnimales', {
+                corral: code,
+                stats: { total, noFeed },
+            });
+            return;
         }
+
+        // demo sin animales (como ya tenías)
+        navigation.navigate('CorralSinAnimales', {
+            corral: code,
+            stats: { total: 0, noFeed: 0 },
+        });
     };
+
 
 
     return (
