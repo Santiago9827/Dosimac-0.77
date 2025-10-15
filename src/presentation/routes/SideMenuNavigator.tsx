@@ -21,13 +21,18 @@ import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { MaintenancePasswordScreen } from './MaintenancePasswordScreen';
 import { AWRStackNavigator } from './AWRStackNavigator';
 
-import { createStackNavigator } from '@react-navigation/stack';
 import TareasProgramadasScreen from './TareasProgramadasScreen';
 import NoAlimentadosScreenMaternidad from './NoAlimentadosScreenMaternidad';
+
+import { createStackNavigator } from '@react-navigation/stack';
+import { AnimalSearchNavigator } from './AnimalSearchNavigator';
+
+
 // 👇 Ajusta la ruta según tu proyecto
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
+
 
 /** Stack que contiene los Tabs + TareasProgramadas */
 function TabsStack() {
@@ -128,6 +133,17 @@ export const SideMenuNavigator = () => {
           title: 'AWR escaneados',
         }}
       />
+
+      <Drawer.Screen
+        name="AnimalSearch"
+        component={AnimalSearchNavigator}
+        options={{
+          drawerIcon: ({ color }) => <IonIcon name="search-outline" color={color} />,
+          title: 'Buscar animal',
+        }}
+      />
+
+
 
       {isDebugMode && (
         <>
