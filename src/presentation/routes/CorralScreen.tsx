@@ -16,17 +16,6 @@ type NFCRecord = {
     payloadHex?: string;
 };
 
-// === tipos mínimos que usa CorralDetalleScreen ===
-type Animal = {
-    id?: string | number;
-    crotal?: string;
-    diaInseminacion?: number;
-    curva?: string;
-    corral: string;
-    total: number;
-    consumida: number;
-};
-
 export default function CorralScreen() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation<NavigationProp<any>>();
@@ -35,9 +24,6 @@ export default function CorralScreen() {
     const [scanning, setScanning] = useState(false);
     const [lastTag, setLastTag] = useState<any | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-    // 👇 nuevo: modo de simulación (por defecto SIN animales)
-    const [demo, setDemo] = useState<'empty' | 'with'>('empty');
 
     useEffect(() => {
         NfcManager.start().catch(() => { });
@@ -129,56 +115,26 @@ export default function CorralScreen() {
         setScanning(false);
     }, []);
 
-    // === Generador demo: estable por corral (hash simple) ===
-    const hash = (s: string) => [...s].reduce((a, c) => a + c.charCodeAt(0), 0);
-
-    const buildAnimalsDemo = (code: string, mode: 'empty' | 'with'): Animal[] => {
-        if (mode === 'empty') return [];
-        const seed = hash(code || 'X');
-        const n = 4;
-        const items: Animal[] = [];
-        for (let i = 0; i < n; i++) {
-            const total = [1400, 1500, 1600, 1700][(seed + i) % 4];
-            const ratios = [0.70, 0.64, 0.55, 0.82];
-            const consumida = Math.round(total * ratios[(seed + i) % ratios.length]);
-            const crotalBase = 100000000000 + ((seed % 90) * 1000) + (i + 1);
-            items.push({
-                id: i + 1,
-                crotal: String(crotalBase),
-                diaInseminacion: 20 + ((seed + i * 7) % 60),
-                curva: 'DEFECTO',
-                corral: code,
-                total,
-                consumida,
-            });
-        }
-        return items;
-    };
-
-    // === Buscar: navega al detalle con datos simulados según demo ===
-    // CorralScreen.tsx (dentro del handler de Buscar)
+    // === Buscar: si corral = "1" => sin info; si corral = "2" => con info simulada ===
     const onBuscar = () => {
-        const code = corral.trim() || '—';
+        const code = (corral || '').trim();
+        if (!code) return;
 
-        if (demo === 'with') {
-            // simula que el corral existe y tiene animales
-            const total = 4;      // lo que quieras para la demo
-            const noFeed = 1;     // p.ej. 1 sin alimentar
-            navigation.navigate('CorralConAnimales', {
-                corral: code,
-                stats: { total, noFeed },
-            });
+        if (code === '1') {
+            // Fuerza pantalla sin datos (no hay animal)
+            navigation.navigate('MAT-CORRALDETAIL', { mockEmpty: true });
             return;
         }
 
-        // demo sin animales (como ya tenías)
-        navigation.navigate('CorralSinAnimales', {
-            corral: code,
-            stats: { total: 0, noFeed: 0 },
-        });
+        if (code === '2') {
+            // Tal cual: sin params. La pantalla hará su axios y mostrará sus datos “de fábrica”
+            navigation.navigate('MAT-CORRALDETAIL');
+            return;
+        }
+
+        // Para otros valores, puedes decidir. Aquí lo trato como “sin datos”
+        navigation.navigate('MAT-CORRALDETAIL', { mockEmpty: true });
     };
-
-
 
     return (
         <KeyboardAvoidingView
@@ -213,7 +169,7 @@ export default function CorralScreen() {
                         <TextInput
                             value={corral}
                             onChangeText={setCorral}
-                            placeholder="AB-1234"
+                            placeholder="1 ó 2"
                             placeholderTextColor="#94A3B8"
                             className="flex-1 ml-2 text-slate-900"
                             autoCapitalize="characters"
@@ -226,32 +182,6 @@ export default function CorralScreen() {
                                 <Ionicons name="close-circle" size={18} color="#94A3B8" />
                             </TouchableOpacity>
                         ) : null}
-                    </View>
-
-                    {/* Selector de modo demo */}
-                    <View style={{ flexDirection: 'row', marginTop: 10 }}>
-                        <TouchableOpacity
-                            onPress={() => setDemo('empty')}
-                            activeOpacity={0.9}
-                            style={{
-                                paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
-                                borderWidth: 1, borderColor: demo === 'empty' ? '#A5B4FC' : '#E2E8F0',
-                                backgroundColor: demo === 'empty' ? '#EEF2FF' : '#FFFFFF', marginRight: 8,
-                            }}
-                        >
-                            <Text style={{ color: '#3730A3', fontWeight: '700' }}>Demo: Sin animales</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => setDemo('with')}
-                            activeOpacity={0.9}
-                            style={{
-                                paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
-                                borderWidth: 1, borderColor: demo === 'with' ? '#A5B4FC' : '#E2E8F0',
-                                backgroundColor: demo === 'with' ? '#EEF2FF' : '#FFFFFF',
-                            }}
-                        >
-                            <Text style={{ color: '#3730A3', fontWeight: '700' }}>Demo: Con animales</Text>
-                        </TouchableOpacity>
                     </View>
 
                     {/* Botón Escanear / Detener */}

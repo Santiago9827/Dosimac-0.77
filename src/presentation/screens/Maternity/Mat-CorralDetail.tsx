@@ -6,8 +6,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import { CorralMatInfo } from '../../../libraries/interfaces/corral-Info.interface';
 
-const ipServer:string='http://192.168.1.238:3010'
-const corralInfoUrl:string=ipServer+'/corral/19'
+const ipServer: string = 'http://192.168.1.238:3010'
+const corralInfoUrl: string = ipServer + '/corral/19'
 export const MatCorralDetail = () => {
    const [isDeviceError, setDeviceError] = useState(true)
    const [hasDiasSinAlimentar, setHasDiasSinAlimentar] = useState(true)
@@ -16,59 +16,59 @@ export const MatCorralDetail = () => {
    const [requestError, setRequestError] = useState(false);
 
 
-   
-   const requestInfo=() => {
+
+   const requestInfo = () => {
       //Fech info form the backend
       // Simulamos un error en el dispositivo
-      console.log("llamada axios:"+ corralInfoUrl)
-      axios.get(corralInfoUrl) 
-      .then((response) => {         
-         // handle the response from the backend
-         // console.log('EXITO LLAMADA AXIOS -------')
-         console.log(response.data)
-         console.log(response.data.animal)
-         setCorralInfo(response.data)
-         
-      })
-      .catch((error) => {
-         // handle the error from the backend
-         console.log('Error axios' + error)
-      })
-      
-   
+      console.log("llamada axios:" + corralInfoUrl)
+      axios.get(corralInfoUrl)
+         .then((response) => {
+            // handle the response from the backend
+            // console.log('EXITO LLAMADA AXIOS -------')
+            console.log(response.data)
+            console.log(response.data.animal)
+            setCorralInfo(response.data)
+
+         })
+         .catch((error) => {
+            // handle the error from the backend
+            console.log('Error axios' + error)
+         })
+
+
 
 
    }
 
-    const requestInfo2= async () => {
+   const requestInfo2 = async () => {
       //Fech info form the backend
       // Simulamos un error en el dispositivo
       // const abortController = new AbortController();
 
-      
+
       // try {
       // const respuesta=await axios.get(corralInfoUrl)    
       // console.log(respuesta.status)
       // console.log(respuesta.data)
       // } catch (error) {
       //    console.log('Error axios' + error)         
-         
-      }
-      
 
-      // .then((response) => {         
-      //    // handle the response from the backend
-      //    console.log('EXITO LLAMADA AXIOS -------')
-      //    console.log(response.data)
-      //    console.log(response.data.animal)
-      //    setCorralInfo(response.data)
-         
-      // })
-      // .catch((error) => {
-      //    // handle the error from the backend
-      //    console.log('Error axios' + error)
-      // })
-   
+   }
+
+
+   // .then((response) => {         
+   //    // handle the response from the backend
+   //    console.log('EXITO LLAMADA AXIOS -------')
+   //    console.log(response.data)
+   //    console.log(response.data.animal)
+   //    setCorralInfo(response.data)
+
+   // })
+   // .catch((error) => {
+   //    // handle the error from the backend
+   //    console.log('Error axios' + error)
+   // })
+
 
 
    // }
@@ -78,12 +78,12 @@ export const MatCorralDetail = () => {
       requestInfo()
    }, [])
 
-   
+
    return (
 
-      
+
       <ScrollView className='flex-1 bg-gray-100 '>
-         <Text>{corraInfo?.animal?'hay animal':'no hay animal'}</Text>
+         <Text>{corraInfo?.animal ? 'hay animal' : 'no hay animal'}</Text>
          <Image source={CerdoMaternidad} className="w-fit h-2/3  absolute translate-x-3 translate-y-60 opacity-40 " />
 
          <View className='mx-4'>
@@ -235,14 +235,14 @@ export const MatCorralDetail = () => {
                      <Text className='text-lg text-gray-600 font-normal'>Fecha entrada</Text>
                      <View className='flex-row'>
                         <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                        <Text className='text-xl text-gray-600 font-bold font-mono'>10/12/2021</Text>
+                        <Text className='text-xl text-gray-600 font-bold font-mono'>15/10/2025</Text>
                      </View>
                   </View>
                   <View className='flex-col'>
                      <Text className='text-lg text-gray-600 font-normal'>Fecha parto</Text>
                      <View className='flex-row'>
                         <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                        <Text className='text-xl text-gray-600 font-bold font-mono'>12/12/2021</Text>
+                        <Text className='text-xl text-gray-600 font-bold font-mono'>12/12/2025</Text>
                      </View>
                   </View>
                </View>
