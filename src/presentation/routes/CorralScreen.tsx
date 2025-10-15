@@ -213,7 +213,7 @@ export default function CorralScreen() {
                         <TextInput
                             value={corral}
                             onChangeText={setCorral}
-                            placeholder=""
+                            placeholder="AB-1234"
                             placeholderTextColor="#94A3B8"
                             className="flex-1 ml-2 text-slate-900"
                             autoCapitalize="characters"
