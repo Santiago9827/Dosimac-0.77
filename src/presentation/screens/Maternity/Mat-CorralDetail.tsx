@@ -1,19 +1,19 @@
-import { View, Text, Image, ScrollView, TouchableOpacity, Modal, Pressable, Animated, Dimensions, TextInput } from 'react-native'
-import React, { useEffect, useState, useRef, useMemo } from 'react'
-import { CerdoMaternidad } from '../../../assets'
+import { View, Text, Image, ScrollView, TouchableOpacity, Modal, Pressable, Animated, Dimensions, TextInput } from 'react-native';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { CerdoMaternidad } from '../../../assets';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
-import { CorralMatInfo } from '../../../libraries/interfaces/corral-Info.interface';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRoute } from '@react-navigation/native';
+import { DrawerItem } from '@react-navigation/drawer';
+// import { CorralMatInfo } from '../../../libraries/interfaces/corral-Info.interface'; // si la tienes, ok
 
-const ipServer: string = 'http://192.168.1.238:3010'
-const corralInfoUrl: string = ipServer + '/corral/19'
+const ipServer = 'http://192.168.1.238:3010';
+const corralInfoUrl = (id: number) => `${ipServer}/corral/${id}`;
 
-// --- estilos util ---
 const CARD_BORDER = '#E2E8F0';
 const BRAND = '#4F46E5';
 
-// --- helpers drawer derecho ---
 const useRightDrawer = () => {
    const w = Math.min(340, Math.round(Dimensions.get('window').width * 0.88));
    const [open, setOpen] = useState(false);
@@ -23,13 +23,9 @@ const useRightDrawer = () => {
    return { open, show, hide, tx, width: w };
 };
 
-const DrawerItem = ({ label, onPress }: { label: string; onPress: () => void }) => (
-   <Pressable onPress={onPress} android_ripple={{ color: '#e5e7eb' }} style={{ paddingVertical: 12, paddingHorizontal: 14, borderRadius: 10 }}>
-      <Text style={{ color: '#0f172a', fontWeight: '600' }}>{label}</Text>
-   </Pressable>
-);
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
 
-// --- diálogos reutilizables (mismos de tu otra pantalla) ---
 function RadioDialog({
    visible, title, options, current, onClose, onAccept,
 }: {
@@ -64,12 +60,6 @@ function RadioDialog({
       </Modal>
    );
 }
-
-const pad2 = (n: number) => String(n).padStart(2, '0');
-const todayStr = () => {
-   const d = new Date();
-   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-};
 
 function SubEstadoDialog({
    visible, current, dateStr, onClose, onAccept,
@@ -158,48 +148,71 @@ function CrotalDialog({
 
 export const MatCorralDetail = () => {
    const insets = useSafeAreaInsets();
+   const route = useRoute<any>();
+   const params = route.params ?? {};
+   const { corralId = 0, mockEmpty, mockData, deviceError, diasSinAlimentar, statusMessage } = params;
 
-   const [isDeviceError, setDeviceError] = useState(true)
-   const [hasDiasSinAlimentar, setHasDiasSinAlimentar] = useState(true)
-   const [corraInfo, setCorralInfo] = useState<CorralMatInfo | null>(null);
+   // ====== estado superior (error/disparadores) ======
+   const [isDeviceError, setDeviceError] = useState<boolean>(!!deviceError);
+   const [hasDiasSinAlimentar, setHasDiasSinAlimentar] = useState<boolean>(!!diasSinAlimentar);
+
+   // Info de corral (puede ser mock o backend)
+   const [corraInfo, setCorralInfo] = useState<any | null>(null);
    const [requestError, setRequestError] = useState(false);
 
-   // estado “local” para operar con el animal mostrado (no cambia tu UI fija si no quieres)
+   // estado local para editar (si hay animal)
    const [animalState, setAnimalState] = useState({
-      crotal: '123456789',
-      curva: 'Multiparas',
-      condicion: 'Normal',
-      subEstado: 'LACTANCIA',
+      crotal: '—',
+      curva: '—',
+      condicion: '—',
+      subEstado: '—',
       subEstadoFecha: todayStr(),
    });
 
-   // drawer y diálogos
    const drawer = useRightDrawer();
    const [dlgCurva, setDlgCurva] = useState(false);
    const [dlgCond, setDlgCond] = useState(false);
    const [dlgSub, setDlgSub] = useState(false);
-   const [dlgSalida, setDlgSalida] = useState(false); // placeholder
+   const [dlgSalida, setDlgSalida] = useState(false);
    const [dlgCrotal, setDlgCrotal] = useState(false);
 
-   const requestInfo = () => {
-      console.log("llamada axios:" + corralInfoUrl)
-      axios.get(corralInfoUrl)
-         .then((response) => {
-            console.log(response.data)
-            console.log(response.data.animal)
-            setCorralInfo(response.data)
-         })
-         .catch((error) => {
-            console.log('Error axios' + error)
-            setRequestError(true)
-         })
-   }
+   // ====== cargar info ======
+   useEffect(() => {
+      // 1) mock vacío
+      if (mockEmpty) {
+         setCorralInfo({}); // sin animal
+         return;
+      }
+      // 2) mock con datos
+      if (mockData) {
+         setCorralInfo(mockData);
+         return;
+      }
+      // 3) backend real
+      const url = corralInfoUrl(corralId || 19);
+      axios.get(url)
+         .then((res) => setCorralInfo(res.data))
+         .catch(() => setRequestError(true));
+   }, [corralId, mockEmpty, mockData]);
 
-   useEffect(() => { requestInfo() }, [])
+   // Derivados
+   const animal = corraInfo?.animal;
+   const hasAnimal = !!animal;
 
-   const hasAnimal = !!corraInfo?.animal;
+   // si llega mock de animal preparo el estado editable inicial
+   useEffect(() => {
+      if (animal) {
+         setAnimalState(s => ({
+            ...s,
+            crotal: animal.crotal ?? s.crotal,
+            curva: animal.curva ?? s.curva,
+            subEstado: animal.subEstado ?? s.subEstado,
+            subEstadoFecha: animal.subEstadoFecha ?? s.subEstadoFecha,
+         }));
+      }
+   }, [hasAnimal]); // eslint-disable-line
 
-   // acciones del drawer (mismas keys que en tu otra pantalla)
+   // acciones drawer
    const openAction = (key: string) => {
       drawer.hide();
       setTimeout(() => {
@@ -208,124 +221,114 @@ export const MatCorralDetail = () => {
          else if (key === 'subEstado') setDlgSub(true);
          else if (key === 'salidaAnimal') setDlgSalida(true);
          else if (key === 'sustituirCrotal') setDlgCrotal(true);
-         else {
-            // otras opciones placeholder
-         }
       }, 120);
    };
 
-   // handlers de aceptación (actualizan solo estado local)
-   const applyCurva = (val: string) => {
-      setAnimalState(s => ({ ...s, curva: val }));
-      setDlgCurva(false);
-   };
-   const applyCondicion = (val: string) => {
-      setAnimalState(s => ({ ...s, condicion: val }));
-      setDlgCond(false);
-   };
-   const applySubEstado = (estado: string, fecha: string) => {
-      setAnimalState(s => ({ ...s, subEstado: estado, subEstadoFecha: fecha }));
-      setDlgSub(false);
-   };
-   const applySalida = (val: string) => {
-      // placeholder; cierra dialog
-      setDlgSalida(false);
-   };
-   const applyCrotal = (nuevo: string) => {
-      if (!nuevo) return;
-      setAnimalState(s => ({ ...s, crotal: nuevo }));
-      setDlgCrotal(false);
-   };
+   const applyCurva = (val: string) => { setAnimalState(s => ({ ...s, curva: val })); setDlgCurva(false); };
+   const applyCondicion = (val: string) => { setAnimalState(s => ({ ...s, condicion: val })); setDlgCond(false); };
+   const applySubEstado = (estado: string, fecha: string) => { setAnimalState(s => ({ ...s, subEstado: estado, subEstadoFecha: fecha })); setDlgSub(false); };
+   const applySalida = () => setDlgSalida(false);
+   const applyCrotal = (nuevo: string) => { if (!nuevo) return; setAnimalState(s => ({ ...s, crotal: nuevo })); setDlgCrotal(false); };
+
+   // helpers consumo (cuando llega en mock)
+   const objetivo = animal?.consumo?.objetivo ?? 12000;
+   const actual = animal?.consumo?.actual ?? 11000;
+   const pct = objetivo > 0 ? Math.round((actual / objetivo) * 100) : 0;
 
    return (
       <View style={{ flex: 1 }}>
-         <ScrollView className='flex-1 bg-gray-100 ' contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
-            <Text>{hasAnimal ? 'hay animal' : 'no hay animal'}</Text>
-            <Image source={CerdoMaternidad} className="w-fit h-2/3  absolute translate-x-3 translate-y-60 opacity-40 " />
+         <ScrollView className='flex-1 bg-gray-100' contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
+            {/* bandera debug */}
+            {/* <Text style={{ marginHorizontal: 16, marginTop: 8, color: '#475569' }}>
+               {hasAnimal ? 'hay animal' : 'no hay animal'}
+            </Text> */}
+
+            <Image source={CerdoMaternidad} className="w-fit h-2/3 absolute translate-x-3 translate-y-60 opacity-40" />
 
             <View className='mx-4'>
-               {/* Error en el dispositivo del corral */}
-               {isDeviceError &&
+               {/* Estado del dispositivo del corral */}
+               {(isDeviceError || statusMessage) && (
                   <View className='mt-3 h-8 bg-red-500 rounded-md flex-col justify-center items-center'>
-                     <Text className='text-white font-normal text-base'>Error:  El motor no funciona</Text>
+                     <Text className='text-white font-normal text-base'>{statusMessage || 'Error:  El motor no funciona'}</Text>
                   </View>
-               }
+               )}
 
-               {/* ---- BLOQUE DE INFORMACIÓN: lo dejas tal cual ---- */}
+               {/* ---- INFORMACIÓN ---- */}
                {/* ID - CROTAL - CICLO */}
                <View className='flex-row justify-between mt-4'>
                   <View className='flex-row items-end'>
-                     <Text className='text-base text-gray-500 px-2  bg-gray-200 rounded-full'>ID</Text>
-                     <Text className='text-xl text-gray-600 font-semibold'>1235</Text>
+                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'>ID</Text>
+                     <Text className='text-xl text-gray-600 font-semibold'>{animal?.id ?? '—'}</Text>
                   </View>
                   <View className='flex-row items-end'>
-                     <Text className='text-base text-gray-500 px-2  bg-gray-200 rounded-full'>Crotal</Text>
-                     <Text className='text-xl text-gray-600 font-semibold'>123456789</Text>
+                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'>Crotal</Text>
+                     <Text className='text-xl text-gray-600 font-semibold'>{animal?.crotal ?? '—'}</Text>
                   </View>
                   <View className='flex-row items-end'>
-                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'> Cicle</Text>
-                     <Text className='text-xl text-gray-600 font-semibold'> 5</Text>
+                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'>Ciclo</Text>
+                     <Text className='text-xl text-gray-600 font-semibold'>{animal?.ciclo ?? '—'}</Text>
                   </View>
                </View>
 
-               {/* SUBESTADO - DIA */}
+               {/* SUBESTADO - DÍA */}
                <View className='flex-row justify-between mx-8 mt-6 items-end'>
                   <View className='flex-row flex-1'>
-                     <Text className='text-3xl text-blue-900 font-semibold'>Parto</Text>
+                     <Text className='text-2xl text-blue-900 font-semibold'>{animalState.subEstado ?? '—'}</Text>
                   </View>
                   <View className='flex-row flex-1 justify-end '>
-                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'> Dia</Text>
-                     <Text className='text-xl text-gray-600 font-semibold pl-2'>5</Text>
+                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'> Día</Text>
+                     <Text className='text-xl text-gray-600 font-semibold pl-2'>{animal?.dia ?? '—'}</Text>
                   </View>
                </View>
 
-               {/* ALIMENTACION */}
+               {/* ALIMENTACIÓN */}
                <View className='flex-row justify-between mt-6'>
                   <View className='flex-col'>
                      <View className='flex-row items-baseline'>
-                        <Text className='text-6xl text-gray-600 font-semibold tracking-tighter  '>11000</Text>
+                        <Text className='text-6xl text-gray-600 font-semibold tracking-tighter'>{actual.toLocaleString('es-ES')}</Text>
                         <Text className='text-xl text-gray-600 font-normal ml-1 '>gr</Text>
                      </View>
-                     <View className=''>
-                        <View className='w-fit h-3 bg-gray-300 rounded-full'></View>
-                        <View className='w-10/12 h-3 bg-green-500 rounded-full absolute '></View>
+                     <View>
+                        <View className='w-fit h-3 bg-gray-300 rounded-full' />
+                        <View className='w-10/12 h-3 bg-green-500 rounded-full absolute' style={{ width: `${Math.min(100, pct)}%` }} />
                      </View>
                      <View className='flex-row justify-between'>
-                        <Text className='font-normal text-md'>12000 gr</Text>
-                        <Text className='font-normal text-md'>92%</Text>
+                        <Text className='font-normal text-md'>{objetivo.toLocaleString('es-ES')} gr</Text>
+                        <Text className='font-normal text-md'>{pct}%</Text>
                      </View>
                   </View>
 
+                  {/* barras dummy (como tenías) */}
                   <View className='flex-col justify-end'>
                      <View className='flex-row '>
                         <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full'></View>
-                           <View className='h-10 w-2 bg-green-500 rounded-t-full'></View>
+                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full' />
+                           <View className='h-10 w-2 bg-green-500 rounded-t-full' />
                         </View>
                         <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full'></View>
-                           <View className='h-12 w-2 bg-green-500 rounded-t-full'></View>
+                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full' />
+                           <View className='h-12 w-2 bg-green-500 rounded-t-full' />
                         </View>
                         <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full'></View>
-                           <View className='h-5 w-2 bg-red-600 rounded-t-full'></View>
+                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full' />
+                           <View className='h-5 w-2 bg-red-600 rounded-t-full' />
                         </View>
                         <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full'></View>
-                           <View className='h-12 w-2 bg-green-500 rounded-t-full'></View>
+                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full' />
+                           <View className='h-12 w-2 bg-green-500 rounded-t-full' />
                         </View>
                         <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-6 bg-gray-500 absolute rounded-t-full'></View>
-                           <View className='h-5 w-6 bg-green-500 rounded-t-full'></View>
+                           <View className='h-12 w-6 bg-gray-500 absolute rounded-t-full' />
+                           <View className='h-5 w-6 bg-green-500 rounded-t-full' />
                         </View>
                         <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500  rounded-t-full'></View>
+                           <View className='h-12 w-2 bg-gray-500  rounded-t-full' />
                         </View>
                         <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500  rounded-t-full'></View>
+                           <View className='h-12 w-2 bg-gray-500  rounded-t-full' />
                         </View>
                         <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500  rounded-t-full'></View>
+                           <View className='h-12 w-2 bg-gray-500  rounded-t-full' />
                         </View>
                      </View>
                      <View className='flex-row justify-between'>
@@ -336,28 +339,28 @@ export const MatCorralDetail = () => {
                </View>
 
                {/* Aviso días sin alimentar */}
-               {hasDiasSinAlimentar &&
+               {hasDiasSinAlimentar && (
                   <View className='mt-4 h-8 bg-red-500 rounded-md flex-col justify-center items-center'>
-                     <Text className='text-white font-normal text-base'>2 días sins alimentar</Text>
+                     <Text className='text-white font-normal text-base'>2 días sin alimentar</Text>
                   </View>
-               }
+               )}
 
-               {/* Resto informacion animal */}
+               {/* Resto información */}
                <View className='flex-col stretch'>
                   <View className='flex-row justify-between mt-6'>
                      <View className='flex-col'>
                         <Text className='text-lg text-gray-600 font-normal'>Curva</Text>
                         <View className='flex-row'>
                            <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>Multiparas</Text>
+                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.curva ?? '—'}</Text>
                         </View>
                      </View>
 
                      <View className='flex-col'>
-                        <Text className='text-lg text-gray-600 font-normal'>Correción</Text>
+                        <Text className='text-lg text-gray-600 font-normal'>Corrección</Text>
                         <View className='flex-row'>
                            <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>100% curva</Text>
+                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.correccion ?? '—'}</Text>
                         </View>
                      </View>
                   </View>
@@ -367,14 +370,14 @@ export const MatCorralDetail = () => {
                         <Text className='text-lg text-gray-600 font-normal'>Fecha entrada</Text>
                         <View className='flex-row'>
                            <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>15/10/2025</Text>
+                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.fechas?.entrada ?? '—'}</Text>
                         </View>
                      </View>
                      <View className='flex-col'>
                         <Text className='text-lg text-gray-600 font-normal'>Fecha parto</Text>
                         <View className='flex-row'>
                            <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>12/12/2025</Text>
+                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.fechas?.parto ?? '—'}</Text>
                         </View>
                      </View>
                   </View>
@@ -384,30 +387,30 @@ export const MatCorralDetail = () => {
                         <Text className='text-lg text-gray-600 font-normal'>Nave</Text>
                         <View className='flex-row'>
                            <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>G-1</Text>
+                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.nave ?? '—'}</Text>
                         </View>
                      </View>
                      <View className='flex-col'>
                         <Text className='text-lg text-gray-600 font-normal'>Corral</Text>
                         <View className='flex-row'>
                            <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>21</Text>
+                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.corral ?? corralId ?? '—'}</Text>
                         </View>
                      </View>
                   </View>
 
                   <View className='flex-row justify-between mt-5'>
                      <View className='flex-col'>
-                        <Text className='text-lg text-gray-600 font-normal'>Última alimentacion</Text>
+                        <Text className='text-lg text-gray-600 font-normal'>Última alimentación</Text>
                         <View className='flex-row'>
                            <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>13/10/2025</Text>
+                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.ultimaAlimentacion ?? '—'}</Text>
                         </View>
                      </View>
                   </View>
                </View>
 
-               {/* CTA cuando NO hay animal (sigues usándolo aquí arriba) */}
+               {/* CTA cuando NO hay animal */}
                {!hasAnimal && (
                   <View className='mt-6'>
                      <TouchableOpacity
@@ -415,7 +418,7 @@ export const MatCorralDetail = () => {
                         activeOpacity={0.9}
                         className='h-12 rounded-md bg-indigo-600 items-center justify-center'
                      >
-                        <Text className='text-white font-semibold'>Meter animales</Text>
+                        <Text className='text-white font-semibold'>Introducir animales</Text>
                      </TouchableOpacity>
                   </View>
                )}
@@ -439,16 +442,17 @@ export const MatCorralDetail = () => {
                   >
                      <Text style={{ color: '#fff', fontWeight: '700' }}>Operaciones</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
+                  {/* <TouchableOpacity
                      onPress={() => setDlgSub(true)}
                      activeOpacity={0.9}
                      style={{ flex: 1, backgroundColor: '#E5E7EB', borderRadius: 12, height: 48, alignItems: 'center', justifyContent: 'center' }}
                   >
                      <Text style={{ color: '#0f172a', fontWeight: '700' }}>Siguiente estado</Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                </View>
             </View>
          )}
+
 
          {/* Drawer lateral derecho */}
          <Modal visible={drawer.open} transparent animationType="none" onRequestClose={drawer.hide}>

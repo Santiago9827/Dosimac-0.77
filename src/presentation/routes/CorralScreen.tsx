@@ -9,12 +9,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import NfcManager, { Ndef, NfcEvents } from 'react-native-nfc-manager';
 
-type NFCRecord = {
-    tnf: number;
-    text?: string;
-    uri?: string;
-    payloadHex?: string;
-};
+type NFCRecord = { tnf: number; text?: string; uri?: string; payloadHex?: string };
 
 export default function CorralScreen() {
     const insets = useSafeAreaInsets();
@@ -24,6 +19,53 @@ export default function CorralScreen() {
     const [scanning, setScanning] = useState(false);
     const [lastTag, setLastTag] = useState<any | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    // ====== MOCKS por corral ======
+    const MOCKS: Record<string, any> = {
+        // corral 2: animal presente
+        '2': {
+            animal: {
+                id: 1235,
+                crotal: '123456789012345',
+                ciclo: 5,
+                subEstado: 'LACTANCIA',
+                subEstadoFecha: '2025-01-12',
+                dia: 5,
+                nave: 'G-1',
+                corral: '2',
+                fechas: { entrada: '15/10/2025', parto: '12/12/2025' },
+                ultimaAlimentacion: '13/10/2025',
+                curva: 'Multiparas',
+                correccion: '100% curva',
+                consumo: { objetivo: 12000, actual: 11000 }, // 92%
+            },
+            deviceError: true,
+            diasSinAlimentar: true,
+            statusMessage: '',
+        },
+
+        // corral 3: otro animal
+        '3': {
+            animal: {
+                id: 987,
+                crotal: '111222333444555',
+                ciclo: 3,
+                subEstado: 'PREPARTO',
+                subEstadoFecha: '2025-02-03',
+                dia: 12,
+                nave: 'G-2',
+                corral: '3',
+                fechas: { entrada: '01/11/2025', parto: '—' },
+                ultimaAlimentacion: '02/11/2025',
+                curva: 'General',
+                correccion: '95% curva',
+                consumo: { objetivo: 9000, actual: 6300 }, // 70%
+            },
+            deviceError: false,
+            diasSinAlimentar: false,
+            statusMessage: '',
+        },
+    };
 
     useEffect(() => {
         NfcManager.start().catch(() => { });
@@ -36,7 +78,6 @@ export default function CorralScreen() {
     const fmtHex = (bytes?: number[]) =>
         bytes ? Array.from(bytes).map(b => ('00' + b.toString(16)).slice(-2)).join(' ') : undefined;
 
-    // Decodifica NDEF (texto / URI)
     const decodeNdef = (tag: any): NFCRecord[] => {
         const msg = tag?.ndefMessage;
         if (!msg || !Array.isArray(msg)) return [];
@@ -46,15 +87,11 @@ export default function CorralScreen() {
                 let uri: string | undefined;
                 if (record?.payload && Array.isArray(record.payload)) {
                     try { text = Ndef.text.decodePayload(Uint8Array.from(record.payload)); } catch { }
-                    if (!text) {
-                        try { uri = Ndef.uri.decodePayload(Uint8Array.from(record.payload)); } catch { }
-                    }
+                    if (!text) { try { uri = Ndef.uri.decodePayload(Uint8Array.from(record.payload)); } catch { } }
                 }
                 return { tnf: record.tnf, text, uri, payloadHex: fmtHex(record.payload) };
             });
-        } catch {
-            return [];
-        }
+        } catch { return []; }
     };
 
     const pickCorralFromTag = (tag: any) => {
@@ -67,7 +104,6 @@ export default function CorralScreen() {
         return '';
     };
 
-    // === NFC handlers ===
     const handleTag = useCallback(async (tag: any) => {
         setLastTag(tag);
         const value = pickCorralFromTag(tag);
@@ -84,7 +120,6 @@ export default function CorralScreen() {
         try {
             const supported = await NfcManager.isSupported();
             if (!supported) { setErrorMsg('Este dispositivo no soporta NFC.'); return; }
-
             const enabled = await NfcManager.isEnabled();
             if (!enabled) {
                 if (Platform.OS === 'android') {
@@ -92,17 +127,13 @@ export default function CorralScreen() {
                         { text: 'Cancelar', style: 'cancel' },
                         { text: 'Abrir Ajustes', onPress: () => NfcManager.goToNfcSetting?.() },
                     ]);
-                } else {
-                    setErrorMsg('NFC desactivado.');
-                }
+                } else { setErrorMsg('NFC desactivado.'); }
                 return;
             }
-
             setLastTag(null);
             setScanning(true);
-
             NfcManager.setEventListener(NfcEvents.DiscoverTag, handleTag);
-            await NfcManager.registerTagEvent(); // sin callback
+            await NfcManager.registerTagEvent();
         } catch (e: any) {
             setScanning(false);
             setErrorMsg(e?.message || 'No se pudo iniciar el escaneo.');
@@ -115,25 +146,44 @@ export default function CorralScreen() {
         setScanning(false);
     }, []);
 
-    // === Buscar: si corral = "1" => sin info; si corral = "2" => con info simulada ===
+    // === Buscar/navegar con mock según corral ===
     const onBuscar = () => {
         const code = (corral || '').trim();
-
         if (!code) return;
 
+        // Corral 1 => sin animal + error de motor
         if (code === '1') {
-            navigation.navigate('MAT-CORRALDETAIL', { corralId: 1, mockEmpty: true });
+            navigation.navigate('MAT-CORRALDETAIL', {
+                corralId: 1,
+                mockEmpty: true,
+                deviceError: true,
+                diasSinAlimentar: false,
+                statusMessage: 'Error: El motor no funciona',
+            });
             return;
         }
 
-        if (code === '2') {
-            navigation.navigate('MAT-CORRALDETAIL', { corralId: 2 });
+        // Corral 2/3 => datos mock
+        if (MOCKS[code]) {
+            navigation.navigate('MAT-CORRALDETAIL', {
+                corralId: Number(code),
+                mockData: MOCKS[code],
+                deviceError: MOCKS[code].deviceError,
+                diasSinAlimentar: MOCKS[code].diasSinAlimentar,
+                statusMessage: MOCKS[code].statusMessage,
+            });
             return;
         }
 
-        navigation.navigate('MAT-CORRALDETAIL', { corralId: Number(code), mockEmpty: true });
+        // Otros => vacío sin error (o lo que prefieras)
+        navigation.navigate('MAT-CORRALDETAIL', {
+            corralId: Number(code),
+            mockEmpty: true,
+            deviceError: false,
+            diasSinAlimentar: false,
+            statusMessage: '',
+        });
     };
-
 
     return (
         <KeyboardAvoidingView
