@@ -6,13 +6,12 @@ import { DonutChart } from '../../components/shared/DonutChart';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-/** ====== Tokens de diseño (coherentes con Home) ====== */
-const SURFACE_BG = '#F6F8FC';   // fondo de pantalla
-const CARD_BG = '#FFFFFF';   // fondo de la card
-const CARD_BORDER = '#E6EAF2';   // borde sutil de la card
+const SURFACE_BG = '#F6F8FC';
+const CARD_BG = '#FFFFFF';
+const CARD_BORDER = '#E6EAF2';
 const BRAND = '#4F46E5';
 
-const INCIDENT_BLOCK_BG = '#FFFFFF'; // superficie del bloque
+const INCIDENT_BLOCK_BG = '#FFFFFF';
 const INCIDENT_ITEM_BG = '#FEE2E2';
 const INCIDENT_ITEM_BORDER = '#FECACA';
 const INCIDENT_PILL_BG = '#FCA5A5';
@@ -27,11 +26,10 @@ const SHADOW = {
     elevation: 1,
 };
 
-// Layout proporciones
-const LEFT_FLEX = 35;  // donut
-const RIGHT_FLEX = 68; // datos
-const VALUE_W = 80;    // ancho fijo para alinear números
-const CHEVRON_W = 18;  // ancho fijo para chevron
+const LEFT_FLEX = 35;
+const RIGHT_FLEX = 68;
+const VALUE_W = 80;
+const CHEVRON_W = 18;
 
 type DatosMaternidad = { alimentados: number; noAlimentados: number };
 type Incidencia = {
@@ -45,12 +43,10 @@ export default function MaternidadScreen() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation<NavigationProp<any>>();
 
-    // Datos demo
     const maternidad: DatosMaternidad = { alimentados: 180, noAlimentados: 20 };
     const total = maternidad.alimentados + maternidad.noAlimentados;
     const pct = total ? Math.round((maternidad.alimentados / total) * 100) : 0;
 
-    // Incidencias SOLO de Maternidad
     const incidenciasMaternidad: Incidencia[] = [
         { id: 1, area: 'Maternidad', corral: '02', descripcion: 'Bebedero con caudal bajo.' },
         { id: 2, area: 'Maternidad', corral: '05', descripcion: 'Puerta sin cierre.' },
@@ -64,7 +60,6 @@ export default function MaternidadScreen() {
     const DANGER = '#DC2626';
     const OK = '#16A34A';
 
-    // ------- ROW (métricas) -------
     const Row = ({
         label,
         value,
@@ -124,11 +119,9 @@ export default function MaternidadScreen() {
         );
     };
 
-    // color dinámico para "No Alimentados"
     const noAl = maternidad.noAlimentados;
     const noAlColor = noAl === 0 ? OK : DANGER;
 
-    // ------- UI -------
     const SectionTitle = ({ icon, text, count }: { icon: string; text: string; count?: number }) => (
         <View className="flex-row items-center justify-between mb-3 px-5">
             <View className="flex-row items-center">
@@ -143,7 +136,6 @@ export default function MaternidadScreen() {
         </View>
     );
 
-    // Tarjeta incidencia (tema rojo suave, sin “lianas”)
     const renderIncidencia = ({ item }: { item: Incidencia }) => (
         <Pressable
             onPress={() => { }}
@@ -206,17 +198,24 @@ export default function MaternidadScreen() {
                                 labelColor={noAlColor}
                                 valueColor={noAlColor}
                             />
-                            <Row label="Totales animales" value={total} strong divider />
+                            {/* ⇩⇩ AHORA ES BOTÓN ⇩⇩ */}
+                            <Row
+                                label="Totales animales"
+                                value={total}
+                                strong
+                                divider
+                                action
+                                onPress={() => navigation.navigate('TodosAnimalesMaternidad')}
+                            />
                         </View>
                     </View>
                 </View>
             </View>
 
-            {/* Bloque 2: Incidencias (misma UX que Home, con scroll interno) */}
+            {/* Bloque 2: Incidencias */}
             <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasMaternidad.length} />
 
             <View className="px-5">
-                {/* contenedor blanco, sin borde, con scroll interno */}
                 <View
                     className="rounded-2xl overflow-hidden"
                     style={{ backgroundColor: INCIDENT_BLOCK_BG, paddingVertical: 12, paddingHorizontal: 12, ...SHADOW }}
@@ -232,7 +231,6 @@ export default function MaternidadScreen() {
                     </View>
                 </View>
 
-                {/* CTA inferior */}
                 <TouchableOpacity
                     onPress={() => navigation.navigate('MAT-CORRAL' as never)}
                     className="mt-4 rounded-xl px-4 py-3 active:opacity-90"

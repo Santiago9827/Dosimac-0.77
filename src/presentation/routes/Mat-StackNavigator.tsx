@@ -14,6 +14,7 @@ import MaternidadScreen from '../screens/HomeScreen/MaternidadScren';
 import CorralMaternidadSinAnimalesScreen from './CorralMaternidadSinAnimalesScreen';
 import MatAddAnimalsScreen from './MatAddAnimalsScreen';
 import CorralMaternidadConAnimalesScreen from './CorralMaternidadConAnimalesScreen';
+import TodosAnimalesMaternidad from './TodosAnimalesMaternidad';
 
 
 
@@ -85,6 +86,11 @@ export const MaternityStackNavigator = () => {
             component={CorralMaternidadConAnimalesScreen}
             options={{ title: 'Corral Maternidad animales', headerShown: true }}
          />
+         <MaternityStack.Screen
+            name="TodosAnimalesMaternidad"
+            component={TodosAnimalesMaternidad}
+            options={{ title: 'Todos los Animales', headerShown: true }} />
+
 
          {/* <DRegistationStack.Screen name="DR-SETUP" component={TopTabDrSetupNavigator} 
             options={{ title: 'Dosimac Setup',headerShown: true, headerLeft:()=>null,headerStyle:{elevation:5} }}
