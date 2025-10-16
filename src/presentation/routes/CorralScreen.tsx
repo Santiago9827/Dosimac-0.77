@@ -118,23 +118,22 @@ export default function CorralScreen() {
     // === Buscar: si corral = "1" => sin info; si corral = "2" => con info simulada ===
     const onBuscar = () => {
         const code = (corral || '').trim();
+
         if (!code) return;
 
         if (code === '1') {
-            // Fuerza pantalla sin datos (no hay animal)
-            navigation.navigate('MAT-CORRALDETAIL', { mockEmpty: true });
+            navigation.navigate('MAT-CORRALDETAIL', { corralId: 1, mockEmpty: true });
             return;
         }
 
         if (code === '2') {
-            // Tal cual: sin params. La pantalla hará su axios y mostrará sus datos “de fábrica”
-            navigation.navigate('MAT-CORRALDETAIL');
+            navigation.navigate('MAT-CORRALDETAIL', { corralId: 2 });
             return;
         }
 
-        // Para otros valores, puedes decidir. Aquí lo trato como “sin datos”
-        navigation.navigate('MAT-CORRALDETAIL', { mockEmpty: true });
+        navigation.navigate('MAT-CORRALDETAIL', { corralId: Number(code), mockEmpty: true });
     };
+
 
     return (
         <KeyboardAvoidingView
