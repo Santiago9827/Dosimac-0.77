@@ -1,134 +1,159 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Tab1Screen } from '../screens/tabs/Tab1Screen';
-import { Tab2Screen } from '../screens/tabs/Tab2Screen';
-import { Tab3Screen } from '../screens/tabs/Tab3Screen';
-import { globalColors } from '../theme/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from 'react-native';
-import { TopTabsNavigator } from './TopTabsNavigator';
-
-import { HomeDebugScreen } from '../screens/Debug/HomeDebugScreen/HomeDebugScreen';
-import { IonIcon } from '../components/shared/IonIcon';
-import { DebugNavigator } from './DebugNavigator';
-import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
-import { GestationScreen } from '../screens/Gestation/Gestation';
-import { MaternityScreen } from '../screens/Maternity/Maternity';
-import { MaternityStackNavigator } from './Mat-StackNavigator';
-import { isDebugMode } from '../../sharedTypes/globlaVars';
-import { useTranslation } from 'react-i18next';
-import { CTIFeedScreen } from '../screens/HomeScreen/CTIFeedScreen';
-import MaternidadScren from '../screens/HomeScreen/MaternidadScren';
-import { GestationStackNavigator } from './GestationStackNavigator';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
+import { globalColors } from '../theme/theme';
+import { IonIcon } from '../components/shared/IonIcon';
+import { useTranslation } from 'react-i18next';
+import { isDebugMode } from '../../sharedTypes/globlaVars';
+
+import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
+import { GestationScreen } from '../screens/Gestation/Gestation';
+import { MaternityStackNavigator } from './Mat-StackNavigator';
+import { CTIFeedScreen } from '../screens/HomeScreen/CTIFeedScreen';
+import { GestationStackNavigator } from './GestationStackNavigator';
 
 const Tab = createBottomTabNavigator();
 
+const ACTIVE_COLOR = "#3F0BAE"; // '#3B82F6' // azul
+const INACTIVE_COLOR = '#94A3B8';
+const ACTIVE_BG = 'rgba(63,11,174,0.10)';
+
 export const BottomTabNavigator = () => {
   const { t } = useTranslation('common');
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
-      sceneContainerStyle={{
-        backgroundColor: globalColors.background,
-      }}
-
-      screenOptions={{
-        tabBarActiveTintColor: globalColors.primary, //color del icono del tab seleccionado
+      sceneContainerStyle={{ backgroundColor: globalColors.background }}
+      screenOptions={({ route }) => ({
         headerShown: true,
-        tabBarLabelStyle: {
-          marginBottom: 5,
-        },
-        headerStyle: {
-          elevation: 0,
-        },
+
+        // Colores
+        tabBarActiveTintColor: ACTIVE_COLOR,
+        tabBarInactiveTintColor: INACTIVE_COLOR,
+
+        // Barra compacta y con aire
         tabBarStyle: {
+          height: 58 + insets.bottom,
+          paddingTop: 4,
+          paddingBottom: Math.max(insets.bottom, 8),
           borderTopWidth: 1,
-          elevation: 5,
-          borderStyle: 'solid',
           borderColor: '#f1f1f1',
+          elevation: 5,
           shadowColor: 'transparent',
-          // backgroundColor:'#9FFFFf',
-          // marginTop:15,
-          height: 60,
+          backgroundColor: globalColors.background,
+        },
 
+        // “Pill” sutil y proporción equilibrada
+        tabBarItemStyle: {
+          marginHorizontal: 6,
+          paddingVertical: 4,
+          borderRadius: 12,
+        },
+        tabBarActiveBackgroundColor: ACTIVE_BG,
+        tabBarInactiveBackgroundColor: 'transparent',
 
+        // Texto más discreto pero claro
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 12,       // ↓ más pequeño
+          fontWeight: '600',  // semi-bold (no 700/800)
+          marginBottom: 4,
+        },
 
-        }
-      }}
+        // ——— Iconos CONSISTENTES (todos outline) ———
+        tabBarIcon: ({ color }) => {
+          const ICONS: Record<string, string> = {
+            Tab1: 'home-outline',
+            MaternidadTab: 'female-outline',       // o 'heart-outline' si prefieres
+            GestacionTab: 'people-outline',       // NO usar *-circle-* para mantener estilo
+            Tab4: 'globe-outline',
+          };
+          const name = ICONS[route.name] ?? 'ellipse-outline';
+          return <IonIcon name={name} color={color} size={22} />; // mismo tamaño en activo/inactivo
+        },
 
-
+        tabBarHideOnKeyboard: true,
+      })}
     >
-      {/* <Tab.Screen name="Tab1" options={{title:"Inicio",tabBarIcon:({color})=>(<IonIcon name="home-outline" color={color}/>)}} component={Tab1Screen} /> */}
-      {/* <Tab.Screen name="Tab1" options={{ title: "Inicio", tabBarIcon: ({ color }) => (<IonIcon name="home-outline" color={color} />) }} component={HomeScreen} /> */}
       <Tab.Screen
         name="Tab1"
         component={HomeScreen}
         options={{
-          // etiqueta de la pestaña
-          tabBarLabel: t('Tabs'),         // ← 'Inicio' / 'Home' / 'Início' ...
-          // título del header (si usas header del tab/stack)
           title: t('Tabs'),
-          tabBarIcon: ({ color }) => <IonIcon name="home-outline" color={color} />,
+          tabBarLabel: ({ focused, color }) => (
+            <Text style={{ fontSize: 14, fontWeight: focused ? '800' : '700', color, marginBottom: 6 }}>
+              {t('Tabs')}
+            </Text>
+          ),
         }}
       />
-      {/* <Tab.Screen name="Tab2" options={{ title: "Maternidad", tabBarIcon: ({ color }) => (<IonIcon name="person-circle-outline" color={color} />) }} component={MaternidadScren} /> */}
+
       <Tab.Screen
         name="MaternidadTab"
         component={MaternityStackNavigator}
         options={{
-          title: "Maternidad",
-          tabBarIcon: ({ color }) => (<IonIcon name="person-circle-outline" color={color} />),
+          title: 'Maternidad',
           headerShown: false, // el header lo lleva el stack
+          tabBarLabel: ({ focused, color }) => (
+            <Text style={{ fontSize: 14, fontWeight: focused ? '800' : '700', color, marginBottom: 6 }}>
+              Maternidad
+            </Text>
+          ),
         }}
       />
 
-      {/* <Tab.Screen name="Tab3" options={{ title: "Gestación", tabBarIcon: ({ color }) => (<IonIcon name="people-circle-outline" color={color} />) }} component={GestationScreen} /> */}
       <Tab.Screen
         name="GestacionTab"
         component={GestationStackNavigator}
         options={({ route }) => {
-          // nombre de la pantalla activa dentro del stack
           const nested = getFocusedRouteNameFromRoute(route) ?? 'GES-HOME';
-
-          // oculta el header del tab en estas pantallas internas:
           const hideHeader =
             nested === 'GES-NOFEED' || nested === 'GES-CORRAL' || nested === 'GES-CORRALPC' || nested === 'GES-CORRAL-DETALLE';
 
           return {
             title: 'Gestación',
-            tabBarIcon: ({ color }) => (<IonIcon name="people-circle-outline" color={color} />),
-            headerShown: !hideHeader,   // 👈 aquí la magia
+            headerShown: !hideHeader,
+            tabBarLabel: ({ focused, color }) => (
+              <Text style={{ fontSize: 14, fontWeight: focused ? '800' : '700', color, marginBottom: 6 }}>
+                Gestación
+              </Text>
+            ),
           };
         }}
       />
+
       <Tab.Screen
         name="Tab4"
         component={CTIFeedScreen}
         options={{
           title: 'CTIFEED',
-          tabBarIcon: ({ color }) => <IonIcon name="globe-outline" color={color} />,
+          tabBarLabel: ({ focused, color }) => (
+            <Text style={{ fontSize: 14, fontWeight: focused ? '800' : '700', color, marginBottom: 6 }}>
+              CTIFEED
+            </Text>
+          ),
         }}
       />
+
       {isDebugMode && (
         <>
-          <Tab.Screen name="Tab2" options={{ title: "Gestación", tabBarIcon: ({ color }) => (<IonIcon name="people-circle-outline" color={color} />) }} component={GestationScreen} />
-
-          <Tab.Screen name="Tab3" options={{ title: "Maternidad", tabBarIcon: ({ color }) => (<IonIcon name="person-circle-outline" color={color} />) }} component={MaternityStackNavigator} />
+          <Tab.Screen
+            name="Tab2"
+            options={{ title: 'Gestación' }}
+            component={GestationScreen}
+          />
+          <Tab.Screen
+            name="Tab3"
+            options={{ title: 'Maternidad' }}
+            component={MaternityStackNavigator}
+          />
         </>
       )}
-
-
-      {/* <Tab.Screen name="Tab2" options={{title:"Gestacion"}}component={Tab2Screen} /> */}
-
-
-      {/* <Tab.Screen name="Tab3" options={{title:"Maternidad"}}component={StackNavigator} /> */}
-      {/* <Tab.Screen name="Tab3" options={{title:"Maternidad",tabBarIcon:({color})=>(<IonIcon name="person-circle-outline" color={color}/>)}}component={Tab3Screen} /> */}
-      {/* <Tab.Screen name="Tab3" options={{title:"Maternidad",tabBarIcon:({color})=>(<IonIcon name="person-circle-outline" color={color}/>)}}component={HomeDebugScreen} /> */}
-
-
     </Tab.Navigator>
   );
 };
-
