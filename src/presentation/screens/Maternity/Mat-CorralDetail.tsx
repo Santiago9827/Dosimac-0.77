@@ -159,100 +159,104 @@ export const MatCorralDetail = () => {
    const [isDeviceError, setDeviceError] = useState<boolean>(!!deviceError);
    const [hasDiasSinAlimentar, setHasDiasSinAlimentar] = useState<boolean>(!!diasSinAlimentar);
 
-   const SHADOW = {
-      shadowColor: '#000',
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 5 },
-      elevation: 3,
-   };
+   const BRAND = '#4F46E5';
+   const CARD_BORDER = '#E2E8F0';
+
+   type BtnVariant = 'primary' | 'secondary' | 'ghost';
 
    const EmptyCorralCard = ({
       corralId,
       onPressAdd,
+      buttonVariant = 'secondary',   // ← por defecto, más suave
    }: {
       corralId: number | string;
       onPressAdd?: () => void;
-   }) => (
-      <View style={{ marginTop: 16 }}>
-         <View
-            style={{
-               backgroundColor: '#FFFFFF',
-               borderRadius: 16,
-               paddingVertical: 20,
-               paddingHorizontal: 16,
-               borderWidth: 1,
-               borderColor: CARD_BORDER,
-               alignItems: 'center',
-               ...SHADOW,
-            }}
-         >
-            {/* icono */}
+      buttonVariant?: BtnVariant;
+   }) => {
+      const baseBtn = {
+         height: 42,                 // ← más pequeño (antes 50)
+         borderRadius: 10,
+         paddingHorizontal: 14,
+         alignItems: 'center',
+         justifyContent: 'center',
+         alignSelf: 'center',
+         width: '75%',               // ← más estrecho que full width
+      } as const;
+
+      const styleByVariant: Record<BtnVariant, any> = {
+         primary: { backgroundColor: BRAND },
+         secondary: { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: CARD_BORDER },
+         ghost: { backgroundColor: 'transparent' },
+      };
+
+      const textColorByVariant: Record<BtnVariant, string> = {
+         primary: '#fff',
+         secondary: BRAND,
+         ghost: BRAND,
+      };
+
+      return (
+         <View style={{ marginTop: 16 }}>
             <View
                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 32,
-                  backgroundColor: '#FEF3C7',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 16,
+                  paddingVertical: 26,
+                  paddingHorizontal: 16,
+                  borderWidth: 1,
+                  borderColor: CARD_BORDER,
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: 8,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.08,
+                  shadowRadius: 12,
+                  shadowOffset: { width: 0, height: 5 },
+                  elevation: 3,
                }}
             >
-               <Icon name="warning-outline" size={34} color="#92400E" />
-            </View>
-
-            <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>
-               Sin animales
-            </Text>
-
-            {/* línea con chip */}
-            <View
-               style={{
-                  marginTop: 6,
-                  flexDirection: 'row',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-               }}
-            >
-               <Text style={{ color: '#475569' }}>No hay ningún animal en el </Text>
-               <Text
+               {/* Icono */}
+               <View
                   style={{
-                     color: '#0f172a',
-                     fontWeight: '800',
-                     backgroundColor: '#F1F5F9',
-                     paddingHorizontal: 10,
-                     paddingVertical: 4,
-                     borderRadius: 999,
+                     width: 64, height: 64, borderRadius: 32,
+                     backgroundColor: '#FEF3C7',
+                     alignItems: 'center', justifyContent: 'center', marginBottom: 8,
                   }}
                >
-                  Corral {corralId}
-               </Text>
-            </View>
+                  <Icon name="warning-outline" size={34} color="#92400E" />
+               </View>
 
-            {/* CTA dentro de la tarjeta */}
-            <TouchableOpacity
-               onPress={onPressAdd}
-               activeOpacity={0.9}
-               style={{
-                  marginTop: 16,
-                  height: 48,
-                  borderRadius: 12,
-                  alignSelf: 'stretch',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: BRAND,
-                  ...SHADOW,
-               }}
-            >
-               <Text style={{ color: '#fff', fontWeight: '700' }}>
-                  Introducir animales
-               </Text>
-            </TouchableOpacity>
+               <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>Sin animales</Text>
+
+               {/* Línea con chip "Corral X" */}
+               <View style={{ marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: '#475569' }}>No hay ningún animal en el </Text>
+                  <Text style={{ color: '#0f172a', fontWeight: '800', backgroundColor: '#F1F5F9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+                     Corral {corralId}
+                  </Text>
+               </View>
+
+               {/* Botón más pequeño y “suave” */}
+               <TouchableOpacity
+                  onPress={onPressAdd}
+                  activeOpacity={0.9}
+                  style={[baseBtn, styleByVariant[buttonVariant], { marginTop: 20 }]}
+               >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                     <Icon
+                        name={buttonVariant === 'ghost' ? 'add-outline' : 'add-circle-outline'}
+                        size={18}
+                        color={textColorByVariant[buttonVariant]}
+                        style={{ marginRight: 6 }}
+                     />
+                     <Text style={{ color: textColorByVariant[buttonVariant], fontWeight: '700' }}>
+                        Introducir animal
+                     </Text>
+                  </View>
+               </TouchableOpacity>
+            </View>
          </View>
-      </View>
-   );
+      );
+   };
+
 
 
    // Info de corral (puede ser mock o backend)
