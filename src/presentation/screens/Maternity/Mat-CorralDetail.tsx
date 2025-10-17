@@ -26,6 +26,9 @@ const useRightDrawer = () => {
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
 
+// fuera del componente
+
+
 function RadioDialog({
    visible, title, options, current, onClose, onAccept,
 }: {
@@ -156,6 +159,102 @@ export const MatCorralDetail = () => {
    const [isDeviceError, setDeviceError] = useState<boolean>(!!deviceError);
    const [hasDiasSinAlimentar, setHasDiasSinAlimentar] = useState<boolean>(!!diasSinAlimentar);
 
+   const SHADOW = {
+      shadowColor: '#000',
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 5 },
+      elevation: 3,
+   };
+
+   const EmptyCorralCard = ({
+      corralId,
+      onPressAdd,
+   }: {
+      corralId: number | string;
+      onPressAdd?: () => void;
+   }) => (
+      <View style={{ marginTop: 16 }}>
+         <View
+            style={{
+               backgroundColor: '#FFFFFF',
+               borderRadius: 16,
+               paddingVertical: 20,
+               paddingHorizontal: 16,
+               borderWidth: 1,
+               borderColor: CARD_BORDER,
+               alignItems: 'center',
+               ...SHADOW,
+            }}
+         >
+            {/* icono */}
+            <View
+               style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                  backgroundColor: '#FEF3C7',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 8,
+               }}
+            >
+               <Icon name="warning-outline" size={34} color="#92400E" />
+            </View>
+
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>
+               Sin animales
+            </Text>
+
+            {/* línea con chip */}
+            <View
+               style={{
+                  marginTop: 6,
+                  flexDirection: 'row',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+               }}
+            >
+               <Text style={{ color: '#475569' }}>No hay ningún animal en el </Text>
+               <Text
+                  style={{
+                     color: '#0f172a',
+                     fontWeight: '800',
+                     backgroundColor: '#F1F5F9',
+                     paddingHorizontal: 10,
+                     paddingVertical: 4,
+                     borderRadius: 999,
+                  }}
+               >
+                  Corral {corralId}
+               </Text>
+            </View>
+
+            {/* CTA dentro de la tarjeta */}
+            <TouchableOpacity
+               onPress={onPressAdd}
+               activeOpacity={0.9}
+               style={{
+                  marginTop: 16,
+                  height: 48,
+                  borderRadius: 12,
+                  alignSelf: 'stretch',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: BRAND,
+                  ...SHADOW,
+               }}
+            >
+               <Text style={{ color: '#fff', fontWeight: '700' }}>
+                  Introducir animales
+               </Text>
+            </TouchableOpacity>
+         </View>
+      </View>
+   );
+
+
    // Info de corral (puede ser mock o backend)
    const [corraInfo, setCorralInfo] = useState<any | null>(null);
    const [requestError, setRequestError] = useState(false);
@@ -199,18 +298,59 @@ export const MatCorralDetail = () => {
    const animal = corraInfo?.animal;
    const hasAnimal = !!animal;
 
-   // si llega mock de animal preparo el estado editable inicial
+   // ⬆️ ESTE EFFECT DEBE IR ANTES DEL early return
    useEffect(() => {
-      if (animal) {
-         setAnimalState(s => ({
-            ...s,
-            crotal: animal.crotal ?? s.crotal,
-            curva: animal.curva ?? s.curva,
-            subEstado: animal.subEstado ?? s.subEstado,
-            subEstadoFecha: animal.subEstadoFecha ?? s.subEstadoFecha,
-         }));
-      }
-   }, [hasAnimal]); // eslint-disable-line
+      if (!animal) return;
+      setAnimalState(s => ({
+         ...s,
+         crotal: animal.crotal ?? s.crotal,
+         curva: animal.curva ?? s.curva,
+         subEstado: animal.subEstado ?? s.subEstado,
+         subEstadoFecha: animal.subEstadoFecha ?? s.subEstadoFecha,
+      }));
+   }, [animal]); // usa 'animal' como dependencia
+
+   // ✅ early return limpio (no se renderiza nada salvo la banda y el CTA)
+   if (!hasAnimal) {
+      return (
+         <View style={{ flex: 1 }}>
+            <ScrollView
+               className="flex-1 bg-gray-100"
+               contentContainerStyle={{
+                  paddingBottom: 40 + insets.bottom,
+                  paddingHorizontal: 16,
+                  paddingTop: 12,
+               }}
+            >
+               {(isDeviceError || statusMessage) && (
+                  <View
+                     style={{
+                        backgroundColor: '#EF4444',
+                        borderRadius: 12,
+                        paddingVertical: 12,
+                        paddingHorizontal: 14,
+                     }}
+                  >
+                     <Text
+                        style={{ color: '#fff', fontWeight: '700', textAlign: 'center' }}
+                     >
+                        {statusMessage || 'Error en el dispositivo'}
+                     </Text>
+                  </View>
+               )}
+
+               <EmptyCorralCard
+                  corralId={corralId}
+                  onPressAdd={() => {
+                  }}
+               />
+            </ScrollView>
+         </View>
+      );
+   }
+
+
+
 
    // acciones drawer
    const openAction = (key: string) => {
@@ -235,6 +375,9 @@ export const MatCorralDetail = () => {
    const actual = animal?.consumo?.actual ?? 11000;
    const pct = objetivo > 0 ? Math.round((actual / objetivo) * 100) : 0;
 
+
+
+
    return (
       <View style={{ flex: 1 }}>
          <ScrollView className='flex-1 bg-gray-100' contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
@@ -255,7 +398,7 @@ export const MatCorralDetail = () => {
 
                {/* ---- INFORMACIÓN ---- */}
                {/* ID - CROTAL - CICLO */}
-               <View className='flex-row justify-between mt-4'>
+               {/* <View className='flex-row justify-between mt-4'>
                   <View className='flex-row items-end'>
                      <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'>ID</Text>
                      <Text className='text-xl text-gray-600 font-semibold'>{animal?.id ?? '—'}</Text>
@@ -268,7 +411,43 @@ export const MatCorralDetail = () => {
                      <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'>Ciclo</Text>
                      <Text className='text-xl text-gray-600 font-semibold'>{animal?.ciclo ?? '—'}</Text>
                   </View>
+               </View> */}
+
+               <View className="flex-row items-center mt-4">
+                  {/* ID */}
+                  <View className="flex-row items-center mr-4">
+                     <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">ID</Text>
+                     <Text className="ml-2 text-[16px] text-gray-700 font-semibold">
+                        {animal?.id ?? '—'}
+                     </Text>
+                  </View>
+
+                  {/* Crotal (encoge si no cabe) */}
+                  <View className="flex-row items-center mr-4 flex-shrink" style={{ minWidth: 0 }}>
+                     <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">Crotal</Text>
+                     <Text
+                        className="ml-2 text-[16px] text-gray-700 font-semibold"
+                        numberOfLines={1}
+                        ellipsizeMode="middle"
+                        style={{ flexShrink: 1, }}   // <- evita salto y recorta por el medio
+                     >
+                        {animal?.crotal ?? '—'}
+                     </Text>
+                  </View>
+
+                  {/* Ciclo */}
+                  <View className="flex-row items-center">
+                     <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">Ciclo</Text>
+                     <Text className="ml-2 text-[16px] text-gray-700 font-semibold">
+                        {animal?.ciclo ?? '—'}
+                     </Text>
+                  </View>
                </View>
+
+
+
+
+
 
                {/* SUBESTADO - DÍA */}
                <View className='flex-row justify-between mx-8 mt-6 items-end'>
@@ -337,6 +516,9 @@ export const MatCorralDetail = () => {
                      </View>
                   </View>
                </View>
+
+
+
 
                {/* Aviso días sin alimentar */}
                {hasDiasSinAlimentar && (
@@ -409,19 +591,6 @@ export const MatCorralDetail = () => {
                      </View>
                   </View>
                </View>
-
-               {/* CTA cuando NO hay animal */}
-               {!hasAnimal && (
-                  <View className='mt-6'>
-                     <TouchableOpacity
-                        onPress={() => { /* acción para meter animales */ }}
-                        activeOpacity={0.9}
-                        className='h-12 rounded-md bg-indigo-600 items-center justify-center'
-                     >
-                        <Text className='text-white font-semibold'>Introducir animales</Text>
-                     </TouchableOpacity>
-                  </View>
-               )}
             </View>
          </ScrollView>
 
