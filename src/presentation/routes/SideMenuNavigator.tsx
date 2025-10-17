@@ -48,11 +48,11 @@ function TabsStack() {
         component={TareasProgramadasScreen}
         options={{ title: 'Tareas Programadas' }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="NoAlimentadosMaternidad"
         component={NoAlimentadosScreenMaternidad}
         options={{ title: 'Animales no Alimentados' }}
-      />
+      /> */}
 
     </Stack.Navigator>
   );

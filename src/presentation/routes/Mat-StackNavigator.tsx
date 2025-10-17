@@ -15,6 +15,7 @@ import CorralMaternidadSinAnimalesScreen from './CorralMaternidadSinAnimalesScre
 import MatAddAnimalsScreen from './MatAddAnimalsScreen';
 import CorralMaternidadConAnimalesScreen from './CorralMaternidadConAnimalesScreen';
 import TodosAnimalesMaternidad from './TodosAnimalesMaternidad';
+import NoAlimentadosScreenMaternidad from './NoAlimentadosScreenMaternidad';
 
 
 
@@ -81,6 +82,13 @@ export const MaternityStackNavigator = () => {
             component={CorralMaternidadSinAnimalesScreen}
             options={{ title: 'Corral Maternidad', headerShown: true }}
          /> */}
+
+         <MaternityStack.Screen
+            name="NoAlimentadosMaternidad"
+            component={NoAlimentadosScreenMaternidad}
+            options={{ title: 'Animales no Alimentados', headerShown: true }}
+         />
+
          <MaternityStack.Screen
             name="CorralConAnimales"
             component={CorralMaternidadConAnimalesScreen}

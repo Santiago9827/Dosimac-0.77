@@ -4,6 +4,8 @@ import React, { useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, Dimensions, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+
 
 type Animal = {
     crotal: string;   // 15 dígitos (puede tener letras)
@@ -51,6 +53,9 @@ export default function NoAlimentadosScreenMaternidad() {
         { crotal: '666555444333222', corral: '11', total: 2400, consumida: 600 },
     ];
 
+    const navigation = useNavigation<NavigationProp<any>>();
+
+
     // ── ESTADO DE FILTRO/ORDEN ──────────────────────────────────────────────
     type SortKey = 'none' | 'pct' | 'crotal' | 'corral';
     type SortDir = 'asc' | 'desc';
@@ -77,31 +82,65 @@ export default function NoAlimentadosScreenMaternidad() {
         return copy;
     }, [data, sort]);
 
+    const openAnimal = (item: Animal) => {
+        const mockData = {
+            animal: {
+                // Lo importante para que el detalle pinte bien:
+                crotal: item.crotal,
+                corral: item.corral,                  // preserva “03” si viene con cero
+                consumo: { objetivo: item.total, actual: item.consumida },
+
+                // Relleno opcional (el detalle mostrará “—” si faltan):
+                subEstado: 'LACTANCIA',
+                curva: '—',
+                correccion: '—',
+                fechas: { entrada: '—', parto: '—' },
+                nave: '—',
+                ciclo: undefined,
+                dia: undefined,
+            },
+            deviceError: false,
+            diasSinAlimentar: false,
+            statusMessage: '',
+        };
+
+        navigation.navigate('MAT-CORRALDETAIL', {
+            corralId: Number(item.corral) || item.corral, // para el título/uso interno
+            mockData,
+            deviceError: mockData.deviceError,
+            diasSinAlimentar: mockData.diasSinAlimentar,
+            statusMessage: mockData.statusMessage,
+        });
+    };
+
     const Item = ({ item }: { item: Animal }) => (
-        <View
-            className="rounded-2xl p-4 bg-white border border-slate-200 mb-3"
-            style={{ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 }}
-        >
-            {/* Cabecera: crotal + chip corral */}
-            <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center">
-                    <Ionicons name="pricetag-outline" size={18} color="#0f172a" />
-                    <Text className="ml-2 text-slate-900 font-semibold">{item.crotal}</Text>
+        <TouchableOpacity activeOpacity={0.85} onPress={() => openAnimal(item)}>
+            <View
+                className="rounded-2xl p-4 bg-white border border-slate-200 mb-3"
+                style={{ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 }}
+            >
+                {/* Cabecera: crotal + chip corral */}
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <Ionicons name="pricetag-outline" size={18} color="#0f172a" />
+                        <Text className="ml-2 text-slate-900 font-semibold">{item.crotal}</Text>
+                    </View>
+                    <View className="px-3 py-1 rounded-full bg-slate-100">
+                        <Text className="text-slate-700 font-medium">Corral {item.corral}</Text>
+                    </View>
                 </View>
-                <View className="px-3 py-1 rounded-full bg-slate-100">
-                    <Text className="text-slate-700 font-medium">Corral {item.corral}</Text>
+
+                {/* Consumo */}
+                <View className="mt-3 rounded-xl border p-3" style={{ backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+                    <Text className="text-slate-600">Consumo</Text>
+                    <ProgressPill value={item.consumida} total={item.total} />
                 </View>
-            </View>
 
-            {/* Caja de consumo */}
-            <View className="mt-3 rounded-xl border p-3" style={{ backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }}>
-                <Text className="text-slate-600">Consumo</Text>
-                <ProgressPill value={item.consumida} total={item.total} />
+                {item.nota ? <Text className="mt-2 text-slate-600">{item.nota}</Text> : null}
             </View>
-
-            {item.nota ? <Text className="mt-2 text-slate-600">{item.nota}</Text> : null}
-        </View>
+        </TouchableOpacity>
     );
+
 
     // ── UI ──────────────────────────────────────────────────────────────────
     return (
