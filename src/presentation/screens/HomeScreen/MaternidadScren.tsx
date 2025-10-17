@@ -119,6 +119,32 @@ export default function MaternidadScreen() {
         );
     };
 
+    // === Fila tipo enlace (igual a “Ver corrales”) ===
+    const LinkRow = ({
+        icon,
+        label,
+        onPress,
+        divider = false,
+    }: {
+        icon: string;
+        label: string;
+        onPress: () => void;
+        divider?: boolean;
+    }) => (
+        <>
+            {divider ? <View className="h-px" style={{ backgroundColor: CARD_BORDER }} /> : null}
+            <Pressable
+                onPress={onPress}
+                android_ripple={{ color: '#e5e7eb' }}
+                style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}
+            >
+                <Ionicons name={icon as any} size={18} color={BRAND} />
+                <Text style={{ marginLeft: 8, color: BRAND, fontWeight: '700', flex: 1 }}>{label}</Text>
+                <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+            </Pressable>
+        </>
+    );
+
     const noAl = maternidad.noAlimentados;
     const noAlColor = noAl === 0 ? OK : DANGER;
 
@@ -198,7 +224,6 @@ export default function MaternidadScreen() {
                                 labelColor={noAlColor}
                                 valueColor={noAlColor}
                             />
-                            {/* ⇩⇩ AHORA ES BOTÓN ⇩⇩ */}
                             <Row
                                 label="Totales animales"
                                 value={total}
@@ -206,6 +231,13 @@ export default function MaternidadScreen() {
                                 divider
                                 action
                                 onPress={() => navigation.navigate('TodosAnimalesMaternidad')}
+                            />
+
+                            <LinkRow
+                                icon="search-outline"
+                                label="Buscar corral"
+                                divider
+                                onPress={() => navigation.navigate('MAT-CORRAL' as never)}
                             />
                         </View>
                     </View>
@@ -220,7 +252,7 @@ export default function MaternidadScreen() {
                     className="rounded-2xl overflow-hidden"
                     style={{ backgroundColor: INCIDENT_BLOCK_BG, paddingVertical: 12, paddingHorizontal: 12, ...SHADOW }}
                 >
-                    <View style={{ height: 360 }}>
+                    <View style={{ height: 320 }}>
                         <FlatList
                             data={incidenciasMaternidad}
                             keyExtractor={(item) => String(item.id)}
@@ -231,8 +263,9 @@ export default function MaternidadScreen() {
                     </View>
                 </View>
 
+                {/* CTA inferior: Introducir animales (placeholder) */}
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('MAT-CORRAL' as never)}
+                    onPress={() => { }}
                     className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
                     style={{
                         backgroundColor: BRAND,
@@ -244,7 +277,7 @@ export default function MaternidadScreen() {
                         elevation: 3,
                     }}
                 >
-                    <Text className="text-white text-center font-semibold">Ir al Corral</Text>
+                    <Text className="text-white text-center font-semibold">Introducir animales</Text>
                 </TouchableOpacity>
             </View>
         </View>

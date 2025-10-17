@@ -203,13 +203,13 @@ export default function CorralScreen() {
             >
                 {/* Título */}
                 <View>
-                    <Text className="text-slate-900 text-[22px] font-extrabold">Elige cómo identificar el corral</Text>
-                    <Text className="text-slate-500 mt-1">Introduce el código o usa el escáner NFC.</Text>
+                    <Text className="text-slate-900 text-[22px] font-extrabold">Localizar corral</Text>
+                    <Text className="text-slate-500 mt-1">Número de corral o lectura NFC.</Text>
                 </View>
 
                 {/* Campo de entrada */}
                 <View className="mt-3">
-                    <Text className="text-slate-600 mb-2">Corral</Text>
+                    <Text className="text-slate-600 text-[18px] mb-2">Corral</Text>
                     <View
                         className="flex-row items-center rounded-2xl bg-white border px-3"
                         style={{ borderColor: '#E2E8F0', height: 52 }}
@@ -218,7 +218,7 @@ export default function CorralScreen() {
                         <TextInput
                             value={corral}
                             onChangeText={setCorral}
-                            placeholder="1 ó 2"
+                            placeholder="1234"
                             placeholderTextColor="#94A3B8"
                             className="flex-1 ml-2 text-slate-900"
                             autoCapitalize="characters"
