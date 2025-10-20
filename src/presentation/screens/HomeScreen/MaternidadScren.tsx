@@ -1,9 +1,10 @@
-// MaternidadScreen.tsx
+// screens/Maternity/MaternidadScreen.tsx
+/* eslint-disable prettier/prettier */
 import React from 'react';
-import { View, Text, Pressable, FlatList, TouchableOpacity } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, Pressable, FlatList, TouchableOpacity, Modal, Dimensions, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { DonutChart } from '../../components/shared/DonutChart';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation, NavigationProp, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const SURFACE_BG = '#F6F8FC';
@@ -40,24 +41,36 @@ type Incidencia = {
 };
 
 export default function MaternidadScreen() {
-    const insets = useSafeAreaInsets();
     const navigation = useNavigation<NavigationProp<any>>();
 
-    const [donutSize, setDonutSize] = React.useState(132);
+    // ===== Header: botón de 3 puntos + menú =====
+    const [menuOpen, setMenuOpen] = React.useState(false);
+    const btnRef = React.useRef<TouchableOpacity>(null);
+    const [btnPos, setBtnPos] = React.useState({ x: 0, y: 0, w: 0, h: 0 });
 
-    const computeDonutSize = (rowWidth: number) => {
-        // cuánto ocupa la columna izquierda según tus flex
-        const leftPct = LEFT_FLEX / (LEFT_FLEX + RIGHT_FLEX);
-        const leftColWidth = rowWidth * leftPct;
+    React.useLayoutEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <TouchableOpacity
+                    ref={btnRef}
+                    onLayout={() => btnRef.current?.measureInWindow((x, y, w, h) => setBtnPos({ x, y, w, h }))}
+                    onPress={() =>
+                        btnRef.current?.measureInWindow((x, y, w, h) => {
+                            setBtnPos({ x, y, w, h });
+                            setMenuOpen(true);
+                        })
+                    }
+                    style={{ marginRight: 12, width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                >
+                    <Ionicons name="ellipsis-vertical" size={20} color="#0f172a" />
+                </TouchableOpacity>
+            ),
+            title: 'Maternidad',
+        });
+    }, [navigation]);
 
-        // margen de seguridad para paddings/separador
-        const safe = leftColWidth - 24;
-
-        // no más grande de 132 y nunca menos de 110
-        return Math.max(110, Math.min(132, Math.round(safe)));
-    };
-
-
+    // ===== Datos de demo =====
     const maternidad: DatosMaternidad = { alimentados: 180, noAlimentados: 20 };
     const total = maternidad.alimentados + maternidad.noAlimentados;
     const pct = total ? Math.round((maternidad.alimentados / total) * 100) : 0;
@@ -75,6 +88,16 @@ export default function MaternidadScreen() {
     const DANGER = '#DC2626';
     const OK = '#16A34A';
 
+    // ===== Donut responsivo =====
+    const [donutSize, setDonutSize] = React.useState(132);
+    const computeDonutSize = (rowWidth: number) => {
+        const leftPct = LEFT_FLEX / (LEFT_FLEX + RIGHT_FLEX);
+        const leftColWidth = rowWidth * leftPct;
+        const safe = leftColWidth - 24;
+        return Math.max(110, Math.min(132, Math.round(safe)));
+    };
+
+    // ===== Rows =====
     const Row = ({
         label,
         value,
@@ -103,26 +126,9 @@ export default function MaternidadScreen() {
                     android_ripple={onPress ? { color: '#e5e7eb' } : undefined}
                     style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}
                 >
-                    <Text
-                        style={{
-                            flex: 1,
-                            color: labelColor ?? '#475569',
-                            marginRight: 8,
-                            flexShrink: 1,
-                            minWidth: 0,
-                        }}
-                    >
-                        {label}
-                    </Text>
+                    <Text style={{ flex: 1, color: labelColor ?? '#475569', marginRight: 8, flexShrink: 1, minWidth: 0 }}>{label}</Text>
 
-                    <Text
-                        style={{
-                            width: VALUE_W,
-                            textAlign: 'right',
-                            color: valueColor ?? '#0F172A',
-                            fontWeight: strong ? '800' : '600',
-                        }}
-                    >
+                    <Text style={{ width: VALUE_W, textAlign: 'right', color: valueColor ?? '#0F172A', fontWeight: strong ? '800' : '600' }}>
                         {value}
                     </Text>
 
@@ -133,32 +139,6 @@ export default function MaternidadScreen() {
             </>
         );
     };
-
-    // Fila tipo enlace (igual estilo a “Ver corrales”)
-    const LinkRow = ({
-        icon,
-        label,
-        onPress,
-        divider = false,
-    }: {
-        icon: string;
-        label: string;
-        onPress: () => void;
-        divider?: boolean;
-    }) => (
-        <>
-            {divider ? <View className="h-px" style={{ backgroundColor: CARD_BORDER }} /> : null}
-            <Pressable
-                onPress={onPress}
-                android_ripple={{ color: '#e5e7eb' }}
-                style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}
-            >
-                <Ionicons name={icon as any} size={18} color={BRAND} />
-                <Text style={{ marginLeft: 8, color: BRAND, fontWeight: '700', flex: 1 }}>{label}</Text>
-                <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
-            </Pressable>
-        </>
-    );
 
     const noAl = maternidad.noAlimentados;
     const noAlColor = noAl === 0 ? OK : DANGER;
@@ -185,15 +165,10 @@ export default function MaternidadScreen() {
             style={{ backgroundColor: INCIDENT_ITEM_BG, borderColor: INCIDENT_ITEM_BORDER, ...SHADOW }}
         >
             <View className="flex-row items-center">
-                <Text
-                    className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                    style={{ backgroundColor: INCIDENT_PILL_BG, color: INCIDENT_PILL_TEXT }}
-                >
+                <Text className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: INCIDENT_PILL_BG, color: INCIDENT_PILL_TEXT }}>
                     {item.area}
                 </Text>
-                <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">
-                    Corral {item.corral}
-                </Text>
+                <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">Corral {item.corral}</Text>
             </View>
             <Text className="mt-2 text-slate-900">{item.descripcion}</Text>
         </Pressable>
@@ -201,23 +176,16 @@ export default function MaternidadScreen() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: SURFACE_BG }}>
-            {/* Contenedor vertical: header (fijo) + lista (flex) + CTA (fijo) */}
             <View style={{ flex: 1 }}>
-                {/* Bloque 1: Donut + métricas (fijo) */}
+                {/* Bloque 1: Donut + métricas */}
                 <View className="px-5 mb-6">
-                    <View
-                        className="rounded-2xl border p-5 overflow-hidden"
-                        style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER, ...SHADOW }}
-                    >
-                        <View
-                            style={{ flexDirection: 'row', alignItems: 'center' }}
-                            onLayout={(e) => setDonutSize(computeDonutSize(e.nativeEvent.layout.width))}
-                        >
-                            {/* Izquierda (donut) */}
+                    <View className="rounded-2xl border p-5 overflow-hidden" style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER, ...SHADOW }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }} onLayout={(e) => setDonutSize(computeDonutSize(e.nativeEvent.layout.width))}>
+                            {/* Donut */}
                             <View style={{ flex: LEFT_FLEX }} className="items-center pr-2">
                                 <DonutChart
                                     size={donutSize}
-                                    strokeWidth={donutSize >= 128 ? 22 : donutSize >= 118 ? 20 : 18} // trazo proporcional
+                                    strokeWidth={donutSize >= 128 ? 22 : donutSize >= 118 ? 20 : 18}
                                     label="Maternidad"
                                     segmentA={maternidad.alimentados}
                                     segmentB={maternidad.noAlimentados}
@@ -232,7 +200,7 @@ export default function MaternidadScreen() {
                             {/* Separador */}
                             <View className="w-px self-stretch mx-3" style={{ backgroundColor: CARD_BORDER }} />
 
-                            {/* Derecha (métricas) */}
+                            {/* Métricas (sin "Buscar corral") */}
                             <View style={{ flex: RIGHT_FLEX }} className="pr-1">
                                 <Row label="Alimentados" value={maternidad.alimentados} />
                                 <Row
@@ -252,31 +220,19 @@ export default function MaternidadScreen() {
                                     action
                                     onPress={() => navigation.navigate('TodosAnimalesMaternidad')}
                                 />
-                                <LinkRow
-                                    icon="search-outline"
-                                    label="Buscar corral"
-                                    divider
-                                    onPress={() => navigation.navigate('MAT-CORRAL' as never)}
-                                />
+                                {/* <-- Se eliminó el LinkRow de Buscar corral aquí */}
                             </View>
                         </View>
                     </View>
                 </View>
 
-                {/* Título Incidencias (fijo) */}
+                {/* Incidencias */}
                 <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasMaternidad.length} />
 
-                {/* Lista de incidencias (ocupa el resto de la pantalla) */}
                 <View className="px-5" style={{ flex: 1 }}>
                     <View
                         className="rounded-2xl overflow-hidden"
-                        style={{
-                            backgroundColor: INCIDENT_BLOCK_BG,
-                            paddingVertical: 12,
-                            paddingHorizontal: 12,
-                            ...SHADOW,
-                            flex: 1, // clave: que el contenedor crezca y deje a la lista ocupar el espacio
-                        }}
+                        style={{ backgroundColor: INCIDENT_BLOCK_BG, paddingVertical: 12, paddingHorizontal: 12, ...SHADOW, flex: 1 }}
                     >
                         <FlatList
                             data={incidenciasMaternidad}
@@ -284,17 +240,16 @@ export default function MaternidadScreen() {
                             renderItem={renderIncidencia}
                             ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                             showsVerticalScrollIndicator
-                            style={{ flex: 1 }}                    // <- ocupa todo
+                            style={{ flex: 1 }}
                             contentContainerStyle={{ paddingBottom: 4 }}
-                        // La lista scrollea dentro de su propio recuadro
                         />
                     </View>
                 </View>
 
-                {/* CTA inferior (fijo) */}
+                {/* CTA inferior: Buscar corral */}
                 <View className="px-5">
                     <TouchableOpacity
-                        onPress={() => { }}
+                        onPress={() => navigation.navigate('MAT-CORRAL' as never)}
                         className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
                         style={{
                             backgroundColor: BRAND,
@@ -305,10 +260,59 @@ export default function MaternidadScreen() {
                             elevation: 3,
                         }}
                     >
-                        <Text className="text-white text-center font-semibold">Introducir animales</Text>
+                        <Text className="text-white text-center font-semibold">Buscar corral</Text>
                     </TouchableOpacity>
                 </View>
             </View>
+
+            {/* ===== Menú flotante (3 puntos) ===== */}
+            <Modal visible={menuOpen} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setMenuOpen(false)}>
+                <View style={{ flex: 1 }}>
+                    <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setMenuOpen(false)} />
+                    {(() => {
+                        const W = Dimensions.get('window').width;
+                        const MENU_W = 220;
+                        const GAP = 8;
+                        const top = btnPos.y + btnPos.h + GAP;
+                        const left = Math.min(Math.max(btnPos.x + btnPos.w - MENU_W, 12), W - MENU_W - 12);
+
+                        return (
+                            <View
+                                style={{
+                                    position: 'absolute',
+                                    top,
+                                    left,
+                                    width: MENU_W,
+                                    backgroundColor: 'white',
+                                    borderWidth: 1,
+                                    borderColor: CARD_BORDER,
+                                    borderRadius: 12,
+                                    shadowColor: '#000',
+                                    shadowOpacity: 0.1,
+                                    shadowRadius: 12,
+                                    shadowOffset: { width: 0, height: 6 },
+                                    elevation: 12,
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                <Text style={{ paddingHorizontal: 12, paddingVertical: 10, color: '#64748B', fontWeight: '700' }}>Acciones</Text>
+
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setMenuOpen(false);
+                                        // navigation.navigate('MAT-INTRO-ANIMALES' as never);
+                                    }}
+                                    activeOpacity={0.8}
+                                    style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
+                                >
+                                    <Ionicons name="add-circle-outline" size={20} color="#0f172a" style={{ marginRight: 10 }} />
+                                    <Text style={{ color: '#0f172a', flex: 1 }}>Introducir animales por lote</Text>
+                                </TouchableOpacity>
+                            </View>
+                        );
+                    })()}
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
