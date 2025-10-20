@@ -6,6 +6,7 @@ import NoAlimentadosGestacion from '../screens/Gestation/NoAlimentadosGestacion'
 // import CorralTablaScreen from './CorralTablaScreen';
 import CorralGridScreen from './CorralGridScreen';
 import CorralDetalleScreen from './corralDetalleScreen';
+import { HamburgerMenu } from '../components/shared/HamburgerMenu';
 
 export type GestationStackParamList = {
     'GES-HOME': undefined;
@@ -23,7 +24,11 @@ export const GestationStackNavigator = () => {
             <Stack.Screen
                 name="GES-HOME"
                 component={GestationScreen}
-                options={{ title: 'Gestación', headerShown: false }}
+                options={{
+                    title: 'Gestación',
+                    headerShown: true,                // <- antes estaba en false
+                    headerLeft: () => <HamburgerMenu />, // <- botón reutilizable
+                }}
             />
             <Stack.Screen
                 name="GES-NOFEED"

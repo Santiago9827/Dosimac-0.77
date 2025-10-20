@@ -63,16 +63,28 @@ export const SideMenuNavigator = () => {
 
   return (
     <Drawer.Navigator
+      id="RootDrawer"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
-        drawerType: 'slide',
+
+        drawerType: 'front',
+        overlayColor: 'rgba(0,0,0,0.25)',
+        drawerStatusBarAnimation: 'fade',
+        drawerHideStatusBarOnOpen: false,
+
+        // opcional: tamaño y estilo del panel
+        drawerStyle: { width: '78%', backgroundColor: '#fff' },
+
+        // gestos (opcional)
+        // swipeEnabled: true,
+        // swipeEdgeWidth: 35,
+
         drawerActiveBackgroundColor: globalColors.primary,
         drawerActiveTintColor: 'white',
         drawerInactiveTintColor: globalColors.primary,
         drawerLabelStyle: { flexShrink: 1 },
-        drawerStyle: { marginTop: 30 },
-        drawerItemStyle: { borderRadius: 100, paddingHorizontal: 20 }
+        drawerItemStyle: { borderRadius: 100, paddingHorizontal: 20 },
       }}
     >
       {/* 👉 Ahora los Tabs van envueltos en TabsStack (que incluye TareasProgramadas) */}

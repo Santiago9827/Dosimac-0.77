@@ -114,7 +114,7 @@ export const BottomTabNavigator = () => {
             nested === 'GES-NOFEED' || nested === 'GES-CORRAL' || nested === 'GES-CORRALPC' || nested === 'GES-CORRAL-DETALLE';
           return {
             title: 'Gestación',
-            headerShown: !hideHeader,
+            headerShown: false,
             tabBarLabel: renderLabel('Gestación'), // ← texto completo
           };
         }}

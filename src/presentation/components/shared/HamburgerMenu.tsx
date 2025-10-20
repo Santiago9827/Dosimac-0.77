@@ -9,29 +9,29 @@ import { IonIcon } from './IonIcon';
 
 export const HamburgerMenu = () => {
 
-   const navigation=useNavigation()
+   const navigation = useNavigation()
 
-      useEffect(()=>{
+   useEffect(() => {
 
-         navigation.setOptions({
-            // Icon:()=><Icon name="rocket-outline" size={30} />,
-            headerLeft:()=>(
-               // <Icon 
-               //    style={{paddingLeft:10}}
-               //    name="menu-outline" size={25}
-               //    onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-               // />
-               <Pressable
-                  style={{marginLeft:10}}
-                  onPress={() => navigation.dispatch(DrawerActions.toggleDrawer)}>
-                  <IonIcon name="menu-outline" color={globalColors.primary}  size={35}/>
-                  {/* <Text>Menu</Text> */}
-               </Pressable>
-            ),
-         })
+      navigation.setOptions({
+         // Icon:()=><Icon name="rocket-outline" size={30} />,
+         headerLeft: () => (
+            // <Icon 
+            //    style={{paddingLeft:10}}
+            //    name="menu-outline" size={25}
+            //    onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+            // />
+            <Pressable
+               style={{ marginLeft: 10 }}
+               onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}>
+               <IonIcon name="menu-outline" color={globalColors.primary} size={35} />
+               {/* <Text>Menu</Text> */}
+            </Pressable>
+         ),
+      })
 
-      }   
-      ,[]);
-      
-  return ( <></> )
+   }
+      , []);
+
+   return (<></>)
 }
