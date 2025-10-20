@@ -4,16 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, useWindowDimensions } from 'react-native';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
-import { globalColors } from '../theme/theme';
 import { IonIcon } from '../components/shared/IonIcon';
-import { useTranslation } from 'react-i18next';
-import { isDebugMode } from '../../sharedTypes/globlaVars';
-
 import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
-import { GestationScreen } from '../screens/Gestation/Gestation';
 import { MaternityStackNavigator } from './Mat-StackNavigator';
-import { CTIFeedScreen } from '../screens/HomeScreen/CTIFeedScreen';
 import { GestationStackNavigator } from './GestationStackNavigator';
+import { CTIFeedScreen } from '../screens/HomeScreen/CTIFeedScreen';
+import { globalColors } from '../theme/theme';
+import { isDebugMode } from '../../sharedTypes/globlaVars';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,34 +19,29 @@ const INACTIVE_COLOR = '#94A3B8';
 const ACTIVE_BG = 'rgba(63,11,174,0.10)';
 
 export const BottomTabNavigator = () => {
-  const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const isSmall = width < 380; // iPhone SE / Android compactos
+  const { width, fontScale } = useWindowDimensions();
+  const isSmall = width < 380;              // teléfonos compactos
+  const superTight = width < 360 || fontScale > 1.15; // aún menos espacio
 
-  // Helper para labels consistentes y de una sola línea
-  const renderLabel = (txt: string) => ({ focused, color }: { focused: boolean; color: string }) => (
+  // Helper de label: UNA sola línea, sin abreviar
+  const renderLabel = (txt: string) => ({ focused, color }: any) => (
     <Text
       numberOfLines={1}
       ellipsizeMode="clip"
-      allowFontScaling={false}
+      allowFontScaling={false}           // evita que el sistema lo haga crecer y rompa
       style={{
-        fontSize: isSmall ? 11 : 12,           // ↓ un poco en pantallas pequeñas
-        fontWeight: focused ? '700' : '600',   // menos “gordo” = ocupa menos ancho
+        fontSize: superTight ? 10 : isSmall ? 11 : 12,   // ↓ un poco en compactos
+        fontWeight: focused ? '700' : '600',
         color,
-        marginBottom: isSmall ? 2 : 4,
+        marginBottom: superTight ? 1 : isSmall ? 2 : 4,
         includeFontPadding: false,
+        textAlign: 'center',
       }}
     >
       {txt}
     </Text>
   );
-
-  // Etiquetas abreviadas en pantallas pequeñas para evitar cualquier wrap
-  const MAT_LABEL = isSmall ? 'Matern.' : 'Maternidad';
-  const GES_LABEL = isSmall ? 'Gestac.' : 'Gestación';
-  const HOME_LABEL = t('Tabs'); // “Inicio”, “Home”, etc.
-  const FEED_LABEL = 'CTIFEED';
 
   return (
     <Tab.Navigator
@@ -59,28 +51,29 @@ export const BottomTabNavigator = () => {
         tabBarActiveTintColor: ACTIVE_COLOR,
         tabBarInactiveTintColor: INACTIVE_COLOR,
 
+        // Más ancho útil para cada item en teléfonos pequeños
         tabBarStyle: {
-          height: 54 + insets.bottom,                // un pelín más compacto
-          paddingTop: 2,
-          paddingBottom: Math.max(insets.bottom, 6),
+          height: 52 + insets.bottom,
+          paddingTop: superTight ? 0 : 2,
+          paddingBottom: Math.max(insets.bottom, superTight ? 4 : 6),
           borderTopWidth: 1,
           borderColor: '#f1f1f1',
           elevation: 5,
           shadowColor: 'transparent',
           backgroundColor: globalColors.background,
         },
-
         tabBarItemStyle: {
-          marginHorizontal: 4,
-          paddingVertical: isSmall ? 2 : 4,
+          flex: 1,                              // reparte todo el ancho disponible
+          minWidth: 0,                          // permite encoger si hace falta
+          marginHorizontal: superTight ? 0 : isSmall ? 2 : 4,
+          paddingVertical: superTight ? 0 : isSmall ? 2 : 4,
           borderRadius: 12,
-          minWidth: isSmall ? 72 : 80,              // evita que el item sea demasiado estrecho
         },
         tabBarActiveBackgroundColor: ACTIVE_BG,
         tabBarInactiveBackgroundColor: 'transparent',
 
         tabBarShowLabel: true,
-        tabBarLabelStyle: undefined, // usamos nuestro renderLabel
+        tabBarLabelStyle: undefined,           // usamos renderLabel abajo
 
         tabBarIcon: ({ color }) => {
           const ICONS: Record<string, string> = {
@@ -90,7 +83,7 @@ export const BottomTabNavigator = () => {
             Tab4: 'globe-outline',
           };
           const name = ICONS[route.name] ?? 'ellipse-outline';
-          return <IonIcon name={name} color={color} size={22} />;
+          return <IonIcon name={name} color={color} size={superTight ? 20 : 22} />;
         },
 
         tabBarHideOnKeyboard: true,
@@ -99,19 +92,16 @@ export const BottomTabNavigator = () => {
       <Tab.Screen
         name="Tab1"
         component={HomeScreen}
-        options={{
-          title: HOME_LABEL,
-          tabBarLabel: renderLabel(HOME_LABEL),
-        }}
+        options={{ title: 'Inicio', tabBarLabel: renderLabel('Inicio') }}
       />
 
       <Tab.Screen
         name="MaternidadTab"
         component={MaternityStackNavigator}
         options={{
-          title: MAT_LABEL,
+          title: 'Maternidad',
           headerShown: false,
-          tabBarLabel: renderLabel(MAT_LABEL),
+          tabBarLabel: renderLabel('Maternidad'),  // ← texto completo
         }}
       />
 
@@ -122,11 +112,10 @@ export const BottomTabNavigator = () => {
           const nested = getFocusedRouteNameFromRoute(route) ?? 'GES-HOME';
           const hideHeader =
             nested === 'GES-NOFEED' || nested === 'GES-CORRAL' || nested === 'GES-CORRALPC' || nested === 'GES-CORRAL-DETALLE';
-
           return {
-            title: GES_LABEL,
+            title: 'Gestación',
             headerShown: !hideHeader,
-            tabBarLabel: renderLabel(GES_LABEL),
+            tabBarLabel: renderLabel('Gestación'), // ← texto completo
           };
         }}
       />
@@ -134,17 +123,12 @@ export const BottomTabNavigator = () => {
       <Tab.Screen
         name="Tab4"
         component={CTIFeedScreen}
-        options={{
-          title: FEED_LABEL,
-          tabBarLabel: renderLabel(FEED_LABEL),
-        }}
+        options={{ title: 'CTIFEED', tabBarLabel: renderLabel('CTIFEED') }}
       />
 
-      {/* DEBUG opcional */}
       {isDebugMode && (
         <>
-          <Tab.Screen name="Tab2" options={{ title: 'Gestación', tabBarLabel: renderLabel(GES_LABEL) }} component={GestationScreen} />
-          <Tab.Screen name="Tab3" options={{ title: MAT_LABEL, tabBarLabel: renderLabel(MAT_LABEL) }} component={MaternityStackNavigator} />
+          {/* …tabs de debug si los necesitas… */}
         </>
       )}
     </Tab.Navigator>
