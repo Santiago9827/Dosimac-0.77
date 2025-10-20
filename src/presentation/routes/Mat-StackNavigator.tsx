@@ -16,6 +16,7 @@ import NoAlimentadosScreenMaternidad from './NoAlimentadosScreenMaternidad';
 import { TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { HamburgerMenu } from '../components/shared/HamburgerMenu';
+import IntroducirAnimalCorral from './IntroducirAnimalCorral';
 
 
 
@@ -102,6 +103,12 @@ export const MaternityStackNavigator = () => {
             component={TodosAnimalesMaternidad}
             options={{ title: 'Todos los Animales', headerShown: true }} />
 
+
+         <MaternityStack.Screen
+            name="MAT-INTRO-ANIMAL"
+            component={IntroducirAnimalCorral}
+            options={{ title: 'Introducir animal', headerShown: true, headerStyle: { elevation: 5 } }}
+         />
 
          {/* <DRegistationStack.Screen name="DR-SETUP" component={TopTabDrSetupNavigator} 
             options={{ title: 'Dosimac Setup',headerShown: true, headerLeft:()=>null,headerStyle:{elevation:5} }}

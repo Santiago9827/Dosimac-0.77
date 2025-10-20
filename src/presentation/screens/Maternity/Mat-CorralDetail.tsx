@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import { DrawerItem } from '@react-navigation/drawer';
 // import { CorralMatInfo } from '../../../libraries/interfaces/corral-Info.interface'; // si la tienes, ok
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+
 
 const ipServer = 'http://192.168.1.238:3010';
 const corralInfoUrl = (id: number) => `${ipServer}/corral/${id}`;
@@ -154,6 +156,8 @@ export const MatCorralDetail = () => {
    const route = useRoute<any>();
    const params = route.params ?? {};
    const { corralId = 0, mockEmpty, mockData, deviceError, diasSinAlimentar, statusMessage } = params;
+   const navigation = useNavigation<NavigationProp<any>>();
+
 
    // ====== estado superior (error/disparadores) ======
    const [isDeviceError, setDeviceError] = useState<boolean>(!!deviceError);
@@ -345,8 +349,7 @@ export const MatCorralDetail = () => {
 
                <EmptyCorralCard
                   corralId={corralId}
-                  onPressAdd={() => {
-                  }}
+                  onPressAdd={() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId })}
                />
             </ScrollView>
          </View>
