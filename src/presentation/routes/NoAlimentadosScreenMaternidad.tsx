@@ -58,9 +58,16 @@ export default function NoAlimentadosScreenMaternidad() {
 
 
     // ── ESTADO DE FILTRO/ORDEN ──────────────────────────────────────────────
-    type SortKey = 'none' | 'pct' | 'crotal' | 'corral';
+    // --- tipos de orden ---
+    type SortKey = 'dias' | 'corral' | 'pct';   // si no quieres 'pct', puedes quitarlo
     type SortDir = 'asc' | 'desc';
-    const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'none', dir: 'asc' });
+
+    // por defecto: días ↓
+    const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
+        key: 'dias',
+        dir: 'desc',
+    });
+
     const [menuOpen, setMenuOpen] = useState(false);
 
     // Posiciones para anclar el menú
@@ -79,17 +86,39 @@ export default function NoAlimentadosScreenMaternidad() {
     // Datos ordenados
     const dataSorted = useMemo(() => {
         const copy = [...data];
-        const dir = sort.dir === 'asc' ? 1 : -1;
 
-        if (sort.key === 'pct') {
-            copy.sort((a, b) => dir * (pct(a.consumida, a.total) - pct(b.consumida, b.total)));
-        } else if (sort.key === 'crotal') {
-            copy.sort((a, b) => dir * a.crotal.localeCompare(b.crotal, 'es'));
+        if (sort.key === 'dias') {
+            copy.sort((a, b) => {
+                const ad = a.diasSinAlimentar ?? 0;
+                const bd = b.diasSinAlimentar ?? 0;
+                if (ad !== bd) {
+                    return sort.dir === 'asc' ? ad - bd : bd - ad; // días primero
+                }
+                // empate: menos % consumido primero (más crítico)
+                return pct(a.consumida, a.total) - pct(b.consumida, b.total);
+            });
+        } else if (sort.key === 'pct') {
+            copy.sort((a, b) =>
+                sort.dir === 'asc'
+                    ? pct(a.consumida, a.total) - pct(b.consumida, b.total)
+                    : pct(b.consumida, b.total) - pct(a.consumida, a.total)
+            );
         } else if (sort.key === 'corral') {
-            copy.sort((a, b) => dir * a.corral.localeCompare(b.corral, 'es', { numeric: true }));
+            copy.sort((a, b) =>
+                sort.dir === 'asc'
+                    ? a.corral.localeCompare(b.corral, 'es', { numeric: true })
+                    : b.corral.localeCompare(a.corral, 'es', { numeric: true })
+            );
         }
+
         return copy;
     }, [data, sort]);
+
+    const ORDER_LABEL: Record<SortKey, string> = {
+        dias: 'Orden: Días sin alimentar',
+        pct: 'Orden: % consumido',
+        corral: 'Orden: Corral',
+    };
 
     const openAnimal = (item: Animal) => {
         const mockData = {
@@ -227,12 +256,14 @@ export default function NoAlimentadosScreenMaternidad() {
             </View>
 
             {/* Chip de orden activo con toggle ASC/DSC */}
-            {sort.key !== 'none' && (
+            {sort.key && (
                 <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <TouchableOpacity
                             activeOpacity={0.85}
-                            onPress={() => setSort(s => (s.key === 'none' ? s : { ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' }))}
+                            onPress={() =>
+                                setSort((s) => ({ ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' }))
+                            }
                             style={{
                                 alignSelf: 'flex-start',
                                 flexDirection: 'row',
@@ -248,12 +279,12 @@ export default function NoAlimentadosScreenMaternidad() {
                             <Ionicons name={sort.dir === 'asc' ? 'arrow-up' : 'arrow-down'} size={20} color={BRAND} style={{ marginRight: 4 }} />
                             <Ionicons name="funnel-outline" size={16} color={BRAND} />
                             <Text style={{ color: BRAND, fontWeight: '800', marginLeft: 6 }}>
-                                {sort.key === 'pct' ? 'Orden: % consumido' : sort.key === 'corral' ? 'Orden: Corral' : 'Orden: Crotal'}
+                                {ORDER_LABEL[sort.key]}
                             </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            onPress={() => setSort({ key: 'none', dir: 'asc' })}
+                            onPress={() => setSort({ key: 'dias', dir: 'desc' })} // vuelve al default
                             style={{ marginLeft: 10, padding: 6 }}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
@@ -316,31 +347,20 @@ export default function NoAlimentadosScreenMaternidad() {
                                 }}
                             >
                                 <Text style={{ paddingHorizontal: 12, paddingVertical: 10, color: '#64748B', fontWeight: '700' }}>
-                                    Filtros
+                                    Ordenar por
                                 </Text>
 
+                                {/* DÍAS SIN ALIMENTAR (default) */}
                                 <TouchableOpacity
-                                    onPress={() => { setSort({ key: 'pct', dir: 'asc' }); setMenuOpen(false); }}
+                                    onPress={() => { setSort({ key: 'dias', dir: 'desc' }); setMenuOpen(false); }}
                                     activeOpacity={0.8}
                                     style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
                                 >
-                                    <Ionicons name="trending-down-outline" size={20} color="#0f172a" style={{ marginRight: 10 }} />
+                                    <Ionicons name="time-outline" size={20} color="#0f172a" style={{ marginRight: 10 }} />
                                     <Text style={{ color: '#0f172a', flex: 1 }}>
-                                        No alimentados ({sort.key === 'pct' ? (sort.dir === 'asc' ? '↑' : '↓') : '↑'})
+                                        Días sin alimentar {sort.key === 'dias' ? (sort.dir === 'asc' ? '↑' : '↓') : '↓'}
                                     </Text>
-                                    {sort.key === 'pct' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={() => { setSort({ key: 'crotal', dir: 'asc' }); setMenuOpen(false); }}
-                                    activeOpacity={0.8}
-                                    style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
-                                >
-                                    <Ionicons name="pricetags-outline" size={20} color="#0f172a" style={{ marginRight: 10 }} />
-                                    <Text style={{ color: '#0f172a', flex: 1 }}>
-                                        Crotal ({sort.key === 'crotal' ? (sort.dir === 'asc' ? '↑' : '↓') : '↑'})
-                                    </Text>
-                                    {sort.key === 'crotal' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
+                                    {sort.key === 'dias' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
@@ -350,12 +370,23 @@ export default function NoAlimentadosScreenMaternidad() {
                                 >
                                     <Ionicons name="home-outline" size={20} color="#0f172a" style={{ marginRight: 10 }} />
                                     <Text style={{ color: '#0f172a', flex: 1 }}>
-                                        Corral ({sort.key === 'corral' ? (sort.dir === 'asc' ? '↑' : '↓') : '↑'})
+                                        Corral {sort.key === 'corral' ? (sort.dir === 'asc' ? '↑' : '↓') : '↑'}
                                     </Text>
                                     {sort.key === 'corral' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
                                 </TouchableOpacity>
+                                {/* <TouchableOpacity
+                                    onPress={() => { setSort({ key: 'corral', dir: 'asc' }); setMenuOpen(false); }}
+                                    activeOpacity={0.8}
+                                    style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
+                                >
+                                    <Ionicons name="home-outline" size={20} color="#0f172a" style={{ marginRight: 10 }} />
+                                    <Text style={{ color: '#0f172a', flex: 1 }}>
+                                        Corral ({sort.key === 'corral' ? (sort.dir === 'asc' ? '↑' : '↓') : '↑'})
+                                    </Text>
+                                    {sort.key === 'corral' && <Ionicons name="checkmark" size={18} color="#22C55E" />}
+                                </TouchableOpacity> */}
 
-                                {sort.key !== 'none' && (
+                                {/* {sort.key !== 'none' && (
                                     <TouchableOpacity
                                         onPress={() => { setSort({ key: 'none', dir: 'asc' }); setMenuOpen(false); }}
                                         activeOpacity={0.8}
@@ -364,7 +395,7 @@ export default function NoAlimentadosScreenMaternidad() {
                                         <Ionicons name="close-circle-outline" size={16} color="#0f172a" style={{ marginRight: 10 }} />
                                         <Text style={{ color: '#0f172a' }}>Quitar filtro</Text>
                                     </TouchableOpacity>
-                                )}
+                                )} */}
                             </View>
                         );
                     })()}
