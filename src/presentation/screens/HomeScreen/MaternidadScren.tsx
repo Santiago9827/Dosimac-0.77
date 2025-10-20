@@ -1,7 +1,7 @@
 // MaternidadScreen.tsx
 import React from 'react';
 import { View, Text, Pressable, FlatList, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DonutChart } from '../../components/shared/DonutChart';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -42,6 +42,21 @@ type Incidencia = {
 export default function MaternidadScreen() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation<NavigationProp<any>>();
+
+    const [donutSize, setDonutSize] = React.useState(132);
+
+    const computeDonutSize = (rowWidth: number) => {
+        // cuánto ocupa la columna izquierda según tus flex
+        const leftPct = LEFT_FLEX / (LEFT_FLEX + RIGHT_FLEX);
+        const leftColWidth = rowWidth * leftPct;
+
+        // margen de seguridad para paddings/separador
+        const safe = leftColWidth - 24;
+
+        // no más grande de 132 y nunca menos de 110
+        return Math.max(110, Math.min(132, Math.round(safe)));
+    };
+
 
     const maternidad: DatosMaternidad = { alimentados: 180, noAlimentados: 20 };
     const total = maternidad.alimentados + maternidad.noAlimentados;
@@ -119,7 +134,7 @@ export default function MaternidadScreen() {
         );
     };
 
-    // === Fila tipo enlace (igual a “Ver corrales”) ===
+    // Fila tipo enlace (igual estilo a “Ver corrales”)
     const LinkRow = ({
         icon,
         label,
@@ -185,101 +200,114 @@ export default function MaternidadScreen() {
     );
 
     return (
-        <View className="flex-1" style={{ backgroundColor: SURFACE_BG, paddingBottom: insets.bottom + 8 }}>
-            {/* Bloque 1: Donut + métricas */}
-            <View className="px-5 mb-6">
-                <View
-                    className="rounded-2xl border p-5 overflow-hidden"
-                    style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER, ...SHADOW }}
-                >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        {/* Izquierda (donut) */}
-                        <View style={{ flex: LEFT_FLEX }} className="items-center pr-2">
-                            <DonutChart
-                                size={132}
-                                strokeWidth={22}
-                                label="Maternidad"
-                                segmentA={maternidad.alimentados}
-                                segmentB={maternidad.noAlimentados}
-                                colorA="#22C55E"
-                                colorB="#EF4444"
-                                lineCap="butt"
-                                gapDegrees={0}
-                                centerPercent={pct}
-                            />
-                        </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: SURFACE_BG }}>
+            {/* Contenedor vertical: header (fijo) + lista (flex) + CTA (fijo) */}
+            <View style={{ flex: 1, paddingBottom: insets.bottom + 8 }}>
+                {/* Bloque 1: Donut + métricas (fijo) */}
+                <View className="px-5 mb-6">
+                    <View
+                        className="rounded-2xl border p-5 overflow-hidden"
+                        style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER, ...SHADOW }}
+                    >
+                        <View
+                            style={{ flexDirection: 'row', alignItems: 'center' }}
+                            onLayout={(e) => setDonutSize(computeDonutSize(e.nativeEvent.layout.width))}
+                        >
+                            {/* Izquierda (donut) */}
+                            <View style={{ flex: LEFT_FLEX }} className="items-center pr-2">
+                                <DonutChart
+                                    size={donutSize}
+                                    strokeWidth={donutSize >= 128 ? 22 : donutSize >= 118 ? 20 : 18} // trazo proporcional
+                                    label="Maternidad"
+                                    segmentA={maternidad.alimentados}
+                                    segmentB={maternidad.noAlimentados}
+                                    colorA="#22C55E"
+                                    colorB="#EF4444"
+                                    lineCap="butt"
+                                    gapDegrees={0}
+                                    centerPercent={pct}
+                                />
+                            </View>
 
-                        {/* Separador */}
-                        <View className="w-px self-stretch mx-3" style={{ backgroundColor: CARD_BORDER }} />
+                            {/* Separador */}
+                            <View className="w-px self-stretch mx-3" style={{ backgroundColor: CARD_BORDER }} />
 
-                        {/* Derecha (métricas) */}
-                        <View style={{ flex: RIGHT_FLEX }} className="pr-1">
-                            <Row label="Alimentados" value={maternidad.alimentados} />
-                            <Row
-                                label="No Alimentados"
-                                value={noAl}
-                                divider
-                                action
-                                onPress={() => navigation.navigate('NoAlimentadosMaternidad')}
-                                labelColor={noAlColor}
-                                valueColor={noAlColor}
-                            />
-                            <Row
-                                label="Totales animales"
-                                value={total}
-                                strong
-                                divider
-                                action
-                                onPress={() => navigation.navigate('TodosAnimalesMaternidad')}
-                            />
-
-                            <LinkRow
-                                icon="search-outline"
-                                label="Buscar corral"
-                                divider
-                                onPress={() => navigation.navigate('MAT-CORRAL' as never)}
-                            />
+                            {/* Derecha (métricas) */}
+                            <View style={{ flex: RIGHT_FLEX }} className="pr-1">
+                                <Row label="Alimentados" value={maternidad.alimentados} />
+                                <Row
+                                    label="No Alimentados"
+                                    value={noAl}
+                                    divider
+                                    action
+                                    onPress={() => navigation.navigate('NoAlimentadosMaternidad')}
+                                    labelColor={noAlColor}
+                                    valueColor={noAlColor}
+                                />
+                                <Row
+                                    label="Totales animales"
+                                    value={total}
+                                    strong
+                                    divider
+                                    action
+                                    onPress={() => navigation.navigate('TodosAnimalesMaternidad')}
+                                />
+                                <LinkRow
+                                    icon="search-outline"
+                                    label="Buscar corral"
+                                    divider
+                                    onPress={() => navigation.navigate('MAT-CORRAL' as never)}
+                                />
+                            </View>
                         </View>
                     </View>
                 </View>
-            </View>
 
-            {/* Bloque 2: Incidencias */}
-            <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasMaternidad.length} />
+                {/* Título Incidencias (fijo) */}
+                <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasMaternidad.length} />
 
-            <View className="px-5">
-                <View
-                    className="rounded-2xl overflow-hidden"
-                    style={{ backgroundColor: INCIDENT_BLOCK_BG, paddingVertical: 12, paddingHorizontal: 12, ...SHADOW }}
-                >
-                    <View style={{ height: 320 }}>
+                {/* Lista de incidencias (ocupa el resto de la pantalla) */}
+                <View className="px-5" style={{ flex: 1 }}>
+                    <View
+                        className="rounded-2xl overflow-hidden"
+                        style={{
+                            backgroundColor: INCIDENT_BLOCK_BG,
+                            paddingVertical: 12,
+                            paddingHorizontal: 12,
+                            ...SHADOW,
+                            flex: 1, // clave: que el contenedor crezca y deje a la lista ocupar el espacio
+                        }}
+                    >
                         <FlatList
                             data={incidenciasMaternidad}
                             keyExtractor={(item) => String(item.id)}
                             renderItem={renderIncidencia}
                             ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                             showsVerticalScrollIndicator
+                        // La lista scrollea dentro de su propio recuadro
                         />
                     </View>
                 </View>
 
-                {/* CTA inferior: Introducir animales (placeholder) */}
-                <TouchableOpacity
-                    onPress={() => { }}
-                    className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
-                    style={{
-                        backgroundColor: BRAND,
-                        marginBottom: insets.bottom + 8,
-                        shadowColor: '#000',
-                        shadowOpacity: 0.18,
-                        shadowRadius: 8,
-                        shadowOffset: { width: 0, height: 4 },
-                        elevation: 3,
-                    }}
-                >
-                    <Text className="text-white text-center font-semibold">Introducir animales</Text>
-                </TouchableOpacity>
+                {/* CTA inferior (fijo) */}
+                <View className="px-5">
+                    <TouchableOpacity
+                        onPress={() => { }}
+                        className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
+                        style={{
+                            backgroundColor: BRAND,
+                            marginBottom: insets.bottom + 8,
+                            shadowColor: '#000',
+                            shadowOpacity: 0.18,
+                            shadowRadius: 8,
+                            shadowOffset: { width: 0, height: 4 },
+                            elevation: 3,
+                        }}
+                    >
+                        <Text className="text-white text-center font-semibold">Introducir animales</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 }
