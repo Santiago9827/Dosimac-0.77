@@ -13,6 +13,7 @@ type Animal = {
     total: number;
     consumida: number;
     nota?: string;
+    diasSinAlimentar?: number;
 };
 
 const BRAND = '#3F0BAE';
@@ -41,16 +42,16 @@ const ProgressPill = ({ value, total }: { value: number; total: number }) => {
 export default function NoAlimentadosScreenMaternidad() {
     // ── DATA (mock) ─────────────────────────────────────────────────────────
     const data: Animal[] = [
-        { crotal: '123456789012345', corral: '01', total: 2837, consumida: 2000 },
-        { crotal: '987654321098765', corral: '02', total: 1500, consumida: 730 },
-        { crotal: '555666777888999', corral: '05', total: 2100, consumida: 210 },
-        { crotal: '111222333444555', corral: '03', total: 1800, consumida: 1260 },
-        { crotal: '999888777666555', corral: '08', total: 2500, consumida: 500 },
-        { crotal: '444333222111000', corral: '07', total: 3000, consumida: 1500 },
-        { crotal: '222333444555666', corral: '04', total: 2750, consumida: 825 },
-        { crotal: '777888999000111', corral: '09', total: 1600, consumida: 400 },
-        { crotal: '333444555666777', corral: '10', total: 2200, consumida: 1100 },
-        { crotal: '666555444333222', corral: '11', total: 2400, consumida: 600 },
+        { crotal: '123456789012345', corral: '01', total: 2837, consumida: 2000, diasSinAlimentar: 2 },
+        { crotal: '987654321098765', corral: '02', total: 1500, consumida: 730, diasSinAlimentar: 5 },
+        { crotal: '555666777888999', corral: '05', total: 2100, consumida: 210, diasSinAlimentar: 1 },
+        { crotal: '111222333444555', corral: '03', total: 1800, consumida: 1260, diasSinAlimentar: 3 },
+        { crotal: '999888777666555', corral: '08', total: 2500, consumida: 500, diasSinAlimentar: 4 },
+        { crotal: '444333222111000', corral: '07', total: 3000, consumida: 1500, diasSinAlimentar: 3 },
+        { crotal: '222333444555666', corral: '04', total: 2750, consumida: 825, diasSinAlimentar: 2 },
+        { crotal: '777888999000111', corral: '09', total: 1600, consumida: 400, diasSinAlimentar: 4 },
+        { crotal: '333444555666777', corral: '10', total: 2200, consumida: 1100, diasSinAlimentar: 3 },
+        { crotal: '666555444333222', corral: '11', total: 2400, consumida: 600, diasSinAlimentar: 1, },
     ];
 
     const navigation = useNavigation<NavigationProp<any>>();
@@ -66,6 +67,14 @@ export default function NoAlimentadosScreenMaternidad() {
     const [btnPos, setBtnPos] = useState({ x: 0, y: 0, w: 0, h: 0 });
     const btnRef = useRef<View>(null);
     const [headerBox, setHeaderBox] = useState({ y: 0, h: 0 });
+
+    const dayPillColors = (d: number) => {
+        // 0 días: OK (verde), 1–4: aviso (ámbar), 5+: riesgo (rojo)
+        if (d >= 5) return { bg: '#FEE2E2', fg: '#7F1D1D' };   // rojo claro
+        if (d >= 1) return { bg: '#FEF3C7', fg: '#92400E' };   // ámbar
+        return { bg: '#DCFCE7', fg: '#166534' };                // verde
+    };
+
 
     // Datos ordenados
     const dataSorted = useMemo(() => {
@@ -117,7 +126,13 @@ export default function NoAlimentadosScreenMaternidad() {
         <TouchableOpacity activeOpacity={0.85} onPress={() => openAnimal(item)}>
             <View
                 className="rounded-2xl p-4 bg-white border border-slate-200 mb-3"
-                style={{ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 }}
+                style={{
+                    shadowColor: '#000',
+                    shadowOpacity: 0.05,
+                    shadowRadius: 6,
+                    shadowOffset: { width: 0, height: 2 },
+                    elevation: 1,
+                }}
             >
                 {/* Cabecera: crotal + chip corral */}
                 <View className="flex-row items-center justify-between">
@@ -130,9 +145,34 @@ export default function NoAlimentadosScreenMaternidad() {
                     </View>
                 </View>
 
-                {/* Consumo */}
+                {/* Consumo (con chip de días a la derecha) */}
                 <View className="mt-3 rounded-xl border p-3" style={{ backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }}>
-                    <Text className="text-slate-600">Consumo</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                        <Text className="text-slate-600" style={{ flex: 1 }}>Consumo</Text>
+
+                        {typeof item.diasSinAlimentar === 'number' && (() => {
+                            const { bg, fg } = dayPillColors(item.diasSinAlimentar);
+                            return (
+                                <View
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 6,
+                                        borderRadius: 999,
+                                        backgroundColor: bg,
+                                    }}
+                                >
+                                    <Ionicons name="time-outline" size={14} color={fg} />
+                                    <Text style={{ marginLeft: 6, color: fg, fontWeight: '700' }}>
+                                        {item.diasSinAlimentar} {item.diasSinAlimentar === 1 ? 'día' : 'días'}
+                                    </Text>
+                                </View>
+                            );
+                        })()}
+                    </View>
+
+                    {/* Barra + números */}
                     <ProgressPill value={item.consumida} total={item.total} />
                 </View>
 
