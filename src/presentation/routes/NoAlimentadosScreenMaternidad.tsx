@@ -70,8 +70,8 @@ export default function NoAlimentadosScreenMaternidad() {
 
     const dayPillColors = (d: number) => {
         // 0 días: OK (verde), 1–4: aviso (ámbar), 5+: riesgo (rojo)
-        if (d >= 5) return { bg: '#FEE2E2', fg: '#7F1D1D' };   // rojo claro
-        if (d >= 1) return { bg: '#FEF3C7', fg: '#92400E' };   // ámbar
+        if (d >= 1) return { bg: '#FEE2E2', fg: '#7F1D1D' };   // rojo claro
+        // if (d >= 1) return { bg: '#FEF3C7', fg: '#92400E' };   // ámbar
         return { bg: '#DCFCE7', fg: '#166534' };                // verde
     };
 
