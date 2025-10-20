@@ -202,7 +202,7 @@ export default function MaternidadScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: SURFACE_BG }}>
             {/* Contenedor vertical: header (fijo) + lista (flex) + CTA (fijo) */}
-            <View style={{ flex: 1, paddingBottom: insets.bottom + 8 }}>
+            <View style={{ flex: 1 }}>
                 {/* Bloque 1: Donut + métricas (fijo) */}
                 <View className="px-5 mb-6">
                     <View
@@ -284,6 +284,8 @@ export default function MaternidadScreen() {
                             renderItem={renderIncidencia}
                             ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                             showsVerticalScrollIndicator
+                            style={{ flex: 1 }}                    // <- ocupa todo
+                            contentContainerStyle={{ paddingBottom: 4 }}
                         // La lista scrollea dentro de su propio recuadro
                         />
                     </View>
@@ -296,7 +298,6 @@ export default function MaternidadScreen() {
                         className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
                         style={{
                             backgroundColor: BRAND,
-                            marginBottom: insets.bottom + 8,
                             shadowColor: '#000',
                             shadowOpacity: 0.18,
                             shadowRadius: 8,
