@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet,
-    KeyboardAvoidingView, Platform, Modal, Pressable, Dimensions, ScrollView,
+    KeyboardAvoidingView, Platform, Modal, Pressable, Dimensions, ScrollView
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute, NavigationProp, useFocusEffect } from '@react-navigation/native';
@@ -14,13 +14,9 @@ const SURFACE = '#F8FAFC';
 const WIN = Dimensions.get('window');
 
 type Estado = 'PREPARTO' | 'LACTANCIA';
+type SearchMode = 'CROTAL' | 'ID';
 
-// tamaños ajustables
-const DAY_W = 100;            // ancho del cuadro “Día”
-const CORRAL_MIN_W = 150;     // ancho mínimo del select Corral
-const CORRAL_MAX_W = 220;     // ancho máximo del select Corral
-
-// corrales mock (libres)
+// Corrales mock
 const MOCK_CORRALES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '12', '14'];
 
 /** Dropdown anclado a un rectángulo (usa measureInWindow del ancla) */
@@ -78,10 +74,11 @@ export default function IntroducirAnimalCorral() {
     const route = useRoute<any>();
     const { corralId: corralFromRoute } = route.params ?? {};
 
-    // ===== AWR300
+    // === AWR300
     const { startReading, stopReading, lastTag, isConnected } = useAwrConn();
 
-    // ===== Estado local
+    // === Estado local
+    const [mode, setMode] = useState<SearchMode>('CROTAL'); // ← nuevo: modo de búsqueda
     const [crotal, setCrotal] = useState('');
     const [estado, setEstado] = useState<Estado>('PREPARTO');
     const dia = useMemo(() => (estado === 'PREPARTO' ? -5 : 0), [estado]);
@@ -94,7 +91,7 @@ export default function IntroducirAnimalCorral() {
         return Array.from(set).sort((a, b) => Number(a) - Number(b));
     }, [initialCorral]);
 
-    // ===== Anclas para dropdowns
+    // === Anclas para dropdowns
     const estadoBtnRef = useRef<View>(null);
     const [estadoAnchor, setEstadoAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
     const [estadoOpen, setEstadoOpen] = useState(false);
@@ -103,57 +100,69 @@ export default function IntroducirAnimalCorral() {
     const [corralAnchor, setCorralAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
     const [corralOpen, setCorralOpen] = useState(false);
 
+    // menú de tres puntos (modo de búsqueda)
+    const moreBtnRef = useRef<View>(null);
+    const [moreAnchor, setMoreAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+    const [moreOpen, setMoreOpen] = useState(false);
+
     const measureEstado = () => estadoBtnRef.current?.measureInWindow((x, y, w, h) => setEstadoAnchor({ x, y, w, h }));
     const measureCorral = () => corralBtnRef.current?.measureInWindow((x, y, w, h) => setCorralAnchor({ x, y, w, h }));
+    const measureMore = () => moreBtnRef.current?.measureInWindow((x, y, w, h) => setMoreAnchor({ x, y, w, h }));
 
-    // ===== Limpieza/arranque al enfocar
+    // === Limpieza/arranque al enfocar
     const seenTagRef = useRef<string | null>(null);
     useFocusEffect(
         useCallback(() => {
             setCrotal('');
             setCorral(initialCorral);
-            seenTagRef.current = lastTag ?? null; // ignora el “arrastrado”
-            startReading().catch(() => { });
+            seenTagRef.current = lastTag ?? null; // ignora el arrastrado
+            if (mode === 'CROTAL') startReading().catch(() => { });
 
-            // medir anclas tras montar layout
-            setTimeout(() => { measureEstado(); measureCorral(); }, 0);
+            setTimeout(() => { measureEstado(); measureCorral(); measureMore(); }, 0);
 
             return () => {
                 stopReading?.();
                 setCrotal('');
                 seenTagRef.current = null;
             };
-        }, [startReading, stopReading, initialCorral])
+        }, [startReading, stopReading, initialCorral, mode])
     );
 
-    // ===== No pisar si el usuario teclea
+    // Si el usuario escribe, no pisar el input durante 800ms
     const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [userTyping, setUserTyping] = useState(false);
-    const onChangeCrotal = (t: string) => {
+    const onChangeIdent = (t: string) => {
         setCrotal(t);
         setUserTyping(true);
         if (typingTimer.current) clearTimeout(typingTimer.current);
         typingTimer.current = setTimeout(() => setUserTyping(false), 800);
     };
 
-    // ===== Volcar tag nuevo al input
+    // Volcar tag nuevo SOLO si estamos en modo CROTAL
     useEffect(() => {
+        if (mode !== 'CROTAL') return;
         if (!lastTag) return;
         if (seenTagRef.current === lastTag) return;
         if (!userTyping) {
             setCrotal(lastTag);
             seenTagRef.current = lastTag;
         }
-    }, [lastTag, userTyping]);
+    }, [lastTag, userTyping, mode]);
 
-    // ===== Confirmar
+    // Si cambias el modo mientras estás en la pantalla, arranca/para la lectura
+    useEffect(() => {
+        if (mode === 'CROTAL') startReading().catch(() => { });
+        else stopReading?.();
+    }, [mode, startReading, stopReading]);
+
+    // Confirmar
     const confirmar = () => {
         if (!crotal.trim()) return;
         navigation.navigate('MAT-CORRALDETAIL', {
             corralId: Number(corral),
             mockData: {
                 animal: {
-                    crotal: crotal.trim(),
+                    crotal: crotal.trim(),        // si es ID, lo mandamos igualmente aquí para el mock
                     corral: String(corral),
                     subEstado: estado,
                     subEstadoFecha: new Date().toISOString().slice(0, 10),
@@ -182,22 +191,36 @@ export default function IntroducirAnimalCorral() {
                         <Text style={styles.title}>Introducir animal</Text>
                         <View style={{ flex: 1 }} />
                         <View style={styles.chip}><Text style={styles.chipText}>Corral {String(corral)}</Text></View>
+
+                        {/* botón tres puntos */}
+                        <View ref={moreBtnRef} onLayout={measureMore} style={{ marginLeft: 6 }}>
+                            <Pressable
+                                onPress={() => { measureMore(); setMoreOpen(true); }}
+                                android_ripple={{ color: '#e5e7eb', borderless: true }}
+                                style={styles.iconBtn}
+                            >
+                                <Ionicons name="ellipsis-vertical" size={18} color="#0f172a" />
+                            </Pressable>
+                        </View>
                     </View>
 
-                    {/* CROTAL */}
+                    {/* IDENTIFICACIÓN */}
                     <View style={styles.card}>
-                        <Text style={styles.cardTitle}>Identificación (Crotal)</Text>
+                        <Text style={styles.cardTitle}>
+                            {mode === 'CROTAL' ? 'Identificación (Crotal)' : 'Identificación (ID)'}
+                        </Text>
                         <TextInput
                             value={crotal}
-                            onChangeText={onChangeCrotal}
-                            placeholder="Escribe o espera la lectura…"
+                            onChangeText={onChangeIdent}
+                            placeholder={mode === 'CROTAL' ? 'Escribe o espera la lectura…' : 'Escribe el ID…'}
                             placeholderTextColor="#94A3B8"
                             autoCapitalize="characters"
                             autoCorrect={false}
                             maxLength={20}
                             style={styles.bigInput}
                         />
-                        {!isConnected && (
+                        {/* Aviso SOLO si modo CROTAL y no conectado */}
+                        {mode === 'CROTAL' && !isConnected && (
                             <View style={styles.helperRow}>
                                 <Ionicons name="alert-circle-outline" size={16} color="#EF4444" />
                                 <Text style={[styles.helperText, { color: '#EF4444' }]}>
@@ -205,12 +228,11 @@ export default function IntroducirAnimalCorral() {
                                 </Text>
                             </View>
                         )}
-
                     </View>
 
                     {/* BLOQUE: Estado + Día + Corral */}
                     <View style={styles.card}>
-                        {/* Fila: Estado (label izq + selector dcha) */}
+                        {/* Estado */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
                             <Text style={[styles.cardTitle, styles.cardTitleBig, { marginBottom: 0 }]}>Estado</Text>
                             <View style={{ flex: 1 }} />
@@ -226,17 +248,14 @@ export default function IntroducirAnimalCorral() {
                             </View>
                         </View>
 
-                        {/* Fila: Día (izq) + Corral (dcha) => 50/50 */}
+                        {/* Día + Corral (50/50) */}
                         <View style={styles.rowSplit50}>
-                            {/* Día */}
                             <View style={styles.colHalf}>
                                 <Text style={styles.labelTop}>Día</Text>
                                 <View style={styles.boxCentered}>
                                     <Text style={styles.valueTextCenter}>{dia}</Text>
                                 </View>
                             </View>
-
-                            {/* Corral */}
                             <View style={styles.colHalf}>
                                 <Text style={styles.labelTop}>Corral</Text>
                                 <View ref={corralBtnRef} onLayout={measureCorral}>
@@ -252,7 +271,6 @@ export default function IntroducirAnimalCorral() {
                             </View>
                         </View>
                     </View>
-
                 </View>
 
                 {/* CTA */}
@@ -268,7 +286,7 @@ export default function IntroducirAnimalCorral() {
                 </View>
             </KeyboardAvoidingView>
 
-            {/* Menú anclado: Estado */}
+            {/* Menú Estado */}
             <AnchoredMenu
                 visible={estadoOpen}
                 anchor={estadoAnchor}
@@ -282,7 +300,7 @@ export default function IntroducirAnimalCorral() {
                 minWidth={160}
             />
 
-            {/* Menú anclado: Corral (scrollable) */}
+            {/* Menú Corral */}
             <AnchoredMenu
                 visible={corralOpen}
                 anchor={corralAnchor}
@@ -290,46 +308,40 @@ export default function IntroducirAnimalCorral() {
                 items={corralesDisponibles.map(c => ({ label: `Corral ${c}`, value: c }))}
                 onSelect={(v) => setCorral(String(v))}
                 onRequestClose={() => setCorralOpen(false)}
-                minWidth={Math.max(CORRAL_MIN_W, (corralAnchor?.w ?? CORRAL_MIN_W))}
+                minWidth={Math.max(200, (corralAnchor?.w ?? 200))}
                 maxHeight={300}
+            />
+
+            {/* Menú tres puntos: modo de búsqueda */}
+            <AnchoredMenu
+                visible={moreOpen}
+                anchor={moreAnchor}
+                selected={mode}
+                items={[
+                    { label: 'Buscar por crotal (lector)', value: 'CROTAL' as SearchMode },
+                    { label: 'Buscar por ID (manual)', value: 'ID' as SearchMode },
+                ]}
+                onSelect={(v) => setMode(v)}
+                onRequestClose={() => setMoreOpen(false)}
+                minWidth={230}
             />
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-    title: {
-        marginLeft: 8,
-        color: '#0f172a',
-        fontWeight: '900',
-        fontSize: 18
-    },
-    chip: {
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 999,
-        backgroundColor: '#F1F5F9'
-    },
-    chipText: {
-        color: '#334155',
-        fontWeight: '700'
+    headerRow: { flexDirection: 'row', alignItems: 'center' },
+    title: { marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 18 },
+    chip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: '#F1F5F9' },
+    chipText: { color: '#334155', fontWeight: '700' },
+    iconBtn: {
+        width: 36, height: 36, borderRadius: 10,
+        alignItems: 'center', justifyContent: 'center'
     },
 
     card: { backgroundColor: '#fff', borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 14, padding: 14 },
-    cardTitle: {
-        color: '#1f2937',
-        fontWeight: '900'
-        , marginBottom: 8
-    },
-    cardTitleBig: {
-        fontSize: 16,
-        lineHeight: 22,
-    },
-
+    cardTitle: { color: '#1f2937', fontWeight: '900', marginBottom: 8 },
+    cardTitleBig: { fontSize: 16, lineHeight: 22 },
 
     bigInput: {
         height: 56, borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 12,
@@ -338,31 +350,10 @@ const styles = StyleSheet.create({
     helperRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
     helperText: { marginLeft: 6, color: BRAND, fontWeight: '700' },
 
-    rowSplit: { flexDirection: 'row', gap: 12, marginTop: 8, alignItems: 'flex-end' },
-    fieldColSm: {},
-    fieldColLg: { flex: 1 },
+    bottomBar: { padding: 16, borderTopWidth: 1, borderTopColor: CARD_BORDER, backgroundColor: '#FFFFFF' },
+    cta: { height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 
-    selectCorral: {
-        minWidth: CORRAL_MIN_W,
-        maxWidth: CORRAL_MAX_W,
-        alignSelf: 'flex-start',
-        flexDirection: 'row',
-    },
-
-    bottomBar: {
-        padding: 16,
-        borderTopWidth: 1,
-        borderTopColor: CARD_BORDER,
-        backgroundColor: '#FFFFFF'
-    },
-    cta: {
-        height: 48,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-
-    // overlay + menú anclado
+    // Overlay + menú anclado
     backdrop: { flex: 1, backgroundColor: 'transparent' },
     menu: {
         position: 'absolute',
@@ -378,45 +369,23 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 8 },
         overflow: 'hidden',
     },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 10
-    },
-    menuText: {
-        color: '#0f172a',
-        fontWeight: '700'
-    },
-    rowSplit50: {
-        flexDirection: 'row',
-        gap: 12,
-        alignItems: 'flex-end',
-    },
-    colHalf: {
-        flex: 1
-    },
+    menuItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10 },
+    menuText: { color: '#0f172a', fontWeight: '700' },
 
-    labelTop: {
-        color: '#64748B',
-        fontWeight: '700',
-        marginBottom: 6
-    },
+    // Layout día + corral (50/50)
+    rowSplit50: { flexDirection: 'row', gap: 12, alignItems: 'flex-end' },
+    colHalf: { flex: 1 },
 
-    // Caja centrada para el número del día 
+    labelTop: { color: '#64748B', fontWeight: '700', marginBottom: 6 },
+
     boxCentered: {
         height: 42,
         borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 10,
-        backgroundColor: SURFACE,
-        alignItems: 'center', justifyContent: 'center',
+        backgroundColor: SURFACE, alignItems: 'center', justifyContent: 'center',
     },
-    valueTextCenter: {
-        color: '#0f172a',
-        fontWeight: '800',
-        textAlign: 'center'
-    },
+    valueTextCenter: { color: '#0f172a', fontWeight: '800', textAlign: 'center' },
 
-    // Selector centrado sirve para Estado y Corral 
+    // Selects centrados (Estado/Corral)
     selectFieldCenter: {
         height: 42,
         borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 10,
@@ -432,11 +401,5 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         textAlignVertical: 'center',
     },
-    selectChevron: {
-        position: 'absolute',
-        right: 10,
-        top: '50%',
-        marginTop: -9,
-    },
-
+    selectChevron: { position: 'absolute', right: 10, top: '50%', marginTop: -9 },
 });
