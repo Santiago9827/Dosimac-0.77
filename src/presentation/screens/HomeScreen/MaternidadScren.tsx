@@ -300,7 +300,7 @@ export default function MaternidadScreen() {
                                 <TouchableOpacity
                                     onPress={() => {
                                         setMenuOpen(false);
-                                        // navigation.navigate('MAT-INTRO-ANIMALES' as never);
+                                        navigation.navigate('MAT-INTRO-LOTE' as never);
                                     }}
                                     activeOpacity={0.8}
                                     style={{ paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}

@@ -17,6 +17,7 @@ import { TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { HamburgerMenu } from '../components/shared/HamburgerMenu';
 import IntroducirAnimalCorral from './IntroducirAnimalCorral';
+import IntroducirAnimalLote from './IntroducirAnimalLote';
 
 
 
@@ -108,6 +109,13 @@ export const MaternityStackNavigator = () => {
             name="MAT-INTRO-ANIMAL"
             component={IntroducirAnimalCorral}
             options={{ title: 'Introducir animal', headerShown: true, headerStyle: { elevation: 5 } }}
+         />
+
+
+         <MaternityStack.Screen
+            name="MAT-INTRO-LOTE"
+            component={IntroducirAnimalLote}
+            options={{ title: 'Introducir animal por lote', headerShown: true, headerStyle: { elevation: 5 } }}
          />
 
          {/* <DRegistationStack.Screen name="DR-SETUP" component={TopTabDrSetupNavigator} 
