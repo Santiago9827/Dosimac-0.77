@@ -1,40 +1,135 @@
 /* eslint-disable prettier/prettier */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet,
-    KeyboardAvoidingView, Platform
+    KeyboardAvoidingView, Platform, Modal, Pressable, Dimensions,
+    ScrollView
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation, useRoute, NavigationProp } from '@react-navigation/native';
-import { useAwrConn } from '../../stores/awrConnStore'; // 👈 usa el mismo hook que en la pantalla de pruebas
+import { useNavigation, useRoute, NavigationProp, useFocusEffect } from '@react-navigation/native';
+import { useAwrConn } from '../../stores/awrConnStore';
 
 const BRAND = '#4F46E5';
 const CARD_BORDER = '#E2E8F0';
+const SURFACE = '#F8FAFC';
+const WIN = Dimensions.get('window');
 
 type Estado = 'PREPARTO' | 'LACTANCIA';
+const MOCK_CORRALES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '12', '14'];
+
+/** Dropdown anclado a un rectángulo (usa measureInWindow del ancla) */
+function AnchoredMenu<T extends string | number>({
+    visible, anchor, selected, items, onSelect, onRequestClose, maxHeight = 360, minWidth = 180,
+}: {
+    visible: boolean;
+    anchor: { x: number; y: number; w: number; h: number } | null;
+    selected: T;
+    items: { label: string; value: T }[];
+    onSelect: (v: T) => void;
+    onRequestClose: () => void;
+    maxHeight?: number;
+    minWidth?: number;
+}) {
+    if (!visible || !anchor) return null;
+
+    const menuW = Math.max(anchor.w, minWidth);
+    const gap = 6;
+    const top = Math.min(anchor.y + anchor.h + gap, WIN.height - 20); // por si llega abajo
+    const left = Math.min(Math.max(anchor.x, 10), Math.max(10, WIN.width - menuW - 10));
+
+    return (
+        <Modal visible transparent animationType="none" onRequestClose={onRequestClose}>
+            <Pressable style={styles.backdrop} onPress={onRequestClose} />
+            <View
+                style={[
+                    styles.menu,
+                    { top, left, width: menuW, maxHeight },
+                ]}
+            >
+                <ScrollView keyboardShouldPersistTaps="handled">
+
+                    {items.map(it => {
+                        const active = it.value === selected;
+                        return (
+                            <TouchableOpacity
+                                key={`${it.value}`}
+                                activeOpacity={0.85}
+                                onPress={() => { onSelect(it.value); onRequestClose(); }}
+                                style={styles.menuItem}
+                            >
+                                <Ionicons
+                                    name={active ? 'checkmark-circle' : 'ellipse-outline'}
+                                    size={18}
+                                    color={active ? BRAND : '#94A3B8'}
+                                    style={{ marginRight: 10 }}
+                                />
+                                <Text style={[styles.menuText, active && { color: BRAND, fontWeight: '800' }]}>
+                                    {it.label}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </View>
+        </Modal>
+    );
+}
 
 export default function IntroducirAnimalCorral() {
     const navigation = useNavigation<NavigationProp<any>>();
     const route = useRoute<any>();
-    const { corralId } = route.params ?? {};
+    const { corralId: corralFromRoute } = route.params ?? {};
 
-    // AWR300
-    const { startReading, lastTag, isConnected } = useAwrConn();
+    // ===== AWR300
+    const { startReading, stopReading, lastTag, isConnected } = useAwrConn();
 
-    // Estado local
+    // ===== Estado local
     const [crotal, setCrotal] = useState('');
     const [estado, setEstado] = useState<Estado>('PREPARTO');
     const dia = useMemo(() => (estado === 'PREPARTO' ? -5 : 0), [estado]);
 
-    // Arranca la lectura al montar
-    useEffect(() => {
-        startReading().catch(() => { });
-    }, [startReading]);
+    const initialCorral = String(corralFromRoute ?? '—');
+    const [corral, setCorral] = useState(initialCorral);
+    const corralesDisponibles = useMemo(() => {
+        const set = new Set<string>(MOCK_CORRALES);
+        if (initialCorral !== '—') set.add(initialCorral);
+        return Array.from(set).sort((a, b) => Number(a) - Number(b));
+    }, [initialCorral]);
 
-    // Si llega un tag nuevo, lo volcamos al input (a menos que el usuario esté tecleando)
+    // ===== Preparar anclas (para dropdowns)
+    const estadoBtnRef = useRef<View>(null);
+    const [estadoAnchor, setEstadoAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+    const [estadoOpen, setEstadoOpen] = useState(false);
+
+    const corralBtnRef = useRef<View>(null);
+    const [corralAnchor, setCorralAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+    const [corralOpen, setCorralOpen] = useState(false);
+
+    const measureEstado = () => estadoBtnRef.current?.measureInWindow((x, y, w, h) => setEstadoAnchor({ x, y, w, h }));
+    const measureCorral = () => corralBtnRef.current?.measureInWindow((x, y, w, h) => setCorralAnchor({ x, y, w, h }));
+
+    // ===== Limpieza/arranque al enfocar
+    const seenTagRef = useRef<string | null>(null);
+    useFocusEffect(
+        useCallback(() => {
+            setCrotal('');
+            setCorral(initialCorral);
+            seenTagRef.current = lastTag ?? null; // ignora arrastrado
+            startReading().catch(() => { });
+            // mide anclas (pequeño retraso para asegurar layout)
+            setTimeout(() => { measureEstado(); measureCorral(); }, 0);
+
+            return () => {
+                stopReading?.();
+                setCrotal('');
+                seenTagRef.current = null;
+            };
+        }, [startReading, stopReading, initialCorral])
+    );
+
+    // ===== No pisar si el usuario teclea
     const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [userTyping, setUserTyping] = useState(false);
-
     const onChangeCrotal = (t: string) => {
         setCrotal(t);
         setUserTyping(true);
@@ -42,20 +137,25 @@ export default function IntroducirAnimalCorral() {
         typingTimer.current = setTimeout(() => setUserTyping(false), 800);
     };
 
+    // ===== Volcar tag nuevo al input
     useEffect(() => {
-        if (!userTyping && lastTag) {
+        if (!lastTag) return;
+        if (seenTagRef.current === lastTag) return;
+        if (!userTyping) {
             setCrotal(lastTag);
+            seenTagRef.current = lastTag;
         }
     }, [lastTag, userTyping]);
 
+    // ===== Confirmar
     const confirmar = () => {
         if (!crotal.trim()) return;
         navigation.navigate('MAT-CORRALDETAIL', {
-            corralId,
+            corralId: Number(corral),
             mockData: {
                 animal: {
                     crotal: crotal.trim(),
-                    corral: String(corralId),
+                    corral: String(corral),
                     subEstado: estado,
                     subEstadoFecha: new Date().toISOString().slice(0, 10),
                     ciclo: '—',
@@ -74,20 +174,20 @@ export default function IntroducirAnimalCorral() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: SURFACE }}>
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
                 <View style={{ padding: 16, gap: 16 }}>
-                    {/* Cabecera contextual */}
+                    {/* Header contextual */}
                     <View style={styles.headerRow}>
                         <Ionicons name="add-circle-outline" size={20} color="#0f172a" />
                         <Text style={styles.title}>Introducir animal</Text>
                         <View style={{ flex: 1 }} />
-                        <View style={styles.chip}><Text style={styles.chipText}>Corral {String(corralId ?? '—')}</Text></View>
+                        <View style={styles.chip}><Text style={styles.chipText}>Corral {String(corral)}</Text></View>
                     </View>
 
                     {/* CROTAL */}
                     <View style={styles.card}>
-                        <Text style={styles.cardLabel}>Identificación (Crotal)</Text>
+                        <Text style={styles.cardTitle}>Identificación (Crotal)</Text>
                         <TextInput
                             value={crotal}
                             onChangeText={onChangeCrotal}
@@ -106,25 +206,57 @@ export default function IntroducirAnimalCorral() {
                         </View>
                     </View>
 
-                    {/* ESTADO + derivados */}
+                    {/* BLOQUE: Estado + Día + Corral */}
                     <View style={styles.card}>
-                        <Text style={styles.cardLabel}>Estado</Text>
-                        <View style={{ flexDirection: 'row', gap: 10 }}>
-                            <EstadoPill label="PREPARTO" active={estado === 'PREPARTO'} onPress={() => setEstado('PREPARTO')} />
-                            <EstadoPill label="LACTANCIA" active={estado === 'LACTANCIA'} onPress={() => setEstado('LACTANCIA')} />
+                        {/* Fila estado con select anclado a la derecha */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                            <Text style={[styles.cardTitle, { marginBottom: 0 }]}>Estado</Text>
+                            <View style={{ flex: 1 }} />
+                            <View
+                                ref={estadoBtnRef}
+                                onLayout={measureEstado}
+                            >
+                                <Pressable
+                                    onPress={() => { measureEstado(); setEstadoOpen(true); }}
+                                    android_ripple={{ color: '#E5E7EB' }}
+                                    style={[styles.selectField, { minWidth: 160 }]}
+                                >
+                                    <Text style={styles.selectText}>{estado}</Text>
+                                    <Ionicons name="chevron-down" size={18} color="#475569" />
+                                </Pressable>
+                            </View>
                         </View>
 
-                        <View style={styles.row}>
-                            <Text style={styles.subLabel}>Día</Text>
-                            <View style={styles.valueBox}><Text style={styles.valueText}>{dia}</Text></View>
+                        {/* Fila combinada: Día pequeño + Corral grande */}
+                        <View style={styles.rowSplit}>
+                            {/* Columna Día (estrecha) */}
+                            <View style={styles.fieldColSm}>
+                                <Text style={styles.labelTop}>Día</Text>
+                                <View style={styles.valueBoxSm}>
+                                    <Text style={styles.valueText}>{dia}</Text>
+                                </View>
+                            </View>
+
+                            {/* Columna Corral (ocupa el resto) */}
+                            <View style={styles.fieldColLg}>
+                                <Text style={styles.labelTop}>Corral</Text>
+                                <View ref={corralBtnRef} onLayout={measureCorral} style={{ alignSelf: 'stretch' }}>
+                                    <Pressable
+                                        onPress={() => { measureCorral(); setCorralOpen(true); }}
+                                        android_ripple={{ color: '#E5E7EB' }}
+                                        style={[styles.valueBoxFull, styles.selectBox]}   // <-- usa valueBoxFull
+                                    >
+                                        <Text style={styles.valueText}>{String(corral)}</Text>
+                                        <Ionicons name="chevron-down" size={18} color="#475569" />
+                                    </Pressable>
+                                </View>
+
+                            </View>
                         </View>
 
-                        <View style={[styles.row, { marginTop: 8 }]}>
-                            <Text style={styles.subLabel}>Corral</Text>
-                            <View style={styles.valueBox}><Text style={styles.valueText}>{String(corralId ?? '—')}</Text></View>
-                        </View>
                     </View>
                 </View>
+
 
                 {/* CTA */}
                 <View style={styles.bottomBar}>
@@ -138,24 +270,34 @@ export default function IntroducirAnimalCorral() {
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
-        </SafeAreaView>
-    );
-}
 
-function EstadoPill({
-    label, active, onPress,
-}: { label: 'PREPARTO' | 'LACTANCIA'; active: boolean; onPress: () => void }) {
-    return (
-        <TouchableOpacity
-            onPress={onPress}
-            activeOpacity={0.9}
-            style={[
-                { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, borderWidth: 1 },
-                active ? { backgroundColor: '#EEF2FF', borderColor: BRAND } : { backgroundColor: '#F8FAFC', borderColor: CARD_BORDER },
-            ]}
-        >
-            <Text style={{ fontWeight: '800', color: active ? BRAND : '#334155', letterSpacing: 0.2 }}>{label}</Text>
-        </TouchableOpacity>
+            {/* Menú anclado: Estado */}
+            <AnchoredMenu
+                visible={estadoOpen}
+                anchor={estadoAnchor}
+                selected={estado}
+                items={[
+                    { label: 'PREPARTO', value: 'PREPARTO' as Estado },
+                    { label: 'LACTANCIA', value: 'LACTANCIA' as Estado },
+                ]}
+                onSelect={(v) => setEstado(v)}
+                onRequestClose={() => setEstadoOpen(false)}
+                minWidth={160}
+            />
+
+            {/* Menú anclado: Corral */}
+            <AnchoredMenu
+                visible={corralOpen}
+                anchor={corralAnchor}
+                selected={corral}
+                items={corralesDisponibles.map(c => ({ label: `Corral ${c}`, value: c }))}
+                onSelect={(v) => setCorral(String(v))}
+                onRequestClose={() => setCorralOpen(false)}
+                minWidth={Math.max(200, (corralAnchor?.w ?? 200))}
+                maxHeight={300}
+
+            />
+        </SafeAreaView >
     );
 }
 
@@ -166,22 +308,78 @@ const styles = StyleSheet.create({
     chipText: { color: '#334155', fontWeight: '700' },
 
     card: { backgroundColor: '#fff', borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 14, padding: 14 },
-    cardLabel: { color: '#64748B', fontWeight: '800', marginBottom: 10 },
+    cardTitle: { color: '#1f2937', fontWeight: '900', marginBottom: 8 },
+
     bigInput: {
         height: 56, borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 12,
-        paddingHorizontal: 14, fontSize: 18, color: '#0f172a', backgroundColor: '#F8FAFC',
+        paddingHorizontal: 14, fontSize: 18, color: '#0f172a', backgroundColor: SURFACE,
     },
     helperRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
     helperText: { marginLeft: 6, color: BRAND, fontWeight: '700' },
 
-    row: { marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
+    row: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 10 },
     subLabel: { color: '#64748B', fontWeight: '700', width: 74 },
+
     valueBox: {
         flex: 1, height: 42, borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 10,
-        backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: SURFACE, alignItems: 'center', justifyContent: 'center',
     },
     valueText: { color: '#0f172a', fontWeight: '800' },
 
+    selectField: {
+        flexDirection: 'row', alignItems: 'center',
+        borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 999,
+        backgroundColor: SURFACE, paddingHorizontal: 12, height: 40, gap: 6,
+    },
+    selectText: { color: '#0f172a', fontWeight: '800' },
+
     bottomBar: { padding: 16, borderTopWidth: 1, borderTopColor: CARD_BORDER, backgroundColor: '#FFFFFF' },
     cta: { height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+
+    // Overlay + menú anclado
+    backdrop: { flex: 1, backgroundColor: 'transparent' },
+    menu: {
+        position: 'absolute',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: CARD_BORDER,
+        paddingVertical: 6,
+        elevation: 14,
+        shadowColor: '#000',
+        shadowOpacity: 0.16,
+        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 8 },
+        overflow: 'hidden',
+    },
+    menuItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10 },
+    menuText: { color: '#0f172a', fontWeight: '700' },
+    rowSplit: { flexDirection: 'row', gap: 12, marginTop: 8, alignItems: 'flex-end' },
+
+    fieldColSm: { width: 120 },   // <- Día más estrecho
+    fieldColLg: { flex: 1 },      // <- Corral ocupa el resto
+
+    labelTop: { color: '#64748B', fontWeight: '700', marginBottom: 6 },
+
+    valueBoxSm: {
+        height: 42,
+        borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 10,
+        backgroundColor: SURFACE,
+        alignItems: 'center', justifyContent: 'center',
+    },
+
+    // ya los tienes, pero los reutilizamos:
+    selectBox: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12 },
+    valueBoxFull: {
+        height: 42,
+        width: '100%',                  // <-- clave
+        borderWidth: 1,
+        borderColor: CARD_BORDER,
+        borderRadius: 10,
+        backgroundColor: SURFACE,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 12,
+        flexDirection: 'row',
+    },
 });
