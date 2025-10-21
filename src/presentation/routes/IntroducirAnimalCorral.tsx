@@ -2,8 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet,
-    KeyboardAvoidingView, Platform, Modal, Pressable, Dimensions,
-    ScrollView
+    KeyboardAvoidingView, Platform, Modal, Pressable, Dimensions, ScrollView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute, NavigationProp, useFocusEffect } from '@react-navigation/native';
@@ -15,6 +14,13 @@ const SURFACE = '#F8FAFC';
 const WIN = Dimensions.get('window');
 
 type Estado = 'PREPARTO' | 'LACTANCIA';
+
+// tamaños ajustables
+const DAY_W = 100;            // ancho del cuadro “Día”
+const CORRAL_MIN_W = 150;     // ancho mínimo del select Corral
+const CORRAL_MAX_W = 220;     // ancho máximo del select Corral
+
+// corrales mock (libres)
 const MOCK_CORRALES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '12', '14'];
 
 /** Dropdown anclado a un rectángulo (usa measureInWindow del ancla) */
@@ -34,20 +40,14 @@ function AnchoredMenu<T extends string | number>({
 
     const menuW = Math.max(anchor.w, minWidth);
     const gap = 6;
-    const top = Math.min(anchor.y + anchor.h + gap, WIN.height - 20); // por si llega abajo
+    const top = Math.min(anchor.y + anchor.h + gap, WIN.height - 20);
     const left = Math.min(Math.max(anchor.x, 10), Math.max(10, WIN.width - menuW - 10));
 
     return (
         <Modal visible transparent animationType="none" onRequestClose={onRequestClose}>
             <Pressable style={styles.backdrop} onPress={onRequestClose} />
-            <View
-                style={[
-                    styles.menu,
-                    { top, left, width: menuW, maxHeight },
-                ]}
-            >
+            <View style={[styles.menu, { top, left, width: menuW, maxHeight }]}>
                 <ScrollView keyboardShouldPersistTaps="handled">
-
                     {items.map(it => {
                         const active = it.value === selected;
                         return (
@@ -63,9 +63,7 @@ function AnchoredMenu<T extends string | number>({
                                     color={active ? BRAND : '#94A3B8'}
                                     style={{ marginRight: 10 }}
                                 />
-                                <Text style={[styles.menuText, active && { color: BRAND, fontWeight: '800' }]}>
-                                    {it.label}
-                                </Text>
+                                <Text style={[styles.menuText, active && { color: BRAND, fontWeight: '800' }]}>{it.label}</Text>
                             </TouchableOpacity>
                         );
                     })}
@@ -96,7 +94,7 @@ export default function IntroducirAnimalCorral() {
         return Array.from(set).sort((a, b) => Number(a) - Number(b));
     }, [initialCorral]);
 
-    // ===== Preparar anclas (para dropdowns)
+    // ===== Anclas para dropdowns
     const estadoBtnRef = useRef<View>(null);
     const [estadoAnchor, setEstadoAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
     const [estadoOpen, setEstadoOpen] = useState(false);
@@ -114,9 +112,10 @@ export default function IntroducirAnimalCorral() {
         useCallback(() => {
             setCrotal('');
             setCorral(initialCorral);
-            seenTagRef.current = lastTag ?? null; // ignora arrastrado
+            seenTagRef.current = lastTag ?? null; // ignora el “arrastrado”
             startReading().catch(() => { });
-            // mide anclas (pequeño retraso para asegurar layout)
+
+            // medir anclas tras montar layout
             setTimeout(() => { measureEstado(); measureCorral(); }, 0);
 
             return () => {
@@ -198,65 +197,63 @@ export default function IntroducirAnimalCorral() {
                             maxLength={20}
                             style={styles.bigInput}
                         />
-                        <View style={styles.helperRow}>
-                            <Ionicons name="radio-outline" size={16} color={BRAND} />
-                            <Text style={styles.helperText}>
-                                {isConnected ? 'Escuchando AWR300…' : 'Conectando al AWR300…'}
-                            </Text>
-                        </View>
+                        {!isConnected && (
+                            <View style={styles.helperRow}>
+                                <Ionicons name="alert-circle-outline" size={16} color="#EF4444" />
+                                <Text style={[styles.helperText, { color: '#EF4444' }]}>
+                                    No conectado al equipo
+                                </Text>
+                            </View>
+                        )}
+
                     </View>
 
                     {/* BLOQUE: Estado + Día + Corral */}
                     <View style={styles.card}>
-                        {/* Fila estado con select anclado a la derecha */}
+                        {/* Fila: Estado (label izq + selector dcha) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                            <Text style={[styles.cardTitle, { marginBottom: 0 }]}>Estado</Text>
+                            <Text style={[styles.cardTitle, styles.cardTitleBig, { marginBottom: 0 }]}>Estado</Text>
                             <View style={{ flex: 1 }} />
-                            <View
-                                ref={estadoBtnRef}
-                                onLayout={measureEstado}
-                            >
+                            <View ref={estadoBtnRef} onLayout={measureEstado}>
                                 <Pressable
                                     onPress={() => { measureEstado(); setEstadoOpen(true); }}
                                     android_ripple={{ color: '#E5E7EB' }}
-                                    style={[styles.selectField, { minWidth: 160 }]}
+                                    style={[styles.selectFieldCenter, { minWidth: 160 }]}
                                 >
-                                    <Text style={styles.selectText}>{estado}</Text>
-                                    <Ionicons name="chevron-down" size={18} color="#475569" />
+                                    <Text numberOfLines={1} style={styles.selectTextCenter}>{estado}</Text>
+                                    <Ionicons name="chevron-down" size={18} color="#475569" style={styles.selectChevron} />
                                 </Pressable>
                             </View>
                         </View>
 
-                        {/* Fila combinada: Día pequeño + Corral grande */}
-                        <View style={styles.rowSplit}>
-                            {/* Columna Día (estrecha) */}
-                            <View style={styles.fieldColSm}>
+                        {/* Fila: Día (izq) + Corral (dcha) => 50/50 */}
+                        <View style={styles.rowSplit50}>
+                            {/* Día */}
+                            <View style={styles.colHalf}>
                                 <Text style={styles.labelTop}>Día</Text>
-                                <View style={styles.valueBoxSm}>
-                                    <Text style={styles.valueText}>{dia}</Text>
+                                <View style={styles.boxCentered}>
+                                    <Text style={styles.valueTextCenter}>{dia}</Text>
                                 </View>
                             </View>
 
-                            {/* Columna Corral (ocupa el resto) */}
-                            <View style={styles.fieldColLg}>
+                            {/* Corral */}
+                            <View style={styles.colHalf}>
                                 <Text style={styles.labelTop}>Corral</Text>
-                                <View ref={corralBtnRef} onLayout={measureCorral} style={{ alignSelf: 'stretch' }}>
+                                <View ref={corralBtnRef} onLayout={measureCorral}>
                                     <Pressable
                                         onPress={() => { measureCorral(); setCorralOpen(true); }}
                                         android_ripple={{ color: '#E5E7EB' }}
-                                        style={[styles.valueBoxFull, styles.selectBox]}   // <-- usa valueBoxFull
+                                        style={[styles.selectFieldCenter, { width: '100%' }]}
                                     >
-                                        <Text style={styles.valueText}>{String(corral)}</Text>
-                                        <Ionicons name="chevron-down" size={18} color="#475569" />
+                                        <Text numberOfLines={1} style={styles.selectTextCenter}>{String(corral)}</Text>
+                                        <Ionicons name="chevron-down" size={18} color="#475569" style={styles.selectChevron} />
                                     </Pressable>
                                 </View>
-
                             </View>
                         </View>
-
                     </View>
-                </View>
 
+                </View>
 
                 {/* CTA */}
                 <View style={styles.bottomBar}>
@@ -285,7 +282,7 @@ export default function IntroducirAnimalCorral() {
                 minWidth={160}
             />
 
-            {/* Menú anclado: Corral */}
+            {/* Menú anclado: Corral (scrollable) */}
             <AnchoredMenu
                 visible={corralOpen}
                 anchor={corralAnchor}
@@ -293,22 +290,46 @@ export default function IntroducirAnimalCorral() {
                 items={corralesDisponibles.map(c => ({ label: `Corral ${c}`, value: c }))}
                 onSelect={(v) => setCorral(String(v))}
                 onRequestClose={() => setCorralOpen(false)}
-                minWidth={Math.max(200, (corralAnchor?.w ?? 200))}
+                minWidth={Math.max(CORRAL_MIN_W, (corralAnchor?.w ?? CORRAL_MIN_W))}
                 maxHeight={300}
-
             />
-        </SafeAreaView >
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    headerRow: { flexDirection: 'row', alignItems: 'center' },
-    title: { marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 18 },
-    chip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: '#F1F5F9' },
-    chipText: { color: '#334155', fontWeight: '700' },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    title: {
+        marginLeft: 8,
+        color: '#0f172a',
+        fontWeight: '900',
+        fontSize: 18
+    },
+    chip: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 999,
+        backgroundColor: '#F1F5F9'
+    },
+    chipText: {
+        color: '#334155',
+        fontWeight: '700'
+    },
 
     card: { backgroundColor: '#fff', borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 14, padding: 14 },
-    cardTitle: { color: '#1f2937', fontWeight: '900', marginBottom: 8 },
+    cardTitle: {
+        color: '#1f2937',
+        fontWeight: '900'
+        , marginBottom: 8
+    },
+    cardTitleBig: {
+        fontSize: 16,
+        lineHeight: 22,
+    },
+
 
     bigInput: {
         height: 56, borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 12,
@@ -317,26 +338,31 @@ const styles = StyleSheet.create({
     helperRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
     helperText: { marginLeft: 6, color: BRAND, fontWeight: '700' },
 
-    row: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 10 },
-    subLabel: { color: '#64748B', fontWeight: '700', width: 74 },
+    rowSplit: { flexDirection: 'row', gap: 12, marginTop: 8, alignItems: 'flex-end' },
+    fieldColSm: {},
+    fieldColLg: { flex: 1 },
 
-    valueBox: {
-        flex: 1, height: 42, borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 10,
-        backgroundColor: SURFACE, alignItems: 'center', justifyContent: 'center',
+    selectCorral: {
+        minWidth: CORRAL_MIN_W,
+        maxWidth: CORRAL_MAX_W,
+        alignSelf: 'flex-start',
+        flexDirection: 'row',
     },
-    valueText: { color: '#0f172a', fontWeight: '800' },
 
-    selectField: {
-        flexDirection: 'row', alignItems: 'center',
-        borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 999,
-        backgroundColor: SURFACE, paddingHorizontal: 12, height: 40, gap: 6,
+    bottomBar: {
+        padding: 16,
+        borderTopWidth: 1,
+        borderTopColor: CARD_BORDER,
+        backgroundColor: '#FFFFFF'
     },
-    selectText: { color: '#0f172a', fontWeight: '800' },
+    cta: {
+        height: 48,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
 
-    bottomBar: { padding: 16, borderTopWidth: 1, borderTopColor: CARD_BORDER, backgroundColor: '#FFFFFF' },
-    cta: { height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-
-    // Overlay + menú anclado
+    // overlay + menú anclado
     backdrop: { flex: 1, backgroundColor: 'transparent' },
     menu: {
         position: 'absolute',
@@ -352,34 +378,65 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 8 },
         overflow: 'hidden',
     },
-    menuItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10 },
-    menuText: { color: '#0f172a', fontWeight: '700' },
-    rowSplit: { flexDirection: 'row', gap: 12, marginTop: 8, alignItems: 'flex-end' },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 10
+    },
+    menuText: {
+        color: '#0f172a',
+        fontWeight: '700'
+    },
+    rowSplit50: {
+        flexDirection: 'row',
+        gap: 12,
+        alignItems: 'flex-end',
+    },
+    colHalf: {
+        flex: 1
+    },
 
-    fieldColSm: { width: 120 },   // <- Día más estrecho
-    fieldColLg: { flex: 1 },      // <- Corral ocupa el resto
+    labelTop: {
+        color: '#64748B',
+        fontWeight: '700',
+        marginBottom: 6
+    },
 
-    labelTop: { color: '#64748B', fontWeight: '700', marginBottom: 6 },
-
-    valueBoxSm: {
+    // Caja centrada para el número del día 
+    boxCentered: {
         height: 42,
         borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 10,
         backgroundColor: SURFACE,
         alignItems: 'center', justifyContent: 'center',
     },
-
-    // ya los tienes, pero los reutilizamos:
-    selectBox: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12 },
-    valueBoxFull: {
-        height: 42,
-        width: '100%',                  // <-- clave
-        borderWidth: 1,
-        borderColor: CARD_BORDER,
-        borderRadius: 10,
-        backgroundColor: SURFACE,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 12,
-        flexDirection: 'row',
+    valueTextCenter: {
+        color: '#0f172a',
+        fontWeight: '800',
+        textAlign: 'center'
     },
+
+    // Selector centrado sirve para Estado y Corral 
+    selectFieldCenter: {
+        height: 42,
+        borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 10,
+        backgroundColor: SURFACE,
+        paddingHorizontal: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+    },
+    selectTextCenter: {
+        fontWeight: '800',
+        color: '#0f172a',
+        textAlign: 'center',
+        textAlignVertical: 'center',
+    },
+    selectChevron: {
+        position: 'absolute',
+        right: 10,
+        top: '50%',
+        marginTop: -9,
+    },
+
 });
