@@ -237,7 +237,7 @@ export default function TodosAnimalesMaternidad() {
             </View>
 
             {/* Chip activo si hay orden aplicado */}
-            {sort.key !== 'none' && (
+            {/* {sort.key !== 'none' && (
                 <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <TouchableOpacity
@@ -284,7 +284,7 @@ export default function TodosAnimalesMaternidad() {
                         </TouchableOpacity>
                     </View>
                 </View>
-            )}
+            )} */}
 
             {/* Lista */}
             <FlatList
@@ -297,7 +297,7 @@ export default function TodosAnimalesMaternidad() {
             />
 
             {/* Menú de filtros */}
-            <Modal
+            {/* <Modal
                 visible={menuOpen}
                 transparent
                 animationType="fade"
@@ -308,8 +308,8 @@ export default function TodosAnimalesMaternidad() {
                         style={StyleSheet.absoluteFill}
                         activeOpacity={1}
                         onPress={() => setMenuOpen(false)}
-                    />
-
+                    /> */}
+            {/* 
                     {(() => {
                         const W = Dimensions.get('window').width;
                         const MENU_W = 260;
@@ -318,8 +318,8 @@ export default function TodosAnimalesMaternidad() {
                         const left = Math.min(
                             Math.max(btnPos.x + btnPos.w - MENU_W, 12),
                             W - MENU_W - 12,
-                        );
-
+                        ); */}
+            {/* 
                         return (
                             <View
                                 style={{
@@ -337,8 +337,8 @@ export default function TodosAnimalesMaternidad() {
                                     shadowOffset: { width: 0, height: 6 },
                                     elevation: 12,
                                     overflow: 'hidden',
-                                }}>
-                                <Text
+                                }}> */}
+            {/* <Text
                                     style={{
                                         paddingHorizontal: 12,
                                         paddingVertical: 10,
@@ -346,10 +346,10 @@ export default function TodosAnimalesMaternidad() {
                                         fontWeight: '700',
                                     }}>
                                     Filtros
-                                </Text>
+                                </Text> */}
 
-                                {/* % consumido */}
-                                <TouchableOpacity
+            {/* % consumido */}
+            {/* <TouchableOpacity
                                     onPress={() => {
                                         setSort({ key: 'pct', dir: 'desc' });
                                         setMenuOpen(false);
@@ -373,10 +373,10 @@ export default function TodosAnimalesMaternidad() {
                                     {sort.key === 'pct' && (
                                         <Ionicons name="checkmark" size={18} color="#22C55E" />
                                     )}
-                                </TouchableOpacity>
+                                </TouchableOpacity> */}
 
-                                {/* Crotal */}
-                                <TouchableOpacity
+            {/* Crotal */}
+            {/* <TouchableOpacity
                                     onPress={() => {
                                         setSort({ key: 'crotal', dir: 'asc' });
                                         setMenuOpen(false);
@@ -400,10 +400,10 @@ export default function TodosAnimalesMaternidad() {
                                     {sort.key === 'crotal' && (
                                         <Ionicons name="checkmark" size={18} color="#22C55E" />
                                     )}
-                                </TouchableOpacity>
+                                </TouchableOpacity> */}
 
-                                {/* Corral */}
-                                <TouchableOpacity
+            {/* Corral */}
+            {/* <TouchableOpacity
                                     onPress={() => {
                                         setSort({ key: 'corral', dir: 'asc' });
                                         setMenuOpen(false);
@@ -427,9 +427,9 @@ export default function TodosAnimalesMaternidad() {
                                     {sort.key === 'corral' && (
                                         <Ionicons name="checkmark" size={18} color="#22C55E" />
                                     )}
-                                </TouchableOpacity>
+                                </TouchableOpacity> */}
 
-                                {sort.key !== 'none' && (
+            {/* {sort.key !== 'none' && (
                                     <TouchableOpacity
                                         onPress={() => {
                                             setSort({ key: 'none', dir: 'asc' });
@@ -452,12 +452,12 @@ export default function TodosAnimalesMaternidad() {
                                         />
                                         <Text style={{ color: '#0f172a' }}>Quitar filtro</Text>
                                     </TouchableOpacity>
-                                )}
-                            </View>
+                                )} */}
+            {/* </View>
                         );
                     })()}
                 </View>
-            </Modal>
+            </Modal> */}
         </SafeAreaView>
     );
 }

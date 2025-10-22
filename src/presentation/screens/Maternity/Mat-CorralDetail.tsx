@@ -151,6 +151,38 @@ function CrotalDialog({
    );
 }
 
+function ActionRow({
+   label,
+   onPress,
+   disabled = false,
+}: {
+   label: string;
+   onPress: () => void;
+   disabled?: boolean;
+}) {
+   return (
+      <Pressable
+         onPress={disabled ? undefined : onPress}
+         disabled={disabled}
+         android_ripple={disabled ? undefined : { color: '#e5e7eb' }}
+         style={{
+            opacity: disabled ? 0.45 : 1,
+            paddingVertical: 12,
+            paddingHorizontal: 8,
+            borderRadius: 10,
+            flexDirection: 'row',
+            alignItems: 'center',
+         }}
+      >
+         <Icon name="chevron-forward" size={16} color={disabled ? '#94A3B8' : '#0F172A'} />
+         <Text style={{ marginLeft: 6, fontWeight: '800', color: disabled ? '#94A3B8' : '#0F172A' }}>
+            {label}
+         </Text>
+      </Pressable>
+   );
+}
+
+
 export const MatCorralDetail = () => {
    const insets = useSafeAreaInsets();
    const route = useRoute<any>();
@@ -159,7 +191,6 @@ export const MatCorralDetail = () => {
    const navigation = useNavigation<NavigationProp<any>>();
 
 
-   // ====== estado superior (error/disparadores) ======
    const [isDeviceError, setDeviceError] = useState<boolean>(!!deviceError);
    const [hasDiasSinAlimentar, setHasDiasSinAlimentar] = useState<boolean>(!!diasSinAlimentar);
 
@@ -171,95 +202,111 @@ export const MatCorralDetail = () => {
    const EmptyCorralCard = ({
       corralId,
       onPressAdd,
-      buttonVariant = 'secondary',   // ← por defecto, más suave
+      buttonVariant = 'secondary',
    }: {
       corralId: number | string;
       onPressAdd?: () => void;
-      buttonVariant?: BtnVariant;
+      buttonVariant?: 'primary' | 'secondary' | 'ghost';
    }) => {
       const baseBtn = {
-         height: 42,                 // ← más pequeño (antes 50)
+         height: 42,
          borderRadius: 10,
          paddingHorizontal: 14,
          alignItems: 'center',
          justifyContent: 'center',
          alignSelf: 'center',
-         width: '75%',               // ← más estrecho que full width
+         width: '75%',
       } as const;
 
-      const styleByVariant: Record<BtnVariant, any> = {
+      const styleByVariant: Record<string, any> = {
          primary: { backgroundColor: BRAND },
          secondary: { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: CARD_BORDER },
          ghost: { backgroundColor: 'transparent' },
       };
 
-      const textColorByVariant: Record<BtnVariant, string> = {
+      const textColorByVariant: Record<string, string> = {
          primary: '#fff',
          secondary: BRAND,
          ghost: BRAND,
       };
 
       return (
-         <View style={{ marginTop: 16 }}>
+         <View style={{ marginTop: 24, alignItems: 'center', paddingHorizontal: 16 }}>
+            {/* Icono redondo */}
             <View
                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 16,
-                  paddingVertical: 26,
-                  paddingHorizontal: 16,
-                  borderWidth: 1,
-                  borderColor: CARD_BORDER,
-                  alignItems: 'center',
-                  shadowColor: '#000',
-                  shadowOpacity: 0.08,
-                  shadowRadius: 12,
-                  shadowOffset: { width: 0, height: 5 },
-                  elevation: 3,
+                  width: 64, height: 64, borderRadius: 32,
+                  backgroundColor: '#FEF3C7',
+                  alignItems: 'center', justifyContent: 'center', marginBottom: 8,
                }}
             >
-               {/* Icono */}
+               <Icon name="warning-outline" size={34} color="#92400E" />
+            </View>
+
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>Sin animales</Text>
+
+            {/* Línea con chip "Corral X" */}
+            <View
+               style={{
+                  marginTop: 14,
+                  flexDirection: 'row',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+               }}
+            >
+               <Text style={{ color: '#475569', fontSize: 16 }}>
+                  No hay ningún animal en el{' '}
+               </Text>
+
+               {/* Chip "Corral {n}" compacto */}
                <View
                   style={{
-                     width: 64, height: 64, borderRadius: 32,
-                     backgroundColor: '#FEF3C7',
-                     alignItems: 'center', justifyContent: 'center', marginBottom: 8,
+                     backgroundColor: '#F1F5F9',
+                     borderWidth: 1,
+                     borderColor: CARD_BORDER,
+                     paddingHorizontal: 10, // antes 14
+                     paddingVertical: 3,    // antes 6
+                     borderRadius: 999,
                   }}
                >
-                  <Icon name="warning-outline" size={34} color="#92400E" />
-               </View>
-
-               <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>Sin animales</Text>
-
-               {/* Línea con chip "Corral X" */}
-               <View style={{ marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: '#475569' }}>No hay ningún animal en el </Text>
-                  <Text style={{ color: '#0f172a', fontWeight: '800', backgroundColor: '#F1F5F9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+                  <Text
+                     style={{
+                        color: '#0f172a',
+                        fontWeight: '900',
+                        fontSize: 16,
+                        lineHeight: 18,        // reduce alto visual
+                        // includeFontPadding: false, // <- si quieres aún más compacto en Android
+                     }}
+                  >
                      Corral {corralId}
                   </Text>
                </View>
-
-               {/* Botón más pequeño y “suave” */}
-               <TouchableOpacity
-                  onPress={onPressAdd}
-                  activeOpacity={0.9}
-                  style={[baseBtn, styleByVariant[buttonVariant], { marginTop: 20 }]}
-               >
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                     <Icon
-                        name={buttonVariant === 'ghost' ? 'add-outline' : 'add-circle-outline'}
-                        size={18}
-                        color={textColorByVariant[buttonVariant]}
-                        style={{ marginRight: 6 }}
-                     />
-                     <Text style={{ color: textColorByVariant[buttonVariant], fontWeight: '700' }}>
-                        Introducir animal
-                     </Text>
-                  </View>
-               </TouchableOpacity>
             </View>
+
+
+            {/* CTA */}
+            <TouchableOpacity
+               onPress={onPressAdd}
+               activeOpacity={0.9}
+               style={[baseBtn, styleByVariant[buttonVariant], { marginTop: 20 }]}
+            >
+               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Icon
+                     name={buttonVariant === 'ghost' ? 'add-outline' : 'add-circle-outline'}
+                     size={18}
+                     color={textColorByVariant[buttonVariant]}
+                     style={{ marginRight: 6 }}
+                  />
+                  <Text style={{ color: textColorByVariant[buttonVariant], fontWeight: '700' }}>
+                     Introducir animal
+                  </Text>
+               </View>
+            </TouchableOpacity>
          </View>
       );
    };
+
 
 
 
@@ -302,11 +349,9 @@ export const MatCorralDetail = () => {
          .catch(() => setRequestError(true));
    }, [corralId, mockEmpty, mockData]);
 
-   // Derivados
    const animal = corraInfo?.animal;
    const hasAnimal = !!animal;
 
-   // ⬆️ ESTE EFFECT DEBE IR ANTES DEL early return
    useEffect(() => {
       if (!animal) return;
       setAnimalState(s => ({
@@ -317,46 +362,6 @@ export const MatCorralDetail = () => {
          subEstadoFecha: animal.subEstadoFecha ?? s.subEstadoFecha,
       }));
    }, [animal]); // usa 'animal' como dependencia
-
-   // ✅ early return limpio (no se renderiza nada salvo la banda y el CTA)
-   if (!hasAnimal) {
-      return (
-         <View style={{ flex: 1 }}>
-            <ScrollView
-               className="flex-1 bg-gray-100"
-               contentContainerStyle={{
-                  paddingBottom: 40 + insets.bottom,
-                  paddingHorizontal: 16,
-                  paddingTop: 12,
-               }}
-            >
-               {(isDeviceError || statusMessage) && (
-                  <View
-                     style={{
-                        backgroundColor: '#EF4444',
-                        borderRadius: 12,
-                        paddingVertical: 12,
-                        paddingHorizontal: 14,
-                     }}
-                  >
-                     <Text
-                        style={{ color: '#fff', fontWeight: '700', textAlign: 'center' }}
-                     >
-                        {statusMessage || 'Error en el dispositivo'}
-                     </Text>
-                  </View>
-               )}
-
-               <EmptyCorralCard
-                  corralId={corralId}
-                  onPressAdd={() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId })}
-               />
-            </ScrollView>
-         </View>
-      );
-   }
-
-
 
 
    // acciones drawer
@@ -387,273 +392,378 @@ export const MatCorralDetail = () => {
 
    return (
       <View style={{ flex: 1 }}>
-         <ScrollView className='flex-1 bg-gray-100' contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
-            {/* bandera debug */}
-            {/* <Text style={{ marginHorizontal: 16, marginTop: 8, color: '#475569' }}>
-               {hasAnimal ? 'hay animal' : 'no hay animal'}
-            </Text> */}
+         <ScrollView
+            className="flex-1 bg-gray-100"
+            contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
+         >
+            {hasAnimal && (
+               <Image
+                  source={CerdoMaternidad}
+                  className="w-fit h-2/3 absolute translate-x-3 translate-y-60 opacity-40"
+               />
+            )}
 
-            <Image source={CerdoMaternidad} className="w-fit h-2/3 absolute translate-x-3 translate-y-60 opacity-40" />
-
-            <View className='mx-4'>
+            <View className="mx-4">
                {/* Estado del dispositivo del corral */}
                {(isDeviceError || statusMessage) && (
-                  <View className='mt-3 h-8 bg-red-500 rounded-md flex-col justify-center items-center'>
-                     <Text className='text-white font-normal text-base'>{statusMessage || 'Error:  El motor no funciona'}</Text>
+                  <View className="mt-3 h-8 bg-red-500 rounded-md flex-col justify-center items-center">
+                     <Text className="text-white font-normal text-base">
+                        {statusMessage || 'Error:  El motor no funciona'}
+                     </Text>
                   </View>
                )}
 
-               {/* ---- INFORMACIÓN ---- */}
-               {/* ID - CROTAL - CICLO */}
-               {/* <View className='flex-row justify-between mt-4'>
-                  <View className='flex-row items-end'>
-                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'>ID</Text>
-                     <Text className='text-xl text-gray-600 font-semibold'>{animal?.id ?? '—'}</Text>
-                  </View>
-                  <View className='flex-row items-end'>
-                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'>Crotal</Text>
-                     <Text className='text-xl text-gray-600 font-semibold'>{animal?.crotal ?? '—'}</Text>
-                  </View>
-                  <View className='flex-row items-end'>
-                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'>Ciclo</Text>
-                     <Text className='text-xl text-gray-600 font-semibold'>{animal?.ciclo ?? '—'}</Text>
-                  </View>
-               </View> */}
-
-               <View className="flex-row items-center mt-4">
-                  {/* ID */}
-                  <View className="flex-row items-center mr-4">
-                     <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">ID</Text>
-                     <Text className="ml-2 text-[16px] text-gray-700 font-semibold">
-                        {animal?.id ?? '—'}
-                     </Text>
-                  </View>
-
-                  {/* Crotal (encoge si no cabe) */}
-                  <View className="flex-row items-center mr-4 flex-shrink" style={{ minWidth: 0 }}>
-                     <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">Crotal</Text>
-                     <Text
-                        className="ml-2 text-[16px] text-gray-700 font-semibold"
-                        numberOfLines={1}
-                        ellipsizeMode="middle"
-                        style={{ flexShrink: 1, }}   // <- evita salto y recorta por el medio
-                     >
-                        {animal?.crotal ?? '—'}
-                     </Text>
-                  </View>
-
-                  {/* Ciclo */}
-                  <View className="flex-row items-center">
-                     <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">Ciclo</Text>
-                     <Text className="ml-2 text-[16px] text-gray-700 font-semibold">
-                        {animal?.ciclo ?? '—'}
-                     </Text>
-                  </View>
-               </View>
-
-
-
-
-
-
-               {/* SUBESTADO - DÍA */}
-               <View className='flex-row justify-between mx-8 mt-6 items-end'>
-                  <View className='flex-row flex-1'>
-                     <Text className='text-2xl text-blue-900 font-semibold'>{animalState.subEstado ?? '—'}</Text>
-                  </View>
-                  <View className='flex-row flex-1 justify-end '>
-                     <Text className='text-base text-gray-500 px-2 bg-gray-200 rounded-full'> Día</Text>
-                     <Text className='text-xl text-gray-600 font-semibold pl-2'>{animal?.dia ?? '—'}</Text>
-                  </View>
-               </View>
-
-               {/* ALIMENTACIÓN */}
-               <View className='flex-row justify-between mt-6'>
-                  <View className='flex-col'>
-                     <View className='flex-row items-baseline'>
-                        <Text className='text-6xl text-gray-600 font-semibold tracking-tighter'>{actual.toLocaleString('es-ES')}</Text>
-                        <Text className='text-xl text-gray-600 font-normal ml-1 '>gr</Text>
-                     </View>
-                     <View>
-                        <View className='w-fit h-3 bg-gray-300 rounded-full' />
-                        <View className='w-10/12 h-3 bg-green-500 rounded-full absolute' style={{ width: `${Math.min(100, pct)}%` }} />
-                     </View>
-                     <View className='flex-row justify-between'>
-                        <Text className='font-normal text-md'>{objetivo.toLocaleString('es-ES')} gr</Text>
-                        <Text className='font-normal text-md'>{pct}%</Text>
-                     </View>
-                  </View>
-
-                  {/* barras dummy (como tenías) */}
-                  <View className='flex-col justify-end'>
-                     <View className='flex-row '>
-                        <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full' />
-                           <View className='h-10 w-2 bg-green-500 rounded-t-full' />
+               {/* —— Vacío vs Con animal —— */}
+               {!hasAnimal ? (
+                  <EmptyCorralCard
+                     corralId={corralId}
+                     onPressAdd={() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId })}
+                  />
+               ) : (
+                  <>
+                     {/* ---- INFORMACIÓN ---- */}
+                     {/* ID - CROTAL - CICLO */}
+                     <View className="flex-row items-center mt-4">
+                        {/* ID */}
+                        <View className="flex-row items-center mr-4">
+                           <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">
+                              ID
+                           </Text>
+                           <Text className="ml-2 text-[16px] text-gray-700 font-semibold">
+                              {animal?.id ?? '—'}
+                           </Text>
                         </View>
-                        <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full' />
-                           <View className='h-12 w-2 bg-green-500 rounded-t-full' />
+
+                        {/* Crotal (encoge si no cabe) */}
+                        <View className="flex-row items-center mr-4 flex-shrink" style={{ minWidth: 0 }}>
+                           <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">
+                              Crotal
+                           </Text>
+                           <Text
+                              className="ml-2 text-[16px] text-gray-700 font-semibold"
+                              numberOfLines={1}
+                              ellipsizeMode="middle"
+                              style={{ flexShrink: 1 }}
+                           >
+                              {animal?.crotal ?? '—'}
+                           </Text>
                         </View>
-                        <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full' />
-                           <View className='h-5 w-2 bg-red-600 rounded-t-full' />
-                        </View>
-                        <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500 absolute rounded-t-full' />
-                           <View className='h-12 w-2 bg-green-500 rounded-t-full' />
-                        </View>
-                        <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-6 bg-gray-500 absolute rounded-t-full' />
-                           <View className='h-5 w-6 bg-green-500 rounded-t-full' />
-                        </View>
-                        <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500  rounded-t-full' />
-                        </View>
-                        <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500  rounded-t-full' />
-                        </View>
-                        <View className='flex-row items-end ml-1'>
-                           <View className='h-12 w-2 bg-gray-500  rounded-t-full' />
+
+                        {/* Ciclo */}
+                        <View className="flex-row items-center">
+                           <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">
+                              Ciclo
+                           </Text>
+                           <Text className="ml-2 text-[16px] text-gray-700 font-semibold">
+                              {animal?.ciclo ?? '—'}
+                           </Text>
                         </View>
                      </View>
-                     <View className='flex-row justify-between'>
-                        <Text className='font-normal text-md'>200/600</Text>
-                        <Text className='font-normal text-md'>33%</Text>
+
+                     {/* SUBESTADO - DÍA */}
+                     <View className="flex-row justify-between mx-8 mt-6 items-end">
+                        <View className="flex-row flex-1">
+                           <Text className="text-2xl text-blue-900 font-semibold">
+                              {animalState.subEstado ?? '—'}
+                           </Text>
+                        </View>
+                        <View className="flex-row flex-1 justify-end">
+                           <Text className="text-base text-gray-500 px-2 bg-gray-200 rounded-full">
+                              {' '}
+                              Día
+                           </Text>
+                           <Text className="text-xl text-gray-600 font-semibold pl-2">
+                              {animal?.dia ?? '—'}
+                           </Text>
+                        </View>
                      </View>
-                  </View>
-               </View>
 
+                     {/* ALIMENTACIÓN */}
+                     <View className="flex-row justify-between mt-6">
+                        <View className="flex-col">
+                           <View className="flex-row items-baseline">
+                              <Text className="text-6xl text-gray-600 font-semibold tracking-tighter">
+                                 {actual.toLocaleString('es-ES')}
+                              </Text>
+                              <Text className="text-xl text-gray-600 font-normal ml-1 ">gr</Text>
+                           </View>
+                           <View>
+                              <View className="w-fit h-3 bg-gray-300 rounded-full" />
+                              <View
+                                 className="w-10/12 h-3 bg-green-500 rounded-full absolute"
+                                 style={{ width: `${Math.min(100, pct)}%` }}
+                              />
+                           </View>
+                           <View className="flex-row justify-between">
+                              <Text className="font-normal text-md">
+                                 {objetivo.toLocaleString('es-ES')} gr
+                              </Text>
+                              <Text className="font-normal text-md">{pct}%</Text>
+                           </View>
+                        </View>
 
+                        {/* barras dummy (como tenías) */}
+                        <View className="flex-col justify-end">
+                           <View className="flex-row ">
+                              <View className="flex-row items-end ml-1">
+                                 <View className="h-12 w-2 bg-gray-500 absolute rounded-t-full" />
+                                 <View className="h-10 w-2 bg-green-500 rounded-t-full" />
+                              </View>
+                              <View className="flex-row items-end ml-1">
+                                 <View className="h-12 w-2 bg-gray-500 absolute rounded-t-full" />
+                                 <View className="h-12 w-2 bg-green-500 rounded-t-full" />
+                              </View>
+                              <View className="flex-row items-end ml-1">
+                                 <View className="h-12 w-2 bg-gray-500 absolute rounded-t-full" />
+                                 <View className="h-5 w-2 bg-red-600 rounded-t-full" />
+                              </View>
+                              <View className="flex-row items-end ml-1">
+                                 <View className="h-12 w-2 bg-gray-500 absolute rounded-t-full" />
+                                 <View className="h-12 w-2 bg-green-500 rounded-t-full" />
+                              </View>
+                              <View className="flex-row items-end ml-1">
+                                 <View className="h-12 w-6 bg-gray-500 absolute rounded-t-full" />
+                                 <View className="h-5 w-6 bg-green-500 rounded-t-full" />
+                              </View>
+                              <View className="flex-row items-end ml-1">
+                                 <View className="h-12 w-2 bg-gray-500  rounded-t-full" />
+                              </View>
+                              <View className="flex-row items-end ml-1">
+                                 <View className="h-12 w-2 bg-gray-500  rounded-t-full" />
+                              </View>
+                              <View className="flex-row items-end ml-1">
+                                 <View className="h-12 w-2 bg-gray-500  rounded-t-full" />
+                              </View>
+                           </View>
+                           <View className="flex-row justify-between">
+                              <Text className="font-normal text-md">200/600</Text>
+                              <Text className="font-normal text-md">33%</Text>
+                           </View>
+                        </View>
+                     </View>
 
+                     {/* Aviso días sin alimentar */}
+                     {hasDiasSinAlimentar && (
+                        <View className="mt-4 h-8 bg-red-500 rounded-md flex-col justify-center items-center">
+                           <Text className="text-white font-normal text-base">2 días sin alimentar</Text>
+                        </View>
+                     )}
 
-               {/* Aviso días sin alimentar */}
-               {hasDiasSinAlimentar && (
-                  <View className='mt-4 h-8 bg-red-500 rounded-md flex-col justify-center items-center'>
-                     <Text className='text-white font-normal text-base'>2 días sin alimentar</Text>
-                  </View>
+                     {/* Resto información */}
+                     <View className="flex-col stretch">
+                        <View className="flex-row justify-between mt-6">
+                           <View className="flex-col">
+                              <Text className="text-lg text-gray-600 font-normal">Curva</Text>
+                              <View className="flex-row">
+                                 <Icon
+                                    name="book-outline"
+                                    size={20}
+                                    color="black"
+                                    style={{ paddingTop: 4, marginRight: 5 }}
+                                 />
+                                 <Text className="text-xl text-gray-600 font-bold font-mono">
+                                    {animal?.curva ?? '—'}
+                                 </Text>
+                              </View>
+                           </View>
+
+                           <View className="flex-col">
+                              <Text className="text-lg text-gray-600 font-normal">Corrección</Text>
+                              <View className="flex-row">
+                                 <Icon
+                                    name="book-outline"
+                                    size={20}
+                                    color="black"
+                                    style={{ paddingTop: 4, marginRight: 5 }}
+                                 />
+                                 <Text className="text-xl text-gray-600 font-bold font-mono">
+                                    {animal?.correccion ?? '—'}
+                                 </Text>
+                              </View>
+                           </View>
+                        </View>
+
+                        <View className="flex-row justify-between mt-5">
+                           <View className="flex-col">
+                              <Text className="text-lg text-gray-600 font-normal">Fecha entrada</Text>
+                              <View className="flex-row">
+                                 <Icon
+                                    name="book-outline"
+                                    size={20}
+                                    color="black"
+                                    style={{ paddingTop: 4, marginRight: 5 }}
+                                 />
+                                 <Text className="text-xl text-gray-600 font-bold font-mono">
+                                    {animal?.fechas?.entrada ?? '—'}
+                                 </Text>
+                              </View>
+                           </View>
+                           <View className="flex-col">
+                              <Text className="text-lg text-gray-600 font-normal">Fecha parto</Text>
+                              <View className="flex-row">
+                                 <Icon
+                                    name="book-outline"
+                                    size={20}
+                                    color="black"
+                                    style={{ paddingTop: 4, marginRight: 5 }}
+                                 />
+                                 <Text className="text-xl text-gray-600 font-bold font-mono">
+                                    {animal?.fechas?.parto ?? '—'}
+                                 </Text>
+                              </View>
+                           </View>
+                        </View>
+
+                        <View className="flex-row justify-between mt-5">
+                           <View className="flex-col">
+                              <Text className="text-lg text-gray-600 font-normal">Nave</Text>
+                              <View className="flex-row">
+                                 <Icon
+                                    name="book-outline"
+                                    size={20}
+                                    color="black"
+                                    style={{ paddingTop: 4, marginRight: 5 }}
+                                 />
+                                 <Text className="text-xl text-gray-600 font-bold font-mono">
+                                    {animal?.nave ?? '—'}
+                                 </Text>
+                              </View>
+                           </View>
+                           <View className="flex-col">
+                              <Text className="text-lg text-gray-600 font-normal">Corral</Text>
+                              <View className="flex-row">
+                                 <Icon
+                                    name="book-outline"
+                                    size={20}
+                                    color="black"
+                                    style={{ paddingTop: 4, marginRight: 5 }}
+                                 />
+                                 <Text className="text-xl text-gray-600 font-bold font-mono">
+                                    {animal?.corral ?? corralId ?? '—'}
+                                 </Text>
+                              </View>
+                           </View>
+                        </View>
+
+                        <View className="flex-row justify-between mt-5">
+                           <View className="flex-col">
+                              <Text className="text-lg text-gray-600 font-normal">Última alimentación</Text>
+                              <View className="flex-row">
+                                 <Icon
+                                    name="book-outline"
+                                    size={20}
+                                    color="black"
+                                    style={{ paddingTop: 4, marginRight: 5 }}
+                                 />
+                                 <Text className="text-xl text-gray-600 font-bold font-mono">
+                                    {animal?.ultimaAlimentacion ?? '—'}
+                                 </Text>
+                              </View>
+                           </View>
+                        </View>
+                     </View>
+                  </>
                )}
-
-               {/* Resto información */}
-               <View className='flex-col stretch'>
-                  <View className='flex-row justify-between mt-6'>
-                     <View className='flex-col'>
-                        <Text className='text-lg text-gray-600 font-normal'>Curva</Text>
-                        <View className='flex-row'>
-                           <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.curva ?? '—'}</Text>
-                        </View>
-                     </View>
-
-                     <View className='flex-col'>
-                        <Text className='text-lg text-gray-600 font-normal'>Corrección</Text>
-                        <View className='flex-row'>
-                           <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.correccion ?? '—'}</Text>
-                        </View>
-                     </View>
-                  </View>
-
-                  <View className='flex-row justify-between mt-5'>
-                     <View className='flex-col'>
-                        <Text className='text-lg text-gray-600 font-normal'>Fecha entrada</Text>
-                        <View className='flex-row'>
-                           <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.fechas?.entrada ?? '—'}</Text>
-                        </View>
-                     </View>
-                     <View className='flex-col'>
-                        <Text className='text-lg text-gray-600 font-normal'>Fecha parto</Text>
-                        <View className='flex-row'>
-                           <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.fechas?.parto ?? '—'}</Text>
-                        </View>
-                     </View>
-                  </View>
-
-                  <View className='flex-row justify-between mt-5'>
-                     <View className='flex-col'>
-                        <Text className='text-lg text-gray-600 font-normal'>Nave</Text>
-                        <View className='flex-row'>
-                           <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.nave ?? '—'}</Text>
-                        </View>
-                     </View>
-                     <View className='flex-col'>
-                        <Text className='text-lg text-gray-600 font-normal'>Corral</Text>
-                        <View className='flex-row'>
-                           <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.corral ?? corralId ?? '—'}</Text>
-                        </View>
-                     </View>
-                  </View>
-
-                  <View className='flex-row justify-between mt-5'>
-                     <View className='flex-col'>
-                        <Text className='text-lg text-gray-600 font-normal'>Última alimentación</Text>
-                        <View className='flex-row'>
-                           <Icon name='book-outline' size={20} color="black" style={{ paddingTop: 4, marginRight: 5 }} />
-                           <Text className='text-xl text-gray-600 font-bold font-mono'>{animal?.ultimaAlimentacion ?? '—'}</Text>
-                        </View>
-                     </View>
-                  </View>
-               </View>
             </View>
          </ScrollView>
 
-         {/* --- Barra inferior SOLO si hay animal --- */}
-         {hasAnimal && (
-            <View
-               style={{
-                  position: 'absolute', left: 0, right: 0, bottom: 0,
-                  paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8 + insets.bottom,
-                  backgroundColor: 'rgba(248,250,252,0.96)', borderTopWidth: 1, borderTopColor: '#E5E7EB',
-               }}
-            >
-               <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <TouchableOpacity
-                     onPress={() => drawer.show()}
-                     activeOpacity={0.9}
-                     style={{ flex: 1, backgroundColor: BRAND, borderRadius: 12, height: 48, alignItems: 'center', justifyContent: 'center' }}
-                  >
-                     <Text style={{ color: '#fff', fontWeight: '700' }}>Operaciones</Text>
-                  </TouchableOpacity>
-                  {/* <TouchableOpacity
-                     onPress={() => setDlgSub(true)}
-                     activeOpacity={0.9}
-                     style={{ flex: 1, backgroundColor: '#E5E7EB', borderRadius: 12, height: 48, alignItems: 'center', justifyContent: 'center' }}
-                  >
-                     <Text style={{ color: '#0f172a', fontWeight: '700' }}>Siguiente estado</Text>
-                  </TouchableOpacity> */}
-               </View>
+         {/* --- Barra inferior SIEMPRE --- */}
+         <View
+            style={{
+               position: 'absolute',
+               left: 0,
+               right: 0,
+               bottom: 0,
+               paddingHorizontal: 20,
+               paddingTop: 8,
+               paddingBottom: 8 + insets.bottom,
+               backgroundColor: 'rgba(248,250,252,0.96)',
+               borderTopWidth: 1,
+               borderTopColor: '#E5E7EB',
+            }}
+         >
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+               <TouchableOpacity
+                  onPress={() => drawer.show()}
+                  activeOpacity={0.9}
+                  style={{
+                     flex: 1,
+                     backgroundColor: BRAND,
+                     borderRadius: 12,
+                     height: 48,
+                     alignItems: 'center',
+                     justifyContent: 'center',
+                  }}
+               >
+                  <Text style={{ color: '#fff', fontWeight: '700' }}>Operaciones</Text>
+               </TouchableOpacity>
             </View>
-         )}
 
+            {/* {!hasAnimal && (
+               <Text style={{ marginTop: 6, textAlign: 'center', color: '#64748B', fontWeight: '600' }}>
+                  No hay animal en este corral: las acciones están desactivadas.
+               </Text>
+            )} */}
+         </View>
 
          {/* Drawer lateral derecho */}
          <Modal visible={drawer.open} transparent animationType="none" onRequestClose={drawer.hide}>
             <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' }} onPress={drawer.hide} />
             <Animated.View
                style={{
-                  position: 'absolute', top: 0, bottom: 0, right: 0, width: drawer.width,
-                  backgroundColor: '#fff', paddingTop: 14, paddingHorizontal: 12,
-                  borderTopLeftRadius: 16, borderBottomLeftRadius: 16,
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  right: 0,
+                  width: drawer.width,
+                  backgroundColor: '#fff',
+                  paddingTop: 14,
+                  paddingHorizontal: 12,
+                  borderTopLeftRadius: 16,
+                  borderBottomLeftRadius: 16,
                   transform: [{ translateX: drawer.tx }],
-                  elevation: 12, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 },
+                  elevation: 12,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.18,
+                  shadowRadius: 12,
+                  shadowOffset: { width: 0, height: 6 },
                }}
             >
                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                   <Icon name="options-outline" size={18} color="#0f172a" />
-                  <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 16 }}>Acciones</Text>
+                  <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 16 }}>
+                     Acciones {!hasAnimal ? '(deshabilitadas)' : ''}
+                  </Text>
                </View>
 
-               <DrawerItem label="Curva" onPress={() => openAction('curva')} />
-               <DrawerItem label="Condición corporal" onPress={() => openAction('condicionCorporal')} />
-               <DrawerItem label="SubEstado" onPress={() => openAction('subEstado')} />
-               <DrawerItem label="Salida animal" onPress={() => openAction('salidaAnimal')} />
-               <DrawerItem label="Sustituir crotal" onPress={() => openAction('sustituirCrotal')} />
-               <DrawerItem label="Identificador animal anónimo" onPress={() => openAction('identificadorAnonimo')} />
-               <DrawerItem label="Salida maternidad" onPress={() => openAction('salidaMaternidad')} />
+               {/* Usa ActionRow (debes tenerlo declarado arriba) */}
+               <ActionRow label="Curva" onPress={() => openAction('curva')} disabled={!hasAnimal} />
+               <ActionRow
+                  label="Condición corporal"
+                  onPress={() => openAction('condicionCorporal')}
+                  disabled={!hasAnimal}
+               />
+               <ActionRow label="SubEstado" onPress={() => openAction('subEstado')} disabled={!hasAnimal} />
+               <ActionRow
+                  label="Salida animal"
+                  onPress={() => openAction('salidaAnimal')}
+                  disabled={!hasAnimal}
+               />
+               <ActionRow
+                  label="Sustituir crotal"
+                  onPress={() => openAction('sustituirCrotal')}
+                  disabled={!hasAnimal}
+               />
+               <ActionRow
+                  label="Identificador animal anónimo"
+                  onPress={() => openAction('identificadorAnonimo')}
+                  disabled={!hasAnimal}
+               />
+               <ActionRow
+                  label="Salida maternidad"
+                  onPress={() => openAction('salidaMaternidad')}
+                  disabled={!hasAnimal}
+               />
             </Animated.View>
          </Modal>
 
@@ -687,7 +797,12 @@ export const MatCorralDetail = () => {
          <RadioDialog
             visible={dlgSalida}
             title="Salida animal"
-            options={['SIN SALIDA PROGRAMADA', 'SALIDA PROGRAMADA', 'SALIDA PROGRAMADA CON VACIO TOLVA', 'SALIDA MATERNIDAD']}
+            options={[
+               'SIN SALIDA PROGRAMADA',
+               'SALIDA PROGRAMADA',
+               'SALIDA PROGRAMADA CON VACIO TOLVA',
+               'SALIDA MATERNIDAD',
+            ]}
             current={undefined}
             onClose={() => setDlgSalida(false)}
             onAccept={applySalida}
@@ -700,5 +815,5 @@ export const MatCorralDetail = () => {
             onAccept={applyCrotal}
          />
       </View>
-   )
-}
+   );
+};
