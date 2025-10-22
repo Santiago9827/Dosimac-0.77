@@ -732,7 +732,7 @@ export const MatCorralDetail = () => {
                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                   <Icon name="options-outline" size={18} color="#0f172a" />
                   <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 16 }}>
-                     Acciones {!hasAnimal ? '(deshabilitadas)' : ''}
+                     Acciones
                   </Text>
                </View>
 

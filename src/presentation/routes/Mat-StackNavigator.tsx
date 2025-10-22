@@ -21,7 +21,39 @@ import IntroducirAnimalLote from './IntroducirAnimalLote';
 
 
 
-const MaternityStack = createStackNavigator();
+// const MaternityStack = createStackNavigator();
+
+const MaternityStack = createStackNavigator<MaternityStackParamList>();
+
+
+type MaternityStackParamList = {
+   'MAT-HOME': undefined;
+   'MAT-ANINOFEED': undefined;
+   'MAT-FEEDISSUE': undefined;
+   'MAT-DEVICEISSUE': undefined;
+
+   'MAT-CORRALDETAIL': {
+      corralId: number | string;
+      mockEmpty?: boolean;
+      mockData?: any;
+      deviceError?: boolean;
+      diasSinAlimentar?: boolean;
+      statusMessage?: string;
+   };
+
+   'MAT-CORRAL': undefined;
+   'CorralSinAnimales': undefined;
+   'MAT-ADD-ANIMALS': undefined;
+   'NoAlimentadosMaternidad': undefined;
+   'CorralConAnimales': undefined;
+   'TodosAnimalesMaternidad': undefined;
+
+   'MAT-INTRO-ANIMAL': { corralId: number | string };
+   'MAT-INTRO-LOTE': undefined;
+};
+
+
+
 
 
 export const MaternityStackNavigator = () => {
@@ -66,7 +98,15 @@ export const MaternityStackNavigator = () => {
          <MaternityStack.Screen name="MAT-ANINOFEED" component={MatAnimalNoFeeded} options={{ title: 'No feed animals', headerShown: true, headerStyle: { elevation: 5 }, }} />
          <MaternityStack.Screen name="MAT-FEEDISSUE" component={MaternityFeedIssues} options={{ title: 'Feed issue', headerShown: true, headerStyle: { elevation: 5 }, }} />
          <MaternityStack.Screen name="MAT-DEVICEISSUE" component={MatDeviceIssue} options={{ title: 'Device issue', headerShown: true, headerStyle: { elevation: 5 }, }} />
-         <MaternityStack.Screen name="MAT-CORRALDETAIL" component={MatCorralDetail} options={{ title: 'Corral details', headerShown: true, headerStyle: { elevation: 5 }, }} />
+         <MaternityStack.Screen
+            name="MAT-CORRALDETAIL"
+            component={MatCorralDetail}
+            options={({ route }) => ({
+               title: route.params?.corralId ? `Corral ${route.params.corralId}` : 'Corral',
+               headerShown: true,
+               headerStyle: { elevation: 5 },
+            })}
+         />
          <MaternityStack.Screen
             name="MAT-CORRAL"
             component={CorralScreen}

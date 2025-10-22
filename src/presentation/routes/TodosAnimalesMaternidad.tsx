@@ -207,7 +207,7 @@ export default function TodosAnimalesMaternidad() {
                     </Text>
                 </View>
 
-                <TouchableOpacity
+                {/* <TouchableOpacity
                     ref={btnRef as any}
                     onLayout={() =>
                         btnRef.current?.measureInWindow((x, y, w, h) =>
@@ -233,7 +233,7 @@ export default function TodosAnimalesMaternidad() {
                     activeOpacity={0.85}
                     hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
                     <Ionicons name="funnel-outline" size={18} color="#0f172a" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
 
             {/* Chip activo si hay orden aplicado */}
