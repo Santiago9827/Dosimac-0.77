@@ -192,23 +192,58 @@ function ConfirmDialog({
    onAccept: () => void;
 }) {
    return (
-      <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
-         <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }} onPress={onCancel} />
-         <View style={{
-            position: 'absolute', left: 20, right: 20, top: '28%',
-            backgroundColor: '#fff', borderRadius: 16, padding: 16,
-            borderWidth: 1, borderColor: CARD_BORDER, shadowColor: '#000',
-            shadowOpacity: 0.15, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 16,
-         }}>
-            <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 8 }}>{title}</Text>
-            {message ? <Text style={{ color: '#334155', marginBottom: 12 }}>{message}</Text> : null}
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-               <TouchableOpacity onPress={onCancel} style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: '#0f172a', fontWeight: '700' }}>Cancelar</Text>
-               </TouchableOpacity>
-               <TouchableOpacity onPress={onAccept} style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: '#fff', fontWeight: '700' }}>Aceptar</Text>
-               </TouchableOpacity>
+      <Modal
+         visible={visible}
+         transparent
+         animationType="fade"
+         statusBarTranslucent
+         onRequestClose={onCancel}
+      >
+         {/* Capa a pantalla completa + centrado */}
+         <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
+            {/* Fondo oscuro clicable */}
+            <Pressable
+               onPress={onCancel}
+               style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
+            />
+
+            {/* Card del modal */}
+            <View
+               style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 16,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: CARD_BORDER,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.15,
+                  shadowRadius: 16,
+                  shadowOffset: { width: 0, height: 8 },
+                  elevation: 16,
+                  width: '100%',
+                  maxWidth: 520,          // opcional: más elegante en pantallas grandes
+                  alignSelf: 'center',
+               }}
+            >
+               <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 8 }}>
+                  {title}
+               </Text>
+               {message ? <Text style={{ color: '#334155', marginBottom: 12 }}>{message}</Text> : null}
+
+               <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity
+                     onPress={onCancel}
+                     style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                     <Text style={{ color: '#0f172a', fontWeight: '700' }}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                     onPress={onAccept}
+                     style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                     <Text style={{ color: '#fff', fontWeight: '700' }}>Aceptar</Text>
+                  </TouchableOpacity>
+               </View>
             </View>
          </View>
       </Modal>
@@ -231,65 +266,142 @@ function LactanciaFormModal({
       donados: '', adoptados: '', viables: '',
    });
 
+   // reset al abrir
    useEffect(() => {
       if (visible) {
-         setForm({ totalLechones: '', nacidosVivos: '', nacidosMuertos: '', donados: '', adoptados: '', viables: '' });
+         setForm({
+            totalLechones: '', nacidosVivos: '', nacidosMuertos: '',
+            donados: '', adoptados: '', viables: '',
+         });
       }
    }, [visible]);
 
+   // helpers
+   const onlyNum = (t: string) => t.replace(/[^0-9]/g, '');
+   const step = (k: keyof typeof form, delta: number) =>
+      setForm(s => {
+         const n = parseInt(s[k] || '0', 10) || 0;
+         const v = Math.max(0, n + delta);
+         return { ...s, [k]: String(v) };
+      });
+
+   const MAX_BODY_H = Math.min(Dimensions.get('window').height * 0.48, 360);
+
    const Row = ({ label, k }: { label: string; k: keyof typeof form }) => (
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 6 }}>
-         <Text style={{ color: '#334155', fontSize: 14, flexShrink: 1, paddingRight: 10 }}>{label}</Text>
-         <TextInput
-            value={form[k]}
-            onChangeText={(t) => setForm(s => ({ ...s, [k]: t.replace(/[^0-9]/g, '') }))}
-            placeholder="0"
-            keyboardType="numeric"
-            inputMode="numeric"
-            maxLength={4}
-            style={{
-               width: 96, height: 36, borderWidth: 1, borderColor: CARD_BORDER,
-               borderRadius: 10, paddingHorizontal: 10, textAlign: 'center', color: '#0f172a',
-            }}
-         />
+      <View style={{
+         flexDirection: 'row',
+         alignItems: 'center',
+         justifyContent: 'space-between',
+         paddingVertical: 6,
+      }}>
+         <Text style={{ color: '#0f172a', fontSize: 15, fontWeight: '600', flexShrink: 1, paddingRight: 12 }}>
+            {label}
+         </Text>
+
+         {/* Input + mini stepper (opcional) */}
+         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Pressable
+               onPress={() => step(k, -1)}
+               android_ripple={{ color: '#e5e7eb' }}
+               style={{
+                  width: 28, height: 28, borderRadius: 14,
+                  borderWidth: 1, borderColor: CARD_BORDER, alignItems: 'center', justifyContent: 'center',
+               }}
+            >
+               <Text style={{ color: '#64748B', fontSize: 16 }}>–</Text>
+            </Pressable>
+
+            <TextInput
+               value={form[k]}
+               onChangeText={(t) => setForm(s => ({ ...s, [k]: onlyNum(t) }))}
+               placeholder="0"
+               placeholderTextColor="#94A3B8"
+               keyboardType="numeric"
+               inputMode="numeric"
+               maxLength={4}
+               style={{
+                  width: 90, height: 38,
+                  borderWidth: 1, borderColor: CARD_BORDER,
+                  borderRadius: 999, paddingHorizontal: 12,
+                  textAlign: 'center', color: '#0f172a', fontWeight: '700',
+               }}
+               accessibilityLabel={label}
+            />
+
+            <Pressable
+               onPress={() => step(k, +1)}
+               android_ripple={{ color: '#e5e7eb' }}
+               style={{
+                  width: 28, height: 28, borderRadius: 14,
+                  borderWidth: 1, borderColor: CARD_BORDER, alignItems: 'center', justifyContent: 'center',
+               }}
+            >
+               <Text style={{ color: '#64748B', fontSize: 16 }}>+</Text>
+            </Pressable>
+         </View>
       </View>
    );
 
    return (
       <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
-         {/* Capa a pantalla completa + centrado vertical/horizontal */}
+         {/* Capa completa + centrado */}
          <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
-            {/* Fondo oscuro clicable para cerrar */}
+            {/* Fondo oscuro */}
             <Pressable
                onPress={onClose}
                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
             />
 
-            {/* Card del modal */}
+            {/* Card */}
             <View
                style={{
                   backgroundColor: '#fff',
-                  borderRadius: 16,
+                  borderRadius: 20,
                   padding: 16,
                   borderWidth: 1,
                   borderColor: CARD_BORDER,
                   shadowColor: '#000',
                   shadowOpacity: 0.15,
-                  shadowRadius: 16,
+                  shadowRadius: 18,
                   shadowOffset: { width: 0, height: 8 },
-                  elevation: 16,
+                  elevation: 18,
                   width: '100%',
+                  maxWidth: 520,            // más elegante en pantallas grandes
                   alignSelf: 'center',
-                  //maxHeight: '80%', // evita desbordes en pantallas pequeñas
                }}
             >
-               <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 8 }}>
-                  Pasar a lactancia
-               </Text>
+               {/* Header */}
+               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <View style={{
+                     width: 36, height: 36, borderRadius: 18, backgroundColor: '#EEF2FF',
+                     alignItems: 'center', justifyContent: 'center', marginRight: 8,
+                  }}>
+                     <Icon name="medkit-outline" size={18} color={BRAND} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                     <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a' }}>
+                        Pasar a lactancia
+                     </Text>
+                     <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
+                        Todos los campos son opcionales
+                     </Text>
+                  </View>
 
+                  {/* Botón cerrar */}
+                  <Pressable
+                     onPress={onClose}
+                     hitSlop={10}
+                     android_ripple={{ color: '#e5e7eb', borderless: true }}
+                     style={{ padding: 4, marginLeft: 6 }}
+                  >
+                     <Icon name="close" size={20} color="#64748B" />
+                  </Pressable>
+               </View>
+
+               {/* Cuerpo (scrollable si hace falta) */}
                <ScrollView
-                  style={{ maxHeight: 320 }}
-                  contentContainerStyle={{ paddingBottom: 0, flexGrow: 0 }}
+                  style={{ maxHeight: MAX_BODY_H }}
+                  contentContainerStyle={{ paddingBottom: 0 }}
                   keyboardShouldPersistTaps="handled"
                   showsVerticalScrollIndicator={false}
                >
@@ -301,27 +413,37 @@ function LactanciaFormModal({
                   <Row label="Viables" k="viables" />
                </ScrollView>
 
-               {/* Botonera pegada al contenido, sin hueco grande */}
-               <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+               {/* Separador */}
+               <View style={{ height: 1, backgroundColor: CARD_BORDER, marginTop: 10, marginBottom: 8 }} />
+
+               {/* Botonera */}
+               <View style={{ flexDirection: 'row', gap: 10 }}>
                   <TouchableOpacity
                      onPress={onClose}
-                     style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center' }}
+                     style={{
+                        flex: 1, height: 44, borderRadius: 12,
+                        backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: CARD_BORDER,
+                        alignItems: 'center', justifyContent: 'center',
+                     }}
                   >
                      <Text style={{ color: '#0f172a', fontWeight: '700' }}>Cancelar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                      onPress={() => onContinue(form)}
-                     style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' }}
+                     style={{
+                        flex: 1, height: 44, borderRadius: 12,
+                        backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center',
+                     }}
                   >
-                     <Text style={{ color: '#fff', fontWeight: '700' }}>Siguiente</Text>
+                     <Text style={{ color: '#fff', fontWeight: '800' }}>Siguiente</Text>
                   </TouchableOpacity>
                </View>
             </View>
          </View>
       </Modal>
    );
-
 }
+
 
 
 
@@ -336,26 +458,76 @@ function NextStepModal({
    return (
       <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }} onPress={onClose} />
-         <View style={{
-            position: 'absolute', left: 20, right: 20, top: '28%', backgroundColor: '#fff', borderRadius: 16, padding: 16,
-            borderWidth: 1, borderColor: CARD_BORDER, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 16,
-         }}>
-            <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 8 }}>Siguiente operacion</Text>
+         <View
+            style={{
+               position: 'absolute',
+               left: 20,
+               right: 20,
+               top: '28%',
+               backgroundColor: '#fff',
+               borderRadius: 16,
+               padding: 16,
+               borderWidth: 1,
+               borderColor: CARD_BORDER,
+               shadowColor: '#000',
+               shadowOpacity: 0.15,
+               shadowRadius: 16,
+               shadowOffset: { width: 0, height: 8 },
+               elevation: 16,
+            }}
+         >
+            <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 8 }}>
+               Siguiente operación
+            </Text>
             <Text style={{ color: '#64748B', marginBottom: 12 }}>Elige una de las opciones:</Text>
 
-            <TouchableOpacity onPress={onPasarDestete} activeOpacity={0.9}
-               style={{ height: 48, borderRadius: 12, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity
+               onPress={onPasarDestete}
+               activeOpacity={0.9}
+               style={{ height: 48, borderRadius: 12, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' }}
+            >
                <Text style={{ color: '#fff', fontWeight: '800' }}>Pasar a destete</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={onSalida} activeOpacity={0.9}
-               style={{ marginTop: 10, height: 48, borderRadius: 12, backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: CARD_BORDER, alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity
+               onPress={onSalida}
+               activeOpacity={0.9}
+               style={{
+                  marginTop: 10,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: '#F1F5F9',
+                  borderWidth: 1,
+                  borderColor: CARD_BORDER,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+               }}
+            >
                <Text style={{ color: '#0f172a', fontWeight: '800' }}>Salida</Text>
             </TouchableOpacity>
+
+            {/* Botón Cancelar abajo a la derecha */}
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 }}>
+               <TouchableOpacity
+                  onPress={onClose}
+                  activeOpacity={0.9}
+                  style={{
+                     height: 44,
+                     paddingHorizontal: 16,
+                     borderRadius: 10,
+                     backgroundColor: '#E5E7EB',
+                     alignItems: 'center',
+                     justifyContent: 'center',
+                  }}
+               >
+                  <Text style={{ color: '#0f172a', fontWeight: '700' }}>Cancelar</Text>
+               </TouchableOpacity>
+            </View>
          </View>
       </Modal>
    );
 }
+
 
 
 export const MatCorralDetail = () => {
