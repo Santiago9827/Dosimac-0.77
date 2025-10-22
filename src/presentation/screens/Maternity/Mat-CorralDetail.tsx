@@ -182,6 +182,181 @@ function ActionRow({
    );
 }
 
+function ConfirmDialog({
+   visible, title, message, onCancel, onAccept,
+}: {
+   visible: boolean;
+   title: string;
+   message?: string;
+   onCancel: () => void;
+   onAccept: () => void;
+}) {
+   return (
+      <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
+         <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }} onPress={onCancel} />
+         <View style={{
+            position: 'absolute', left: 20, right: 20, top: '28%',
+            backgroundColor: '#fff', borderRadius: 16, padding: 16,
+            borderWidth: 1, borderColor: CARD_BORDER, shadowColor: '#000',
+            shadowOpacity: 0.15, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 16,
+         }}>
+            <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 8 }}>{title}</Text>
+            {message ? <Text style={{ color: '#334155', marginBottom: 12 }}>{message}</Text> : null}
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+               <TouchableOpacity onPress={onCancel} style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: '#0f172a', fontWeight: '700' }}>Cancelar</Text>
+               </TouchableOpacity>
+               <TouchableOpacity onPress={onAccept} style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: '#fff', fontWeight: '700' }}>Aceptar</Text>
+               </TouchableOpacity>
+            </View>
+         </View>
+      </Modal>
+   );
+}
+
+
+function LactanciaFormModal({
+   visible, onClose, onContinue,
+}: {
+   visible: boolean;
+   onClose: () => void;
+   onContinue: (data: {
+      totalLechones?: string; nacidosVivos?: string; nacidosMuertos?: string;
+      donados?: string; adoptados?: string; viables?: string;
+   }) => void;
+}) {
+   const [form, setForm] = useState({
+      totalLechones: '', nacidosVivos: '', nacidosMuertos: '',
+      donados: '', adoptados: '', viables: '',
+   });
+
+   useEffect(() => {
+      if (visible) {
+         setForm({ totalLechones: '', nacidosVivos: '', nacidosMuertos: '', donados: '', adoptados: '', viables: '' });
+      }
+   }, [visible]);
+
+   const Row = ({ label, k }: { label: string; k: keyof typeof form }) => (
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 6 }}>
+         <Text style={{ color: '#334155', fontSize: 14, flexShrink: 1, paddingRight: 10 }}>{label}</Text>
+         <TextInput
+            value={form[k]}
+            onChangeText={(t) => setForm(s => ({ ...s, [k]: t.replace(/[^0-9]/g, '') }))}
+            placeholder="0"
+            keyboardType="numeric"
+            inputMode="numeric"
+            maxLength={4}
+            style={{
+               width: 96, height: 36, borderWidth: 1, borderColor: CARD_BORDER,
+               borderRadius: 10, paddingHorizontal: 10, textAlign: 'center', color: '#0f172a',
+            }}
+         />
+      </View>
+   );
+
+   return (
+      <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+         {/* Capa a pantalla completa + centrado vertical/horizontal */}
+         <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
+            {/* Fondo oscuro clicable para cerrar */}
+            <Pressable
+               onPress={onClose}
+               style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
+            />
+
+            {/* Card del modal */}
+            <View
+               style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 16,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: CARD_BORDER,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.15,
+                  shadowRadius: 16,
+                  shadowOffset: { width: 0, height: 8 },
+                  elevation: 16,
+                  width: '100%',
+                  alignSelf: 'center',
+                  //maxHeight: '80%', // evita desbordes en pantallas pequeñas
+               }}
+            >
+               <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 8 }}>
+                  Pasar a lactancia
+               </Text>
+
+               <ScrollView
+                  style={{ maxHeight: 320 }}
+                  contentContainerStyle={{ paddingBottom: 0, flexGrow: 0 }}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+               >
+                  <Row label="Total lechones" k="totalLechones" />
+                  <Row label="Nacidos vivos" k="nacidosVivos" />
+                  <Row label="Nacidos muertos" k="nacidosMuertos" />
+                  <Row label="Donados" k="donados" />
+                  <Row label="Adoptados" k="adoptados" />
+                  <Row label="Viables" k="viables" />
+               </ScrollView>
+
+               {/* Botonera pegada al contenido, sin hueco grande */}
+               <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+                  <TouchableOpacity
+                     onPress={onClose}
+                     style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                     <Text style={{ color: '#0f172a', fontWeight: '700' }}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                     onPress={() => onContinue(form)}
+                     style={{ flex: 1, height: 44, borderRadius: 10, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                     <Text style={{ color: '#fff', fontWeight: '700' }}>Siguiente</Text>
+                  </TouchableOpacity>
+               </View>
+            </View>
+         </View>
+      </Modal>
+   );
+
+}
+
+
+
+function NextStepModal({
+   visible, onClose, onPasarDestete, onSalida,
+}: {
+   visible: boolean;
+   onClose: () => void;
+   onPasarDestete: () => void;
+   onSalida: () => void;
+}) {
+   return (
+      <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+         <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }} onPress={onClose} />
+         <View style={{
+            position: 'absolute', left: 20, right: 20, top: '28%', backgroundColor: '#fff', borderRadius: 16, padding: 16,
+            borderWidth: 1, borderColor: CARD_BORDER, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 16,
+         }}>
+            <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 8 }}>Siguiente operacion</Text>
+            <Text style={{ color: '#64748B', marginBottom: 12 }}>Elige una de las opciones:</Text>
+
+            <TouchableOpacity onPress={onPasarDestete} activeOpacity={0.9}
+               style={{ height: 48, borderRadius: 12, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' }}>
+               <Text style={{ color: '#fff', fontWeight: '800' }}>Pasar a destete</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={onSalida} activeOpacity={0.9}
+               style={{ marginTop: 10, height: 48, borderRadius: 12, backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: CARD_BORDER, alignItems: 'center', justifyContent: 'center' }}>
+               <Text style={{ color: '#0f172a', fontWeight: '800' }}>Salida</Text>
+            </TouchableOpacity>
+         </View>
+      </Modal>
+   );
+}
+
 
 export const MatCorralDetail = () => {
    const insets = useSafeAreaInsets();
@@ -193,6 +368,15 @@ export const MatCorralDetail = () => {
 
    const [isDeviceError, setDeviceError] = useState<boolean>(!!deviceError);
    const [hasDiasSinAlimentar, setHasDiasSinAlimentar] = useState<boolean>(!!diasSinAlimentar);
+
+   const [dlgLactancia, setDlgLactancia] = useState(false);
+   const [dlgNextStep, setDlgNextStep] = useState(false);
+   const [dlgSalidaMotivo, setDlgSalidaMotivo] = useState(false);
+
+   const [confirm, setConfirm] = useState<{
+      visible: boolean; title: string; message?: string; onAccept?: () => void;
+   }>({ visible: false, title: '' });
+
 
    const BRAND = '#4F46E5';
    const CARD_BORDER = '#E2E8F0';
@@ -265,8 +449,8 @@ export const MatCorralDetail = () => {
                      backgroundColor: '#F1F5F9',
                      borderWidth: 1,
                      borderColor: CARD_BORDER,
-                     paddingHorizontal: 10, // antes 14
-                     paddingVertical: 3,    // antes 6
+                     paddingHorizontal: 10,
+                     paddingVertical: 3,
                      borderRadius: 999,
                   }}
                >
@@ -275,8 +459,7 @@ export const MatCorralDetail = () => {
                         color: '#0f172a',
                         fontWeight: '900',
                         fontSize: 16,
-                        lineHeight: 18,        // reduce alto visual
-                        // includeFontPadding: false, // <- si quieres aún más compacto en Android
+                        lineHeight: 18,
                      }}
                   >
                      Corral {corralId}
@@ -361,7 +544,7 @@ export const MatCorralDetail = () => {
          subEstado: animal.subEstado ?? s.subEstado,
          subEstadoFecha: animal.subEstadoFecha ?? s.subEstadoFecha,
       }));
-   }, [animal]); // usa 'animal' como dependencia
+   }, [animal]);
 
 
    // acciones drawer
@@ -382,7 +565,36 @@ export const MatCorralDetail = () => {
    const applySalida = () => setDlgSalida(false);
    const applyCrotal = (nuevo: string) => { if (!nuevo) return; setAnimalState(s => ({ ...s, crotal: nuevo })); setDlgCrotal(false); };
 
-   // helpers consumo (cuando llega en mock)
+   const askConfirm = (title: string, message: string, onAccept: () => void) =>
+      setConfirm({ visible: true, title, message, onAccept });
+
+   const onContinueLactancia = (data: any) => {
+      // Aquí podrías enviar al backend "data" si hiciera falta.
+      askConfirm('Pasar a lactancia', '¿Seguro de pasar a la siguiente operación?', () => {
+         setAnimalState(s => ({ ...s, subEstado: 'LACTANCIA', subEstadoFecha: todayStr() }));
+         setDlgLactancia(false);
+      });
+   };
+
+   const onPasarDestete = () => {
+      askConfirm('Pasar a destete', '¿Seguro de pasar a la siguiente operación?', () => {
+         setAnimalState(s => ({ ...s, subEstado: 'DESTETE', subEstadoFecha: todayStr() }));
+         setDlgNextStep(false);
+      });
+   };
+
+   const onSalida = () => {
+      setDlgSalidaMotivo(true);
+   };
+
+   const onAcceptSalidaMotivo = (motivo: string) => {
+      askConfirm('Confirmar salida', `Motivo: ${motivo}. ¿Seguro de pasar a la siguiente operación?`, () => {
+         setAnimalState(s => ({ ...s, subEstado: 'SALIDA', subEstadoFecha: todayStr() }));
+         setDlgSalidaMotivo(false);
+         setDlgNextStep(false);
+      });
+   };
+
    const objetivo = animal?.consumo?.objetivo ?? 12000;
    const actual = animal?.consumo?.actual ?? 11000;
    const pct = objetivo > 0 ? Math.round((actual / objetivo) * 100) : 0;
@@ -729,6 +941,46 @@ export const MatCorralDetail = () => {
                   shadowOffset: { width: 0, height: 6 },
                }}
             >
+               {/* Sección: Siguiente operación */}
+               {/* Sección: Siguiente operación */}
+               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                  <Icon name="walk-outline" size={18} color="#0f172a" />
+                  <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 16 }}>
+                     Siguiente operación
+                  </Text>
+               </View>
+
+               {!hasAnimal ? (
+                  <ActionRow
+                     label="Introducir animal"
+                     onPress={() => {
+                        drawer.hide();
+                        setTimeout(() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId }), 120);
+                     }}
+                  />
+               ) : ((animalState.subEstado || '').toUpperCase() !== 'LACTANCIA') ? (
+                  <ActionRow
+                     label="Pasar a lactancia"
+                     onPress={() => {
+                        drawer.hide();
+                        setTimeout(() => setDlgLactancia(true), 120);
+                     }}
+                  />
+               ) : (
+                  <ActionRow
+                     label="Siguiente paso"
+                     onPress={() => {
+                        drawer.hide();
+                        setTimeout(() => setDlgNextStep(true), 120);
+                     }}
+                  />
+               )}
+
+
+
+               <View style={{ height: 1, backgroundColor: CARD_BORDER, marginVertical: 10 }} />
+
+               {/* Sección: Acciones */}
                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                   <Icon name="options-outline" size={18} color="#0f172a" />
                   <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 16 }}>
@@ -736,35 +988,15 @@ export const MatCorralDetail = () => {
                   </Text>
                </View>
 
-               {/* Usa ActionRow (debes tenerlo declarado arriba) */}
                <ActionRow label="Curva" onPress={() => openAction('curva')} disabled={!hasAnimal} />
-               <ActionRow
-                  label="Condición corporal"
-                  onPress={() => openAction('condicionCorporal')}
-                  disabled={!hasAnimal}
-               />
+               <ActionRow label="Condición corporal" onPress={() => openAction('condicionCorporal')} disabled={!hasAnimal} />
                <ActionRow label="SubEstado" onPress={() => openAction('subEstado')} disabled={!hasAnimal} />
-               <ActionRow
-                  label="Salida animal"
-                  onPress={() => openAction('salidaAnimal')}
-                  disabled={!hasAnimal}
-               />
-               <ActionRow
-                  label="Sustituir crotal"
-                  onPress={() => openAction('sustituirCrotal')}
-                  disabled={!hasAnimal}
-               />
-               <ActionRow
-                  label="Identificador animal anónimo"
-                  onPress={() => openAction('identificadorAnonimo')}
-                  disabled={!hasAnimal}
-               />
-               <ActionRow
-                  label="Salida maternidad"
-                  onPress={() => openAction('salidaMaternidad')}
-                  disabled={!hasAnimal}
-               />
+               <ActionRow label="Salida animal" onPress={() => openAction('salidaAnimal')} disabled={!hasAnimal} />
+               <ActionRow label="Sustituir crotal" onPress={() => openAction('sustituirCrotal')} disabled={!hasAnimal} />
+               <ActionRow label="Identificador animal anónimo" onPress={() => openAction('identificadorAnonimo')} disabled={!hasAnimal} />
+               <ActionRow label="Salida maternidad" onPress={() => openAction('salidaMaternidad')} disabled={!hasAnimal} />
             </Animated.View>
+
          </Modal>
 
          {/* Diálogos */}
@@ -814,6 +1046,45 @@ export const MatCorralDetail = () => {
             onClose={() => setDlgCrotal(false)}
             onAccept={applyCrotal}
          />
+
+         {/* Paso: Formulario de lactancia */}
+         <LactanciaFormModal
+            visible={dlgLactancia}
+            onClose={() => setDlgLactancia(false)}
+            onContinue={onContinueLactancia}
+         />
+
+         {/* Paso: Elegir “destete” o “salida” */}
+         <NextStepModal
+            visible={dlgNextStep}
+            onClose={() => setDlgNextStep(false)}
+            onPasarDestete={onPasarDestete}
+            onSalida={onSalida}
+         />
+
+         {/* Motivo de salida */}
+         <RadioDialog
+            visible={dlgSalidaMotivo}
+            title="Motivo de salida"
+            options={['Correcto', 'Aborto', 'Muerta']}
+            current={undefined}
+            onClose={() => setDlgSalidaMotivo(false)}
+            onAccept={onAcceptSalidaMotivo}
+         />
+
+         {/* Confirmaciones genéricas */}
+         <ConfirmDialog
+            visible={confirm.visible}
+            title={confirm.title}
+            message={confirm.message}
+            onCancel={() => setConfirm(c => ({ ...c, visible: false }))}
+            onAccept={() => {
+               const cb = confirm.onAccept;
+               setConfirm(c => ({ ...c, visible: false }));
+               cb && cb();
+            }}
+         />
+
       </View>
    );
 };
