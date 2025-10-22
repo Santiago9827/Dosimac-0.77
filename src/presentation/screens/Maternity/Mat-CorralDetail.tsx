@@ -446,7 +446,6 @@ function LactanciaFormModal({
 
 
 
-
 function NextStepModal({
    visible, onClose, onPasarDestete, onSalida,
 }: {
@@ -457,71 +456,102 @@ function NextStepModal({
 }) {
    return (
       <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
-         <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }} onPress={onClose} />
-         <View
-            style={{
-               position: 'absolute',
-               left: 20,
-               right: 20,
-               top: '28%',
-               backgroundColor: '#fff',
-               borderRadius: 16,
-               padding: 16,
-               borderWidth: 1,
-               borderColor: CARD_BORDER,
-               shadowColor: '#000',
-               shadowOpacity: 0.15,
-               shadowRadius: 16,
-               shadowOffset: { width: 0, height: 8 },
-               elevation: 16,
-            }}
-         >
-            <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 8 }}>
-               Siguiente operación
-            </Text>
-            <Text style={{ color: '#64748B', marginBottom: 12 }}>Elige una de las opciones:</Text>
+         {/* capa completa + centrado */}
+         <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
+            {/* fondo oscuro */}
+            <Pressable
+               onPress={onClose}
+               style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
+            />
 
-            <TouchableOpacity
-               onPress={onPasarDestete}
-               activeOpacity={0.9}
-               style={{ height: 48, borderRadius: 12, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' }}
-            >
-               <Text style={{ color: '#fff', fontWeight: '800' }}>Pasar a destete</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-               onPress={onSalida}
-               activeOpacity={0.9}
+            {/* card */}
+            <View
                style={{
-                  marginTop: 10,
-                  height: 48,
-                  borderRadius: 12,
-                  backgroundColor: '#F1F5F9',
+                  backgroundColor: '#fff',
+                  borderRadius: 18,
+                  padding: 14,
                   borderWidth: 1,
                   borderColor: CARD_BORDER,
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  shadowColor: '#000',
+                  shadowOpacity: 0.15,
+                  shadowRadius: 18,
+                  shadowOffset: { width: 0, height: 8 },
+                  elevation: 18,
+                  width: '100%',
+                  maxWidth: 480,
+                  alignSelf: 'center',
                }}
             >
-               <Text style={{ color: '#0f172a', fontWeight: '800' }}>Salida</Text>
-            </TouchableOpacity>
+               {/* header */}
+               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                  <View
+                     style={{
+                        width: 30, height: 30, borderRadius: 15, backgroundColor: '#EEF2FF',
+                        alignItems: 'center', justifyContent: 'center', marginRight: 8,
+                     }}
+                  >
+                     <Icon name="walk-outline" size={16} color={BRAND} />
+                  </View>
+                  <Text style={{ flex: 1, fontWeight: '900', fontSize: 16, color: '#0f172a' }}>
+                     Siguiente operación
+                  </Text>
+                  <Pressable onPress={onClose} hitSlop={8} android_ripple={{ color: '#e5e7eb', borderless: true }}>
+                     <Icon name="close" size={20} color="#64748B" />
+                  </Pressable>
+               </View>
 
-            {/* Botón Cancelar abajo a la derecha */}
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 }}>
-               <TouchableOpacity
-                  onPress={onClose}
-                  activeOpacity={0.9}
-                  style={{
-                     height: 44,
-                     paddingHorizontal: 16,
-                     borderRadius: 10,
-                     backgroundColor: '#E5E7EB',
-                     alignItems: 'center',
-                     justifyContent: 'center',
-                  }}
-               >
-                  <Text style={{ color: '#0f172a', fontWeight: '700' }}>Cancelar</Text>
-               </TouchableOpacity>
+               <Text style={{ color: '#64748B', marginBottom: 8, fontSize: 13 }}>Elige una opción:</Text>
+
+               {/* lista de opciones */}
+               <View style={{ borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 12, overflow: 'hidden' }}>
+                  <Pressable
+                     onPress={onPasarDestete}
+                     android_ripple={{ color: '#e5e7eb' }}
+                     style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 }}
+                  >
+                     <Icon name="git-branch-outline" size={18} color={BRAND} />
+                     <Text style={{ marginLeft: 10, fontSize: 15, color: '#0f172a', fontWeight: '700' }}>
+                        Pasar a destete
+                     </Text>
+                     <View style={{ flex: 1 }} />
+                     <Icon name="chevron-forward" size={18} color="#94A3B8" />
+                  </Pressable>
+
+                  <View style={{ height: 1, backgroundColor: CARD_BORDER }} />
+
+                  <Pressable
+                     onPress={onSalida}
+                     android_ripple={{ color: '#e5e7eb' }}
+                     style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 }}
+                  >
+                     <Icon name="exit-outline" size={18} color="#0f172a" />
+                     <Text style={{ marginLeft: 10, fontSize: 15, color: '#0f172a', fontWeight: '700' }}>
+                        Salida
+                     </Text>
+                     <View style={{ flex: 1 }} />
+                     <Icon name="chevron-forward" size={18} color="#94A3B8" />
+                  </Pressable>
+               </View>
+
+               {/* footer */}
+               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 }}>
+                  <TouchableOpacity
+                     onPress={onClose}
+                     activeOpacity={0.9}
+                     style={{
+                        height: 36,
+                        paddingHorizontal: 14,
+                        borderRadius: 10,
+                        backgroundColor: '#F1F5F9',
+                        borderWidth: 1,
+                        borderColor: CARD_BORDER,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                     }}
+                  >
+                     <Text style={{ color: '#0f172a', fontWeight: '700' }}>Cancelar</Text>
+                  </TouchableOpacity>
+               </View>
             </View>
          </View>
       </Modal>
@@ -536,6 +566,19 @@ export const MatCorralDetail = () => {
    const params = route.params ?? {};
    const { corralId = 0, mockEmpty, mockData, deviceError, diasSinAlimentar, statusMessage } = params;
    const navigation = useNavigation<NavigationProp<any>>();
+   const [corraInfo, setCorralInfo] = useState<any | null>(null);
+
+
+   const [animalState, setAnimalState] = useState({
+      crotal: '—',
+      curva: '—',
+      condicion: '—',
+      subEstado: '—',
+      subEstadoFecha: todayStr(),
+   });
+   const sub = (animalState.subEstado || '').toUpperCase();
+
+
 
 
    const [isDeviceError, setDeviceError] = useState<boolean>(!!deviceError);
@@ -553,7 +596,22 @@ export const MatCorralDetail = () => {
    const BRAND = '#4F46E5';
    const CARD_BORDER = '#E2E8F0';
 
-   type BtnVariant = 'primary' | 'secondary' | 'ghost';
+   // type BtnVariant = 'primary' | 'secondary' | 'ghost';
+
+   // justo encima de los handlers
+   const resetAnimalState = () => ({
+      crotal: '—',
+      curva: '—',
+      condicion: '—',
+      subEstado: '—',
+      subEstadoFecha: todayStr(),
+   });
+
+   const simulateRemoveAnimal = () => {
+      setCorralInfo(c => ({ ...(c || {}), animal: null }));
+      setAnimalState(resetAnimalState());
+   };
+
 
    const EmptyCorralCard = ({
       corralId,
@@ -666,17 +724,10 @@ export const MatCorralDetail = () => {
 
 
    // Info de corral (puede ser mock o backend)
-   const [corraInfo, setCorralInfo] = useState<any | null>(null);
    const [requestError, setRequestError] = useState(false);
 
    // estado local para editar (si hay animal)
-   const [animalState, setAnimalState] = useState({
-      crotal: '—',
-      curva: '—',
-      condicion: '—',
-      subEstado: '—',
-      subEstadoFecha: todayStr(),
-   });
+
 
    const drawer = useRightDrawer();
    const [dlgCurva, setDlgCurva] = useState(false);
@@ -747,25 +798,30 @@ export const MatCorralDetail = () => {
          setDlgLactancia(false);
       });
    };
-
    const onPasarDestete = () => {
       askConfirm('Pasar a destete', '¿Seguro de pasar a la siguiente operación?', () => {
          setAnimalState(s => ({ ...s, subEstado: 'DESTETE', subEstadoFecha: todayStr() }));
          setDlgNextStep(false);
+         // el siguiente paso debe ser Salida
+         // setTimeout(() => setDlgSalidaMotivo(true), 120);
       });
    };
 
    const onSalida = () => {
+      // desde LACTANCIA se puede ir directo a salida
       setDlgSalidaMotivo(true);
    };
 
    const onAcceptSalidaMotivo = (motivo: string) => {
-      askConfirm('Confirmar salida', `Motivo: ${motivo}. ¿Seguro de pasar a la siguiente operación?`, () => {
+      askConfirm('Confirmar salida', `Motivo: ${motivo}. ¿Seguro?`, () => {
          setAnimalState(s => ({ ...s, subEstado: 'SALIDA', subEstadoFecha: todayStr() }));
          setDlgSalidaMotivo(false);
          setDlgNextStep(false);
+         // simular que el animal ya no está en el corral
+         simulateRemoveAnimal();
       });
    };
+
 
    const objetivo = animal?.consumo?.objetivo ?? 12000;
    const actual = animal?.consumo?.actual ?? 11000;
@@ -1122,6 +1178,7 @@ export const MatCorralDetail = () => {
                   </Text>
                </View>
 
+
                {!hasAnimal ? (
                   <ActionRow
                      label="Introducir animal"
@@ -1130,7 +1187,7 @@ export const MatCorralDetail = () => {
                         setTimeout(() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId }), 120);
                      }}
                   />
-               ) : ((animalState.subEstado || '').toUpperCase() !== 'LACTANCIA') ? (
+               ) : sub === 'PREPARTO' ? (
                   <ActionRow
                      label="Pasar a lactancia"
                      onPress={() => {
@@ -1138,7 +1195,24 @@ export const MatCorralDetail = () => {
                         setTimeout(() => setDlgLactancia(true), 120);
                      }}
                   />
+               ) : sub === 'LACTANCIA' ? (
+                  <ActionRow
+                     label="Siguiente paso"
+                     onPress={() => {
+                        drawer.hide();
+                        setTimeout(() => setDlgNextStep(true), 120); // muestra Destete / Salida
+                     }}
+                  />
+               ) : sub === 'DESTETE' ? (
+                  <ActionRow
+                     label="Salida"
+                     onPress={() => {
+                        drawer.hide();
+                        setTimeout(() => setDlgSalidaMotivo(true), 120); // siguiente paso directo
+                     }}
+                  />
                ) : (
+                  // fallback genérico
                   <ActionRow
                      label="Siguiente paso"
                      onPress={() => {
