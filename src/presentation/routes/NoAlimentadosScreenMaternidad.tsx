@@ -69,6 +69,8 @@ export default function NoAlimentadosScreenMaternidad() {
     });
 
     const [menuOpen, setMenuOpen] = useState(false);
+    const isDefaultSort = sort.key === 'dias' && sort.dir === 'desc';
+
 
     // Posiciones para anclar el menú
     const [btnPos, setBtnPos] = useState({ x: 0, y: 0, w: 0, h: 0 });
@@ -256,13 +258,16 @@ export default function NoAlimentadosScreenMaternidad() {
             </View>
 
             {/* Chip de orden activo con toggle ASC/DSC */}
+            {/* Chip de orden activo con toggle ASC/DESC */}
             {sort.key && (
                 <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+
+                        {/* Chip con el orden actual; toca para alternar asc/desc */}
                         <TouchableOpacity
                             activeOpacity={0.85}
                             onPress={() =>
-                                setSort((s) => ({ ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' }))
+                                setSort(s => ({ ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' }))
                             }
                             style={{
                                 alignSelf: 'flex-start',
@@ -276,23 +281,32 @@ export default function NoAlimentadosScreenMaternidad() {
                                 borderColor: '#E9D5FF',
                             }}
                         >
-                            <Ionicons name={sort.dir === 'asc' ? 'arrow-up' : 'arrow-down'} size={20} color={BRAND} style={{ marginRight: 4 }} />
+                            <Ionicons
+                                name={sort.dir === 'asc' ? 'arrow-up' : 'arrow-down'}
+                                size={20}
+                                color={BRAND}
+                                style={{ marginRight: 4 }}
+                            />
                             <Ionicons name="funnel-outline" size={16} color={BRAND} />
                             <Text style={{ color: BRAND, fontWeight: '800', marginLeft: 6 }}>
                                 {ORDER_LABEL[sort.key]}
                             </Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            onPress={() => setSort({ key: 'dias', dir: 'desc' })} // vuelve al default
-                            style={{ marginLeft: 10, padding: 6 }}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        >
-                            <Ionicons name="close" size={16} color={BRAND} />
-                        </TouchableOpacity>
+                        {/* Solo mostrar la X cuando NO es el orden por defecto */}
+                        {!isDefaultSort && (
+                            <TouchableOpacity
+                                onPress={() => setSort({ key: 'dias', dir: 'desc' })} // volver al default
+                                style={{ marginLeft: 10, padding: 6 }}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                                <Ionicons name="close" size={16} color={BRAND} />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
             )}
+
 
             <FlatList
                 className="px-5 pt-2"

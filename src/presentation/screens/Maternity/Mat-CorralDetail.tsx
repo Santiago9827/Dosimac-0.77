@@ -490,7 +490,7 @@ function NextStepModal({
                         alignItems: 'center', justifyContent: 'center', marginRight: 8,
                      }}
                   >
-                     <Icon name="walk-outline" size={16} color={BRAND} />
+                     <Icon name="arrow-forward-circle-outline" size={16} color={BRAND} />    {/*arrow-forward-circle-outline - walk-outline */}
                   </View>
                   <Text style={{ flex: 1, fontWeight: '900', fontSize: 16, color: '#0f172a' }}>
                      Siguiente operación
@@ -557,6 +557,89 @@ function NextStepModal({
       </Modal>
    );
 }
+
+function DrawerGrabber() {
+   return (
+      <View style={{ alignItems: 'center', marginBottom: 8 }}>
+         <View style={{ width: 42, height: 4, borderRadius: 999, backgroundColor: '#CBD5E1' }} />
+      </View>
+   );
+}
+
+function SectionTitle({
+   icon, title, subtitle,
+}: { icon: string; title: string; subtitle?: string }) {
+   return (
+      <View
+         style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 12,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: '#C7D2FE',         // borde suave del brand
+            backgroundColor: '#EEF2FF',     // fondo tenue brand
+            marginBottom: 10,
+         }}
+      >
+         <View
+            style={{
+               width: 32, height: 32, borderRadius: 16,
+               backgroundColor: '#E0E7FF',
+               alignItems: 'center', justifyContent: 'center', marginRight: 10,
+            }}
+         >
+            <Icon name={icon} size={18} color={BRAND} />
+         </View>
+         <View style={{ flex: 1 }}>
+            <Text style={{ color: '#0f172a', fontWeight: '900', fontSize: 16 }}>{title}</Text>
+            {!!subtitle && <Text style={{ color: '#64748B', fontSize: 12 }}>{subtitle}</Text>}
+         </View>
+      </View>
+   );
+}
+
+function ListItem({
+   icon, label, onPress, disabled,
+}: {
+   icon?: string; label: string; onPress: () => void; disabled?: boolean;
+}) {
+   return (
+      <Pressable
+         onPress={disabled ? undefined : onPress}
+         disabled={disabled}
+         android_ripple={disabled ? undefined : { color: '#e5e7eb' }}
+         style={{
+            opacity: disabled ? 0.45 : 1,
+            flexDirection: 'row', alignItems: 'center',
+            paddingVertical: 12, paddingHorizontal: 12,
+         }}
+      >
+         {!!icon && <Icon name={icon} size={18} color={disabled ? '#94A3B8' : '#334155'} />}
+         <Text style={{ marginLeft: icon ? 10 : 0, color: disabled ? '#94A3B8' : '#0F172A', fontWeight: '800', flex: 1 }}>
+            {label}
+         </Text>
+         <Icon name="chevron-forward" size={18} color="#94A3B8" />
+      </Pressable>
+   );
+}
+
+/** Contenedor “grouped list” */
+function ListGroup({ children }: { children: React.ReactNode }) {
+   return (
+      <View
+         style={{
+            borderWidth: 1, borderColor: CARD_BORDER,
+            borderRadius: 12, overflow: 'hidden', backgroundColor: '#fff',
+         }}
+      >
+         {children}
+      </View>
+   );
+}
+
+const Divider = () => <View style={{ height: 1, backgroundColor: CARD_BORDER }} />;
+
 
 
 
@@ -1169,78 +1252,94 @@ export const MatCorralDetail = () => {
                   shadowOffset: { width: 0, height: 6 },
                }}
             >
-               {/* Sección: Siguiente operación */}
-               {/* Sección: Siguiente operación */}
-               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                  <Icon name="walk-outline" size={18} color="#0f172a" />
-                  <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 16 }}>
-                     Siguiente operación
-                  </Text>
-               </View>
+               <DrawerGrabber />
 
+               {/* Sección: Siguiente operación */}
+               <SectionTitle
+                  icon="arrow-forward-circle-outline"
+                  title="Siguiente operación"
+                  subtitle="Elige la siguiente acción para este animal"
+               />
 
                {!hasAnimal ? (
-                  <ActionRow
-                     label="Introducir animal"
-                     onPress={() => {
-                        drawer.hide();
-                        setTimeout(() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId }), 120);
-                     }}
-                  />
+                  <ListGroup>
+                     <ListItem
+                        icon="add-circle-outline"
+                        label="Introducir animal"
+                        onPress={() => {
+                           drawer.hide();
+                           setTimeout(() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId }), 120);
+                        }}
+                     />
+                  </ListGroup>
                ) : sub === 'PREPARTO' ? (
-                  <ActionRow
-                     label="Pasar a lactancia"
-                     onPress={() => {
-                        drawer.hide();
-                        setTimeout(() => setDlgLactancia(true), 120);
-                     }}
-                  />
+                  <ListGroup>
+                     <ListItem
+                        icon="medkit-outline"
+                        label="Pasar a lactancia"
+                        onPress={() => {
+                           drawer.hide();
+                           setTimeout(() => setDlgLactancia(true), 120);
+                        }}
+                     />
+                  </ListGroup>
                ) : sub === 'LACTANCIA' ? (
-                  <ActionRow
-                     label="Siguiente paso"
-                     onPress={() => {
-                        drawer.hide();
-                        setTimeout(() => setDlgNextStep(true), 120); // muestra Destete / Salida
-                     }}
-                  />
+                  <ListGroup>
+                     <ListItem
+                        icon="flag-outline"                  // hito/siguiente fase
+                        label="Siguiente paso"
+                        onPress={() => {
+                           drawer.hide();
+                           setTimeout(() => setDlgNextStep(true), 120);
+                        }}
+                     />
+                  </ListGroup>
                ) : sub === 'DESTETE' ? (
-                  <ActionRow
-                     label="Salida"
-                     onPress={() => {
-                        drawer.hide();
-                        setTimeout(() => setDlgSalidaMotivo(true), 120); // siguiente paso directo
-                     }}
-                  />
+                  <ListGroup>
+                     <ListItem
+                        icon="exit-outline"
+                        label="Salida"
+                        onPress={() => {
+                           drawer.hide();
+                           setTimeout(() => setDlgSalidaMotivo(true), 120);
+                        }}
+                     />
+                  </ListGroup>
                ) : (
-                  // fallback genérico
-                  <ActionRow
-                     label="Siguiente paso"
-                     onPress={() => {
-                        drawer.hide();
-                        setTimeout(() => setDlgNextStep(true), 120);
-                     }}
-                  />
+                  <ListGroup>
+                     <ListItem
+                        icon="arrow-forward-outline"
+                        label="Siguiente paso"
+                        onPress={() => {
+                           drawer.hide();
+                           setTimeout(() => setDlgNextStep(true), 120);
+                        }}
+                     />
+                  </ListGroup>
                )}
 
-
-
-               <View style={{ height: 1, backgroundColor: CARD_BORDER, marginVertical: 10 }} />
+               {/* Separador visual amplio */}
+               <View style={{ height: 1, backgroundColor: CARD_BORDER, marginVertical: 12 }} />
 
                {/* Sección: Acciones */}
-               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                  <Icon name="options-outline" size={18} color="#0f172a" />
-                  <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 16 }}>
-                     Acciones
-                  </Text>
-               </View>
+               <SectionTitle icon="options-outline" title="Acciones" />
 
-               <ActionRow label="Curva" onPress={() => openAction('curva')} disabled={!hasAnimal} />
-               <ActionRow label="Condición corporal" onPress={() => openAction('condicionCorporal')} disabled={!hasAnimal} />
-               <ActionRow label="SubEstado" onPress={() => openAction('subEstado')} disabled={!hasAnimal} />
-               <ActionRow label="Salida animal" onPress={() => openAction('salidaAnimal')} disabled={!hasAnimal} />
-               <ActionRow label="Sustituir crotal" onPress={() => openAction('sustituirCrotal')} disabled={!hasAnimal} />
-               <ActionRow label="Identificador animal anónimo" onPress={() => openAction('identificadorAnonimo')} disabled={!hasAnimal} />
-               <ActionRow label="Salida maternidad" onPress={() => openAction('salidaMaternidad')} disabled={!hasAnimal} />
+               <ListGroup>
+                  <ListItem icon="pulse-outline" label="Curva" onPress={() => openAction('curva')} disabled={!hasAnimal} />
+                  <Divider />
+                  <ListItem icon="body-outline" label="Condición corporal" onPress={() => openAction('condicionCorporal')} disabled={!hasAnimal} />
+                  <Divider />
+                  <ListItem icon="flag-outline" label="SubEstado" onPress={() => openAction('subEstado')} disabled={!hasAnimal} />
+                  <Divider />
+                  <ListItem icon="exit-outline" label="Salida animal" onPress={() => openAction('salidaAnimal')} disabled={!hasAnimal} />
+                  <Divider />
+                  <ListItem icon="pricetags-outline" label="Sustituir crotal" onPress={() => openAction('sustituirCrotal')} disabled={!hasAnimal} />
+                  <Divider />
+                  <ListItem icon="finger-print-outline" label="Identificador animal anónimo" onPress={() => openAction('identificadorAnonimo')} disabled={!hasAnimal} />
+                  <Divider />
+                  <ListItem icon="home-outline" label="Salida maternidad" onPress={() => openAction('salidaMaternidad')} disabled={!hasAnimal} />
+               </ListGroup>
+
             </Animated.View>
 
          </Modal>
