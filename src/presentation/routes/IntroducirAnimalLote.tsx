@@ -76,7 +76,7 @@ export default function IntroducirAnimalLote() {
     const { corralId: corralFromRoute } = route.params ?? {};
 
     // ==== AWR300
-    const { startReading, stopReading, lastTag, isConnected } = useAwrConn();
+    const { startReading, stopReading, lastTag, isConnected, clearLastTag } = useAwrConn();
 
     // ==== Estado local
     const [mode, setMode] = useState<SearchMode>('CROTAL');
@@ -138,12 +138,20 @@ export default function IntroducirAnimalLote() {
         useCallback(() => {
             setCrotal('');
             setCorral(initialCorral);
-            setCorralesDisponibles(buildInitialCorrales()); // 👈 resetea simulación al entrar
-            seenTagRef.current = lastTag ?? null;
+            setCorralesDisponibles(buildInitialCorrales());
+
+            clearLastTag();
+            seenTagRef.current = null;
+
             if (mode === 'CROTAL') startReading().catch(() => { });
             setTimeout(() => { measureEstado(); measureCorral(); measureMore(); }, 0);
-            return () => { stopReading?.(); seenTagRef.current = null; };
-        }, [startReading, stopReading, initialCorral, mode, buildInitialCorrales])
+
+            return () => {
+                stopReading?.();
+                clearLastTag();
+                seenTagRef.current = null;
+            };
+        }, [startReading, stopReading, initialCorral, mode, buildInitialCorrales, clearLastTag])
     );
 
     // No pisar si escribe
@@ -190,6 +198,8 @@ export default function IntroducirAnimalLote() {
         setCrotal('');
         setCorralesDisponibles(prev => prev.filter(c => c !== corral));
         setCorral(EMPTY_CORRAL);
+        clearLastTag();
+        seenTagRef.current = null;
         if (mode === 'ID') inputRef.current?.focus();
     };
 

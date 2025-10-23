@@ -27,6 +27,8 @@ type State = {
     startReading: () => Promise<void>;
     stopReading: () => Promise<void>;
     clearHistory: () => void;
+    clearLastTag: () => void;
+
 };
 
 export const useAwrConn = create<State>((set, get) => ({
@@ -124,4 +126,6 @@ export const useAwrConn = create<State>((set, get) => ({
     },
 
     clearHistory: () => set({ history: [], lastTag: null }),
+    clearLastTag: () => set({ lastTag: null }),
+
 }));

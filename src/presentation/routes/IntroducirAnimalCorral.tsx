@@ -75,7 +75,7 @@ export default function IntroducirAnimalCorral() {
     const { corralId: corralFromRoute } = route.params ?? {};
 
     // === AWR300
-    const { startReading, stopReading, lastTag, isConnected } = useAwrConn();
+    const { startReading, stopReading, lastTag, isConnected, clearLastTag } = useAwrConn();
 
     // === Estado local
     const [mode, setMode] = useState<SearchMode>('CROTAL'); // ← nuevo: modo de búsqueda
@@ -115,7 +115,7 @@ export default function IntroducirAnimalCorral() {
         useCallback(() => {
             setCrotal('');
             setCorral(initialCorral);
-            seenTagRef.current = lastTag ?? null; // ignora el arrastrado
+            clearLastTag();
             if (mode === 'CROTAL') startReading().catch(() => { });
 
             setTimeout(() => { measureEstado(); measureCorral(); measureMore(); }, 0);
@@ -123,9 +123,10 @@ export default function IntroducirAnimalCorral() {
             return () => {
                 stopReading?.();
                 setCrotal('');
-                seenTagRef.current = null;
+                // También puedes limpiar aquí si quieres doble seguridad:
+                clearLastTag();
             };
-        }, [startReading, stopReading, initialCorral, mode])
+        }, [startReading, stopReading, initialCorral, mode, clearLastTag])
     );
 
     // Si el usuario escribe, no pisar el input durante 800ms
