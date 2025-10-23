@@ -7,6 +7,9 @@ import NoAlimentadosGestacion from '../screens/Gestation/NoAlimentadosGestacion'
 import CorralGridScreen from './CorralGridScreen';
 import CorralDetalleScreen from './corralDetalleScreen';
 import { HamburgerMenu } from '../components/shared/HamburgerMenu';
+import TodosAnimalesGestacion from '../screens/Gestation/TodosAnimalesGestacion';
+// GestationStackNavigator.tsx
+import { GetAnimalDetail } from '../screens/Gestation/Get-AnimalDetail';
 
 export type GestationStackParamList = {
     'GES-HOME': undefined;
@@ -14,6 +17,16 @@ export type GestationStackParamList = {
     'GES-CORRAL': undefined;
     'GES-CORRALPC': undefined;
     'GES-CORRAL-DETALLE': { corralId: string };
+    'GES-TODOS': undefined;
+    'GET-ANIMAL-DETAIL': {
+        corralId: number | string;
+        mockEmpty?: boolean;
+        mockData?: any;
+        deviceError?: boolean;
+        diasSinAlimentar?: boolean;
+        statusMessage?: string;
+    };
+
 };
 
 const Stack = createStackNavigator<GestationStackParamList>();
@@ -49,8 +62,26 @@ export const GestationStackNavigator = () => {
             <Stack.Screen
                 name="GES-CORRAL-DETALLE"
                 component={CorralDetalleScreen}
-                options={{ headerShown: false }} // usamos el header custom del detalle
+                options={{ headerShown: false }}
             />
+
+            <Stack.Screen
+                name="GES-TODOS"
+                component={TodosAnimalesGestacion}
+                options={{ title: 'Todos los Animales', headerShown: true }}
+            />
+
+            <Stack.Screen
+                name="GET-ANIMAL-DETAIL"
+                component={GetAnimalDetail}
+                options={({ route }) => ({
+                    title: route.params?.corralId ? `Corral ${route.params.corralId}` : 'Corral',
+                    headerShown: true,
+                    headerStyle: { elevation: 5 },
+                })}
+            />
+
+
 
         </Stack.Navigator>
     );

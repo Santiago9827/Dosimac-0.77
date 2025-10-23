@@ -166,7 +166,14 @@ export const GestationScreen = () => {
                 <Row label="Alimentados" value={gestacion.alimentados} />
                 <Row label="No Alimentados" value={noAl} divider action onPress={() => navigation.navigate('GES-NOFEED')}
                   labelColor={noAlColor} valueColor={noAlColor} />
-                <Row label="Totales animales" value={total} strong divider />
+                <Row
+                  label="Totales animales"
+                  value={total}
+                  strong
+                  divider
+                  action
+                  onPress={() => navigation.navigate('GES-TODOS')}
+                />
                 <LinkRow label="Ver corrales" icon="grid-outline" onPress={() => navigation.navigate('GES-CORRALPC' as never)} />
               </View>
             </View>
