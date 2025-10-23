@@ -6,9 +6,7 @@ import axios from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import { DrawerItem } from '@react-navigation/drawer';
-// import { CorralMatInfo } from '../../../libraries/interfaces/corral-Info.interface'; // si la tienes, ok
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-
 
 const ipServer = 'http://192.168.1.238:3010';
 const corralInfoUrl = (id: number) => `${ipServer}/corral/${id}`;
@@ -20,16 +18,29 @@ const useRightDrawer = () => {
    const w = Math.min(340, Math.round(Dimensions.get('window').width * 0.88));
    const [open, setOpen] = useState(false);
    const tx = useRef(new Animated.Value(w)).current;
-   const show = () => { setOpen(true); Animated.timing(tx, { toValue: 0, duration: 240, useNativeDriver: true }).start(); };
-   const hide = () => { Animated.timing(tx, { toValue: w, duration: 220, useNativeDriver: true }).start(({ finished }) => finished && setOpen(false)); };
+
+   const show = () => {
+      setOpen(true);
+      Animated.timing(tx, { toValue: 0, duration: 240, useNativeDriver: true }).start();
+   };
+
+   // ✅ Nuevo: acepta callback para ejecutar acciones tras cerrar el drawer
+   const hide = (after?: () => void) => {
+      Animated.timing(tx, { toValue: w, duration: 220, useNativeDriver: true })
+         .start(({ finished }) => {
+            if (finished) {
+               setOpen(false);
+               // Espera un frame a que se desmonte el Modal del drawer
+               requestAnimationFrame(() => after?.());
+            }
+         });
+   };
+
    return { open, show, hide, tx, width: w };
 };
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
-
-// fuera del componente
-
 
 function RadioDialog({
    visible, title, options, current, onClose, onAccept,
@@ -199,15 +210,12 @@ function ConfirmDialog({
          statusBarTranslucent
          onRequestClose={onCancel}
       >
-         {/* Capa a pantalla completa + centrado */}
          <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
-            {/* Fondo oscuro clicable */}
             <Pressable
                onPress={onCancel}
                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
             />
 
-            {/* Card del modal */}
             <View
                style={{
                   backgroundColor: '#fff',
@@ -221,7 +229,7 @@ function ConfirmDialog({
                   shadowOffset: { width: 0, height: 8 },
                   elevation: 16,
                   width: '100%',
-                  maxWidth: 520,          // opcional: más elegante en pantallas grandes
+                  maxWidth: 520,
                   alignSelf: 'center',
                }}
             >
@@ -250,7 +258,6 @@ function ConfirmDialog({
    );
 }
 
-
 function LactanciaFormModal({
    visible, onClose, onContinue,
 }: {
@@ -266,7 +273,6 @@ function LactanciaFormModal({
       donados: '', adoptados: '', viables: '',
    });
 
-   // reset al abrir
    useEffect(() => {
       if (visible) {
          setForm({
@@ -276,7 +282,6 @@ function LactanciaFormModal({
       }
    }, [visible]);
 
-   // helpers
    const onlyNum = (t: string) => t.replace(/[^0-9]/g, '');
    const step = (k: keyof typeof form, delta: number) =>
       setForm(s => {
@@ -298,7 +303,6 @@ function LactanciaFormModal({
             {label}
          </Text>
 
-         {/* Input + mini stepper (opcional) */}
          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Pressable
                onPress={() => step(k, -1)}
@@ -344,15 +348,12 @@ function LactanciaFormModal({
 
    return (
       <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
-         {/* Capa completa + centrado */}
          <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
-            {/* Fondo oscuro */}
             <Pressable
                onPress={onClose}
                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
             />
 
-            {/* Card */}
             <View
                style={{
                   backgroundColor: '#fff',
@@ -366,11 +367,10 @@ function LactanciaFormModal({
                   shadowOffset: { width: 0, height: 8 },
                   elevation: 18,
                   width: '100%',
-                  maxWidth: 520,            // más elegante en pantallas grandes
+                  maxWidth: 520,
                   alignSelf: 'center',
                }}
             >
-               {/* Header */}
                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                   <View style={{
                      width: 36, height: 36, borderRadius: 18, backgroundColor: '#EEF2FF',
@@ -387,7 +387,6 @@ function LactanciaFormModal({
                      </Text>
                   </View>
 
-                  {/* Botón cerrar */}
                   <Pressable
                      onPress={onClose}
                      hitSlop={10}
@@ -398,7 +397,6 @@ function LactanciaFormModal({
                   </Pressable>
                </View>
 
-               {/* Cuerpo (scrollable si hace falta) */}
                <ScrollView
                   style={{ maxHeight: MAX_BODY_H }}
                   contentContainerStyle={{ paddingBottom: 0 }}
@@ -413,10 +411,8 @@ function LactanciaFormModal({
                   <Row label="Viables" k="viables" />
                </ScrollView>
 
-               {/* Separador */}
                <View style={{ height: 1, backgroundColor: CARD_BORDER, marginTop: 10, marginBottom: 8 }} />
 
-               {/* Botonera */}
                <View style={{ flexDirection: 'row', gap: 10 }}>
                   <TouchableOpacity
                      onPress={onClose}
@@ -444,8 +440,6 @@ function LactanciaFormModal({
    );
 }
 
-
-
 function NextStepModal({
    visible, onClose, onPasarDestete, onSalida,
 }: {
@@ -456,15 +450,12 @@ function NextStepModal({
 }) {
    return (
       <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
-         {/* capa completa + centrado */}
          <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
-            {/* fondo oscuro */}
             <Pressable
                onPress={onClose}
                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
             />
 
-            {/* card */}
             <View
                style={{
                   backgroundColor: '#fff',
@@ -482,7 +473,6 @@ function NextStepModal({
                   alignSelf: 'center',
                }}
             >
-               {/* header */}
                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                   <View
                      style={{
@@ -490,7 +480,7 @@ function NextStepModal({
                         alignItems: 'center', justifyContent: 'center', marginRight: 8,
                      }}
                   >
-                     <Icon name="arrow-forward-circle-outline" size={16} color={BRAND} />    {/*arrow-forward-circle-outline - walk-outline */}
+                     <Icon name="arrow-forward-circle-outline" size={16} color={BRAND} />
                   </View>
                   <Text style={{ flex: 1, fontWeight: '900', fontSize: 16, color: '#0f172a' }}>
                      Siguiente operación
@@ -502,7 +492,6 @@ function NextStepModal({
 
                <Text style={{ color: '#64748B', marginBottom: 8, fontSize: 13 }}>Elige una opción:</Text>
 
-               {/* lista de opciones */}
                <View style={{ borderWidth: 1, borderColor: CARD_BORDER, borderRadius: 12, overflow: 'hidden' }}>
                   <Pressable
                      onPress={onPasarDestete}
@@ -533,7 +522,6 @@ function NextStepModal({
                   </Pressable>
                </View>
 
-               {/* footer */}
                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 }}>
                   <TouchableOpacity
                      onPress={onClose}
@@ -577,8 +565,8 @@ function SectionTitle({
             padding: 12,
             borderRadius: 12,
             borderWidth: 1,
-            borderColor: '#C7D2FE',         // borde suave del brand
-            backgroundColor: '#EEF2FF',     // fondo tenue brand
+            borderColor: '#C7D2FE',
+            backgroundColor: '#EEF2FF',
             marginBottom: 10,
          }}
       >
@@ -624,7 +612,6 @@ function ListItem({
    );
 }
 
-/** Contenedor “grouped list” */
 function ListGroup({ children }: { children: React.ReactNode }) {
    return (
       <View
@@ -640,9 +627,6 @@ function ListGroup({ children }: { children: React.ReactNode }) {
 
 const Divider = () => <View style={{ height: 1, backgroundColor: CARD_BORDER }} />;
 
-
-
-
 export const MatCorralDetail = () => {
    const insets = useSafeAreaInsets();
    const route = useRoute<any>();
@@ -650,7 +634,6 @@ export const MatCorralDetail = () => {
    const { corralId = 0, mockEmpty, mockData, deviceError, diasSinAlimentar, statusMessage } = params;
    const navigation = useNavigation<NavigationProp<any>>();
    const [corraInfo, setCorralInfo] = useState<any | null>(null);
-
 
    const [animalState, setAnimalState] = useState({
       crotal: '—',
@@ -661,11 +644,8 @@ export const MatCorralDetail = () => {
    });
    const sub = (animalState.subEstado || '').toUpperCase();
 
-
-
-
-   const [isDeviceError, setDeviceError] = useState<boolean>(!!deviceError);
-   const [hasDiasSinAlimentar, setHasDiasSinAlimentar] = useState<boolean>(!!diasSinAlimentar);
+   const [isDeviceError] = useState<boolean>(!!deviceError);
+   const [hasDiasSinAlimentar] = useState<boolean>(!!diasSinAlimentar);
 
    const [dlgLactancia, setDlgLactancia] = useState(false);
    const [dlgNextStep, setDlgNextStep] = useState(false);
@@ -675,27 +655,16 @@ export const MatCorralDetail = () => {
       visible: boolean; title: string; message?: string; onAccept?: () => void;
    }>({ visible: false, title: '' });
 
+   // Info de corral (mock / backend)
+   const [requestError, setRequestError] = useState(false);
 
-   const BRAND = '#4F46E5';
-   const CARD_BORDER = '#E2E8F0';
-
-   // type BtnVariant = 'primary' | 'secondary' | 'ghost';
-
-   // justo encima de los handlers
-   const resetAnimalState = () => ({
-      crotal: '—',
-      curva: '—',
-      condicion: '—',
-      subEstado: '—',
-      subEstadoFecha: todayStr(),
-   });
-
-   const simulateRemoveAnimal = () => {
-      setCorralInfo(c => ({ ...(c || {}), animal: null }));
-      setAnimalState(resetAnimalState());
-   };
-
-
+   const drawer = useRightDrawer();
+   const [dlgCurva, setDlgCurva] = useState(false);
+   const [dlgCond, setDlgCond] = useState(false);
+   const [dlgSub, setDlgSub] = useState(false);
+   const [dlgSalida, setDlgSalida] = useState(false);
+   const [dlgCrotal, setDlgCrotal] = useState(false);
+   // --- Card para corral vacío ---
    const EmptyCorralCard = ({
       corralId,
       onPressAdd,
@@ -729,7 +698,7 @@ export const MatCorralDetail = () => {
 
       return (
          <View style={{ marginTop: 24, alignItems: 'center', paddingHorizontal: 16 }}>
-            {/* Icono redondo */}
+            {/* Icono */}
             <View
                style={{
                   width: 64, height: 64, borderRadius: 32,
@@ -756,7 +725,6 @@ export const MatCorralDetail = () => {
                   No hay ningún animal en el{' '}
                </Text>
 
-               {/* Chip "Corral {n}" compacto */}
                <View
                   style={{
                      backgroundColor: '#F1F5F9',
@@ -779,7 +747,6 @@ export const MatCorralDetail = () => {
                   </Text>
                </View>
             </View>
-
 
             {/* CTA */}
             <TouchableOpacity
@@ -804,34 +771,15 @@ export const MatCorralDetail = () => {
    };
 
 
-
-
-   // Info de corral (puede ser mock o backend)
-   const [requestError, setRequestError] = useState(false);
-
-   // estado local para editar (si hay animal)
-
-
-   const drawer = useRightDrawer();
-   const [dlgCurva, setDlgCurva] = useState(false);
-   const [dlgCond, setDlgCond] = useState(false);
-   const [dlgSub, setDlgSub] = useState(false);
-   const [dlgSalida, setDlgSalida] = useState(false);
-   const [dlgCrotal, setDlgCrotal] = useState(false);
-
-   // ====== cargar info ======
    useEffect(() => {
-      // 1) mock vacío
       if (mockEmpty) {
-         setCorralInfo({}); // sin animal
+         setCorralInfo({});
          return;
       }
-      // 2) mock con datos
       if (mockData) {
          setCorralInfo(mockData);
          return;
       }
-      // 3) backend real
       const url = corralInfoUrl(corralId || 19);
       axios.get(url)
          .then((res) => setCorralInfo(res.data))
@@ -852,17 +800,27 @@ export const MatCorralDetail = () => {
       }));
    }, [animal]);
 
-
-   // acciones drawer
    const openAction = (key: string) => {
-      drawer.hide();
-      setTimeout(() => {
+      drawer.hide(() => {
          if (key === 'curva') setDlgCurva(true);
          else if (key === 'condicionCorporal') setDlgCond(true);
          else if (key === 'subEstado') setDlgSub(true);
          else if (key === 'salidaAnimal') setDlgSalida(true);
          else if (key === 'sustituirCrotal') setDlgCrotal(true);
-      }, 120);
+      });
+   };
+
+   const resetAnimalState = () => ({
+      crotal: '—',
+      curva: '—',
+      condicion: '—',
+      subEstado: '—',
+      subEstadoFecha: todayStr(),
+   });
+
+   const simulateRemoveAnimal = () => {
+      setCorralInfo(c => ({ ...(c || {}), animal: null }));
+      setAnimalState(resetAnimalState());
    };
 
    const applyCurva = (val: string) => { setAnimalState(s => ({ ...s, curva: val })); setDlgCurva(false); };
@@ -875,23 +833,20 @@ export const MatCorralDetail = () => {
       setConfirm({ visible: true, title, message, onAccept });
 
    const onContinueLactancia = (data: any) => {
-      // Aquí podrías enviar al backend "data" si hiciera falta.
       askConfirm('Pasar a lactancia', '¿Seguro de pasar a la siguiente operación?', () => {
          setAnimalState(s => ({ ...s, subEstado: 'LACTANCIA', subEstadoFecha: todayStr() }));
          setDlgLactancia(false);
       });
    };
+
    const onPasarDestete = () => {
       askConfirm('Pasar a destete', '¿Seguro de pasar a la siguiente operación?', () => {
          setAnimalState(s => ({ ...s, subEstado: 'DESTETE', subEstadoFecha: todayStr() }));
          setDlgNextStep(false);
-         // el siguiente paso debe ser Salida
-         // setTimeout(() => setDlgSalidaMotivo(true), 120);
       });
    };
 
    const onSalida = () => {
-      // desde LACTANCIA se puede ir directo a salida
       setDlgSalidaMotivo(true);
    };
 
@@ -900,18 +855,13 @@ export const MatCorralDetail = () => {
          setAnimalState(s => ({ ...s, subEstado: 'SALIDA', subEstadoFecha: todayStr() }));
          setDlgSalidaMotivo(false);
          setDlgNextStep(false);
-         // simular que el animal ya no está en el corral
          simulateRemoveAnimal();
       });
    };
 
-
    const objetivo = animal?.consumo?.objetivo ?? 12000;
    const actual = animal?.consumo?.actual ?? 11000;
    const pct = objetivo > 0 ? Math.round((actual / objetivo) * 100) : 0;
-
-
-
 
    return (
       <View style={{ flex: 1 }}>
@@ -927,7 +877,6 @@ export const MatCorralDetail = () => {
             )}
 
             <View className="mx-4">
-               {/* Estado del dispositivo del corral */}
                {(isDeviceError || statusMessage) && (
                   <View className="mt-3 h-8 bg-red-500 rounded-md flex-col justify-center items-center">
                      <Text className="text-white font-normal text-base">
@@ -936,7 +885,6 @@ export const MatCorralDetail = () => {
                   </View>
                )}
 
-               {/* —— Vacío vs Con animal —— */}
                {!hasAnimal ? (
                   <EmptyCorralCard
                      corralId={corralId}
@@ -944,10 +892,7 @@ export const MatCorralDetail = () => {
                   />
                ) : (
                   <>
-                     {/* ---- INFORMACIÓN ---- */}
-                     {/* ID - CROTAL - CICLO */}
                      <View className="flex-row items-center mt-4">
-                        {/* ID */}
                         <View className="flex-row items-center mr-4">
                            <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">
                               ID
@@ -957,7 +902,6 @@ export const MatCorralDetail = () => {
                            </Text>
                         </View>
 
-                        {/* Crotal (encoge si no cabe) */}
                         <View className="flex-row items-center mr-4 flex-shrink" style={{ minWidth: 0 }}>
                            <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">
                               Crotal
@@ -972,7 +916,6 @@ export const MatCorralDetail = () => {
                            </Text>
                         </View>
 
-                        {/* Ciclo */}
                         <View className="flex-row items-center">
                            <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">
                               Ciclo
@@ -983,7 +926,6 @@ export const MatCorralDetail = () => {
                         </View>
                      </View>
 
-                     {/* SUBESTADO - DÍA */}
                      <View className="flex-row justify-between mx-8 mt-6 items-end">
                         <View className="flex-row flex-1">
                            <Text className="text-2xl text-blue-900 font-semibold">
@@ -1001,7 +943,6 @@ export const MatCorralDetail = () => {
                         </View>
                      </View>
 
-                     {/* ALIMENTACIÓN */}
                      <View className="flex-row justify-between mt-6">
                         <View className="flex-col">
                            <View className="flex-row items-baseline">
@@ -1025,7 +966,6 @@ export const MatCorralDetail = () => {
                            </View>
                         </View>
 
-                        {/* barras dummy (como tenías) */}
                         <View className="flex-col justify-end">
                            <View className="flex-row ">
                               <View className="flex-row items-end ml-1">
@@ -1065,14 +1005,12 @@ export const MatCorralDetail = () => {
                         </View>
                      </View>
 
-                     {/* Aviso días sin alimentar */}
                      {hasDiasSinAlimentar && (
                         <View className="mt-4 h-8 bg-red-500 rounded-md flex-col justify-center items-center">
                            <Text className="text-white font-normal text-base">2 días sin alimentar</Text>
                         </View>
                      )}
 
-                     {/* Resto información */}
                      <View className="flex-col stretch">
                         <View className="flex-row justify-between mt-6">
                            <View className="flex-col">
@@ -1190,7 +1128,7 @@ export const MatCorralDetail = () => {
             </View>
          </ScrollView>
 
-         {/* --- Barra inferior SIEMPRE --- */}
+         {/* --- Barra inferior --- */}
          <View
             style={{
                position: 'absolute',
@@ -1221,17 +1159,11 @@ export const MatCorralDetail = () => {
                   <Text style={{ color: '#fff', fontWeight: '700' }}>Operaciones</Text>
                </TouchableOpacity>
             </View>
-
-            {/* {!hasAnimal && (
-               <Text style={{ marginTop: 6, textAlign: 'center', color: '#64748B', fontWeight: '600' }}>
-                  No hay animal en este corral: las acciones están desactivadas.
-               </Text>
-            )} */}
          </View>
 
          {/* Drawer lateral derecho */}
-         <Modal visible={drawer.open} transparent animationType="none" onRequestClose={drawer.hide}>
-            <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' }} onPress={drawer.hide} />
+         <Modal visible={drawer.open} transparent animationType="none" onRequestClose={() => drawer.hide()}>
+            <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' }} onPress={() => drawer.hide()} />
             <Animated.View
                style={{
                   position: 'absolute',
@@ -1254,7 +1186,6 @@ export const MatCorralDetail = () => {
             >
                <DrawerGrabber />
 
-               {/* Sección: Siguiente operación */}
                <SectionTitle
                   icon="arrow-forward-circle-outline"
                   title="Siguiente operación"
@@ -1266,10 +1197,7 @@ export const MatCorralDetail = () => {
                      <ListItem
                         icon="add-circle-outline"
                         label="Introducir animal"
-                        onPress={() => {
-                           drawer.hide();
-                           setTimeout(() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId }), 120);
-                        }}
+                        onPress={() => drawer.hide(() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId }))}
                      />
                   </ListGroup>
                ) : sub === 'PREPARTO' ? (
@@ -1277,21 +1205,15 @@ export const MatCorralDetail = () => {
                      <ListItem
                         icon="medkit-outline"
                         label="Pasar a lactancia"
-                        onPress={() => {
-                           drawer.hide();
-                           setTimeout(() => setDlgLactancia(true), 120);
-                        }}
+                        onPress={() => drawer.hide(() => setDlgLactancia(true))}
                      />
                   </ListGroup>
                ) : sub === 'LACTANCIA' ? (
                   <ListGroup>
                      <ListItem
-                        icon="flag-outline"                  // hito/siguiente fase
+                        icon="flag-outline"
                         label="Siguiente paso"
-                        onPress={() => {
-                           drawer.hide();
-                           setTimeout(() => setDlgNextStep(true), 120);
-                        }}
+                        onPress={() => drawer.hide(() => setDlgNextStep(true))}
                      />
                   </ListGroup>
                ) : sub === 'DESTETE' ? (
@@ -1299,10 +1221,7 @@ export const MatCorralDetail = () => {
                      <ListItem
                         icon="exit-outline"
                         label="Salida"
-                        onPress={() => {
-                           drawer.hide();
-                           setTimeout(() => setDlgSalidaMotivo(true), 120);
-                        }}
+                        onPress={() => drawer.hide(() => setDlgSalidaMotivo(true))}
                      />
                   </ListGroup>
                ) : (
@@ -1310,18 +1229,13 @@ export const MatCorralDetail = () => {
                      <ListItem
                         icon="arrow-forward-outline"
                         label="Siguiente paso"
-                        onPress={() => {
-                           drawer.hide();
-                           setTimeout(() => setDlgNextStep(true), 120);
-                        }}
+                        onPress={() => drawer.hide(() => setDlgNextStep(true))}
                      />
                   </ListGroup>
                )}
 
-               {/* Separador visual amplio */}
                <View style={{ height: 1, backgroundColor: CARD_BORDER, marginVertical: 12 }} />
 
-               {/* Sección: Acciones */}
                <SectionTitle icon="options-outline" title="Acciones" />
 
                <ListGroup>
@@ -1339,9 +1253,7 @@ export const MatCorralDetail = () => {
                   <Divider />
                   <ListItem icon="home-outline" label="Salida maternidad" onPress={() => openAction('salidaMaternidad')} disabled={!hasAnimal} />
                </ListGroup>
-
             </Animated.View>
-
          </Modal>
 
          {/* Diálogos */}
@@ -1400,8 +1312,9 @@ export const MatCorralDetail = () => {
          />
 
          {/* Paso: Elegir “destete” o “salida” */}
+         {/* ✅ Guardia para no mostrar si el drawer aún está abierto */}
          <NextStepModal
-            visible={dlgNextStep}
+            visible={!drawer.open && dlgNextStep}
             onClose={() => setDlgNextStep(false)}
             onPasarDestete={onPasarDestete}
             onSalida={onSalida}
@@ -1429,7 +1342,6 @@ export const MatCorralDetail = () => {
                cb && cb();
             }}
          />
-
       </View>
    );
 };
