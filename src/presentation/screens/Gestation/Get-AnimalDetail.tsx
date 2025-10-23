@@ -936,7 +936,7 @@ export const GetAnimalDetail = () => {
                         </View>
                     )}
 
-                    {/* —— Vacío vs Con animal —— */}
+                    {/* —— Vacío vs Con animal — */}
                     {!hasAnimal ? (
                         <EmptyCorralCard
                             corralId={corralId}
