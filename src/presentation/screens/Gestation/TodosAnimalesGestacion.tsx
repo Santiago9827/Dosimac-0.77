@@ -72,7 +72,7 @@ export default function TodosAnimalesGestacion() {
             deviceError: false, diasSinAlimentar: false, statusMessage: '',
         };
 
-        navigation.navigate('GET-ANIMAL-DETAIL', {   // 👈 usa el mismo nombre de la ruta del Stack
+        navigation.navigate('GET-ANIMAL-DETAIL', {
             corralId: Number(item.corral) || item.corral,
             mockData,
             deviceError: mockData.deviceError,
