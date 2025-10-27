@@ -174,11 +174,35 @@ export const GestationScreen = () => {
                   action
                   onPress={() => navigation.navigate('GES-TODOS')}
                 />
-                <LinkRow label="Ver corrales" icon="grid-outline" onPress={() => navigation.navigate('GES-CORRALPC' as never)} />
               </View>
             </View>
           </View>
         </View>
+        {/* —— Ver corrales (suelto entre bloque 1 y bloque 2) —— */}
+        <View className="px-5 mb-4">
+          <Pressable
+            onPress={() => navigation.navigate('GES-CORRALPC' as never)}
+            android_ripple={{ color: '#e5e7eb' }}
+            style={{
+              backgroundColor: CARD_BG,
+              borderColor: CARD_BORDER,
+              borderWidth: 1,
+              borderRadius: 16,
+              paddingVertical: 12,
+              paddingHorizontal: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              ...SHADOW,
+            }}
+          >
+            <Ionicons name="grid-outline" size={18} color={BRAND} />
+            <Text style={{ marginLeft: 8, color: BRAND, fontWeight: '800', flex: 1 }}>
+              Ver corrales
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+          </Pressable>
+        </View>
+
 
         {/* Incidencias ocupa el resto */}
         <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasGestacion.length} />
@@ -204,7 +228,7 @@ export const GestationScreen = () => {
         <View className="px-5" style={{ paddingBottom: 8 }}>
           <View style={{ flexDirection: 'row', gap: 12, paddingTop: 6 }}>
             <TouchableOpacity
-              onPress={() => navigation.navigate('GES-CORRALPC' as never)}
+              onPress={() => navigation.navigate('GES-CORRAL-LOOKUP' as never)}
               activeOpacity={0.9}
               style={{
                 flex: 1, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
@@ -212,10 +236,10 @@ export const GestationScreen = () => {
                 shadowOffset: { width: 0, height: 3 }, elevation: 2
               }}
             >
-              <Text className="text-white font-semibold">Ir al Corral</Text>
+              <Text className="text-white font-semibold">Buscar Corral</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => navigation.navigate('GES-CORRALPC' as never)}
               activeOpacity={0.9}
               style={{
@@ -225,7 +249,7 @@ export const GestationScreen = () => {
               }}
             >
               <Text className="text-white font-semibold">Operaciones</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
       </View>

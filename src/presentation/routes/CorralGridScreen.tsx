@@ -216,8 +216,12 @@ export default function CorralGridScreen() {
             activeOpacity={0.9}
             onPress={() => goToCorral(item.corral)}
             style={{
-                flex: 1, borderWidth: 1, borderColor: CARD_BORDER, backgroundColor: CARD_BG, borderRadius: 16,
-                padding: 14, marginBottom: CARD_GAP, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 8,
+                flex: 1, borderWidth: 1,
+                borderColor: CARD_BORDER,
+                backgroundColor: CARD_BG,
+                borderRadius: 16,
+                padding: 14, marginBottom: CARD_GAP,
+                shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 8,
                 shadowOffset: { width: 0, height: 3 }, elevation: 1,
             }}
         >
@@ -474,10 +478,10 @@ export default function CorralGridScreen() {
                 <FlatList
                     data={filtered}
                     keyExtractor={(it) => it.corral}
-                    numColumns={2}
+                    numColumns={1}
                     renderItem={renderCard}
                     contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 }}
-                    columnWrapperStyle={{ gap: CARD_GAP }}
+                    // columnWrapperStyle={{ gap: CARD_GAP }}
                     showsVerticalScrollIndicator={false}
                     ListEmptyComponent={() => (
                         <View style={{ paddingVertical: 24, alignItems: 'center' }}>

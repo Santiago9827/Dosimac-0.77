@@ -10,6 +10,7 @@ import { HamburgerMenu } from '../components/shared/HamburgerMenu';
 import TodosAnimalesGestacion from '../screens/Gestation/TodosAnimalesGestacion';
 // GestationStackNavigator.tsx
 import { GetAnimalDetail } from '../screens/Gestation/Get-AnimalDetail';
+import GesCorralScreen from '../screens/Gestation/GesCorralScreen';
 
 export type GestationStackParamList = {
     'GES-HOME': undefined;
@@ -26,6 +27,7 @@ export type GestationStackParamList = {
         diasSinAlimentar?: boolean;
         statusMessage?: string;
     };
+    'GES-CORRAL-LOOKUP': undefined;
 
 };
 
@@ -80,6 +82,9 @@ export const GestationStackNavigator = () => {
                     headerStyle: { elevation: 5 },
                 })}
             />
+
+            <Stack.Screen name="GES-CORRAL-LOOKUP" component={GesCorralScreen} options={{ title: 'Ir al corral' }} />
+
 
 
 
