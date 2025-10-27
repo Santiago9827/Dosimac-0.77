@@ -28,7 +28,69 @@ const useRightDrawer = () => {
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
 
-// fuera del componente
+function QuickAnimalCard({
+    crotal, id, subEstado, dia, consumoActual, consumoObjetivo,
+}: {
+    crotal?: string; id?: string | number; subEstado?: string; dia?: number | string;
+    consumoActual?: number; consumoObjetivo?: number;
+}) {
+    const pct = consumoObjetivo ? Math.min(100, Math.round((consumoActual ?? 0) * 100 / consumoObjetivo)) : 0;
+    return (
+        <View style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: CARD_BORDER,
+            padding: 12,
+            marginTop: 8,
+            marginBottom: 12,
+            shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 6 }, elevation: 6,
+        }}>
+            {/* Top row: icon + crotal/ID + chips */}
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{
+                    width: 32, height: 32, borderRadius: 16, backgroundColor: '#EEF2FF',
+                    alignItems: 'center', justifyContent: 'center', marginRight: 10,
+                }}>
+                    <Icon name="paw-outline" size={18} color={BRAND} />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#0f172a', fontWeight: '900' }}>{crotal || '—'}</Text>
+                    {!!id && <Text style={{ color: '#64748B', fontWeight: '600', fontSize: 12 }}>ID {id}</Text>}
+                </View>
+
+                {/* chips */}
+                {!!subEstado && (
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <View style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#F1F5F9', borderRadius: 999, borderWidth: 1, borderColor: CARD_BORDER }}>
+                            <Text style={{ color: '#0f172a', fontWeight: '800', fontSize: 12 }}>{subEstado}</Text>
+                        </View>
+                        {!!dia && (
+                            <View style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#EEF2FF', borderRadius: 999, borderWidth: 1, borderColor: '#C7D2FE' }}>
+                                <Text style={{ color: BRAND, fontWeight: '800', fontSize: 12 }}>Día {dia}</Text>
+                            </View>
+                        )}
+                    </View>
+                )}
+            </View>
+
+            {/* Barra de consumo opcional */}
+            {typeof consumoActual === 'number' && typeof consumoObjetivo === 'number' && (
+                <View style={{ marginTop: 10 }}>
+                    <View style={{ height: 8, borderRadius: 999, backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
+                        <View style={{ width: `${pct}%`, height: 8, borderRadius: 999, backgroundColor: BRAND }} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+                        <Text style={{ color: '#64748B', fontWeight: '700', fontSize: 12 }}>
+                            {consumoActual?.toLocaleString('es-ES')} / {consumoObjetivo?.toLocaleString('es-ES')} gr
+                        </Text>
+                        <Text style={{ color: '#64748B', fontWeight: '700', fontSize: 12 }}>{pct}%</Text>
+                    </View>
+                </View>
+            )}
+        </View>
+    );
+}
 
 
 function RadioDialog({
@@ -1230,8 +1292,20 @@ export const GetAnimalDetail = () => {
             </View>
 
             {/* Drawer lateral derecho */}
-            <Modal visible={drawer.open} transparent animationType="none" onRequestClose={drawer.hide}>
-                <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' }} onPress={drawer.hide} />
+            <Modal
+                visible={drawer.open}
+                transparent
+                animationType="none"               // nada de slide nativo
+                presentationStyle="overFullScreen" // iOS: evita pageSheet desde abajo
+                statusBarTranslucent               // Android: overlay hasta el status bar
+                onRequestClose={drawer.hide}
+            >
+                <Pressable
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' }}
+                    onPress={drawer.hide}
+                />
+
+                {/* Drawer lateral derecho */}
                 <Animated.View
                     style={{
                         position: 'absolute',
@@ -1244,7 +1318,7 @@ export const GetAnimalDetail = () => {
                         paddingHorizontal: 12,
                         borderTopLeftRadius: 16,
                         borderBottomLeftRadius: 16,
-                        transform: [{ translateX: drawer.tx }],
+                        transform: [{ translateX: drawer.tx }], // 👈 entra/sale por X
                         elevation: 12,
                         shadowColor: '#000',
                         shadowOpacity: 0.18,
@@ -1254,11 +1328,10 @@ export const GetAnimalDetail = () => {
                 >
                     <DrawerGrabber />
 
-                    {/* Sección: Siguiente operación */}
                     <SectionTitle
-                        icon="arrow-forward-circle-outline"
-                        title="Siguiente operación"
-                        subtitle="Elige la siguiente acción para este animal"
+                        icon="construct-outline"
+                        title="Gestión del corral"
+                        subtitle={!hasAnimal ? 'Añade un animal a este corral' : 'Acciones disponibles'}
                     />
 
                     {!hasAnimal ? (
@@ -1272,58 +1345,18 @@ export const GetAnimalDetail = () => {
                                 }}
                             />
                         </ListGroup>
-                    ) : sub === 'PREPARTO' ? (
-                        <ListGroup>
-                            <ListItem
-                                icon="medkit-outline"
-                                label="Pasar a lactancia"
-                                onPress={() => {
-                                    drawer.hide();
-                                    setTimeout(() => setDlgLactancia(true), 120);
-                                }}
-                            />
-                        </ListGroup>
-                    ) : sub === 'LACTANCIA' ? (
-                        <ListGroup>
-                            <ListItem
-                                icon="flag-outline"                  // hito/siguiente fase
-                                label="Siguiente paso"
-                                onPress={() => {
-                                    drawer.hide();
-                                    setTimeout(() => setDlgNextStep(true), 120);
-                                }}
-                            />
-                        </ListGroup>
-                    ) : sub === 'DESTETE' ? (
-                        <ListGroup>
-                            <ListItem
-                                icon="exit-outline"
-                                label="Salida"
-                                onPress={() => {
-                                    drawer.hide();
-                                    setTimeout(() => setDlgSalidaMotivo(true), 120);
-                                }}
-                            />
-                        </ListGroup>
                     ) : (
-                        <ListGroup>
-                            <ListItem
-                                icon="arrow-forward-outline"
-                                label="Siguiente paso"
-                                onPress={() => {
-                                    drawer.hide();
-                                    setTimeout(() => setDlgNextStep(true), 120);
-                                }}
-                            />
-                        </ListGroup>
+                        <QuickAnimalCard
+                            crotal={animal?.crotal}
+                            id={animal?.id}
+                            subEstado={(animalState.subEstado || '').toUpperCase()}
+                            dia={animal?.dia}
+                            consumoActual={animal?.consumo?.actual}
+                            consumoObjetivo={animal?.consumo?.objetivo}
+                        />
                     )}
 
-                    {/* Separador visual amplio */}
-                    <View style={{ height: 1, backgroundColor: CARD_BORDER, marginVertical: 12 }} />
-
-                    {/* Sección: Acciones */}
                     <SectionTitle icon="options-outline" title="Acciones" />
-
                     <ListGroup>
                         <ListItem icon="pulse-outline" label="Curva" onPress={() => openAction('curva')} disabled={!hasAnimal} />
                         <Divider />
@@ -1339,10 +1372,11 @@ export const GetAnimalDetail = () => {
                         <Divider />
                         <ListItem icon="home-outline" label="Salida maternidad" onPress={() => openAction('salidaMaternidad')} disabled={!hasAnimal} />
                     </ListGroup>
-
                 </Animated.View>
-
             </Modal>
+
+
+
 
             {/* Diálogos */}
             <RadioDialog
