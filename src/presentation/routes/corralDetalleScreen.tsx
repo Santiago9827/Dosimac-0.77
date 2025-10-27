@@ -10,6 +10,19 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Dimensions, Alert } from 'react-native';
 
+import { Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const useRightDrawer = () => {
+    const w = Math.min(340, Math.round(Dimensions.get('window').width * 0.88));
+    const [open, setOpen] = useState(false);
+    const tx = useRef(new Animated.Value(w)).current;
+    const show = () => { setOpen(true); Animated.timing(tx, { toValue: 0, duration: 240, useNativeDriver: true }).start(); };
+    const hide = () => { Animated.timing(tx, { toValue: w, duration: 220, useNativeDriver: true }).start(({ finished }) => finished && setOpen(false)); };
+    return { open, show, hide, tx, width: w };
+};
+
+
 
 // Animaciones Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -81,6 +94,8 @@ export default function CorralDetalleScreen() {
     const route = useRoute<any>();
     const navigation = useNavigation<NavigationProp<any>>();
     const listRef = useRef<FlatList<RenderAnimal>>(null);
+    const insets = useSafeAreaInsets();
+    const drawer = useRightDrawer();
 
     const corral: string = route.params?.corral ?? '—';
     const animals: Animal[] = route.params?.animals ?? [];
@@ -286,7 +301,7 @@ export default function CorralDetalleScreen() {
                 data={dataSorted}
                 keyExtractor={(item) => `${corral}-${item._idx}`}
                 removeClippedSubviews={false}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 + insets.bottom + 72 }}
                 renderItem={({ item }) => {
                     const p = pct(item);
                     const displayId = item.id ?? item._idx + 1;
@@ -519,6 +534,117 @@ export default function CorralDetalleScreen() {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+            {/* FAB Operaciones (siempre visible) */}
+            <TouchableOpacity
+                onPress={drawer.show}
+                activeOpacity={0.9}
+                style={{
+                    position: 'absolute',
+                    right: 16,
+                    bottom: 16 + insets.bottom,
+                    height: 52,
+                    borderRadius: 26,
+                    paddingHorizontal: 16,
+                    backgroundColor: '#4F46E5',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    shadowColor: '#000',
+                    shadowOpacity: 0.18,
+                    shadowRadius: 10,
+                    shadowOffset: { width: 0, height: 6 },
+                    elevation: 8,
+                }}
+            >
+                <Ionicons name="construct-outline" size={20} color="#fff" />
+                <Text style={{ color: '#fff', fontWeight: '800', marginLeft: 8 }}>Operaciones</Text>
+            </TouchableOpacity>
+            {/* Drawer lateral derecho */}
+            <Modal
+                visible={drawer.open}
+                transparent
+                animationType="none"
+                presentationStyle="overFullScreen"
+                statusBarTranslucent
+                onRequestClose={drawer.hide}
+            >
+                {/* Overlay */}
+                <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' }}
+                    activeOpacity={1}
+                    onPress={drawer.hide}
+                />
+
+                {/* Panel derecho (SOLO cambia este style) */}
+                <Animated.View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
+                        right: 0,
+                        width: drawer.width,
+                        backgroundColor: '#fff',
+                        paddingTop: Math.max(24, insets.top + 16),
+                        paddingHorizontal: 12,
+                        borderTopLeftRadius: 16,
+                        borderBottomLeftRadius: 16,
+                        transform: [{ translateX: drawer.tx }],
+                        elevation: 12,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.18,
+                        shadowRadius: 12,
+                        shadowOffset: { width: 0, height: 6 },
+                    }}
+                >
+
+                    {/* “grabber” */}
+                    <View style={{ alignItems: 'center', marginBottom: 8 }}>
+                        <View style={{ width: 42, height: 4, borderRadius: 999, backgroundColor: '#CBD5E1' }} />
+                    </View>
+
+                    {/* Título */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingHorizontal: 4 }}>
+                        <Ionicons name="construct-outline" size={18} color="#4F46E5" />
+                        <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '900', fontSize: 16 }}>
+                            Operaciones · Corral {corral}
+                        </Text>
+                    </View>
+
+                    {/* Lista de acciones */}
+                    <View style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, overflow: 'hidden', backgroundColor: '#fff' }}>
+                        <TouchableOpacity
+                            onPress={() => { drawer.hide(); /* acción 1 */ }}
+                            style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 }}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="add-circle-outline" size={18} color="#0f172a" />
+                            <Text style={{ marginLeft: 10, color: '#0f172a', fontWeight: '700' }}>Introducir animal</Text>
+                        </TouchableOpacity>
+
+                        <View style={{ height: 1, backgroundColor: '#E2E8F0' }} />
+
+                        <TouchableOpacity
+                            onPress={() => { drawer.hide(); /* acción 2 */ }}
+                            style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 }}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="swap-horizontal-outline" size={18} color="#0f172a" />
+                            <Text style={{ marginLeft: 10, color: '#0f172a', fontWeight: '700' }}>Mover a otro corral</Text>
+                        </TouchableOpacity>
+
+                        <View style={{ height: 1, backgroundColor: '#E2E8F0' }} />
+
+                        <TouchableOpacity
+                            onPress={() => { drawer.hide(); /* acción 3 */ }}
+                            style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 }}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="exit-outline" size={18} color="#0f172a" />
+                            <Text style={{ marginLeft: 10, color: '#0f172a', fontWeight: '700' }}>Salida de corral</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Animated.View>
+            </Modal>
+        </SafeAreaView >
     );
 }
