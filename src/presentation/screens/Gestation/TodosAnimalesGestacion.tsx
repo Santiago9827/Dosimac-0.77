@@ -72,7 +72,7 @@ export default function TodosAnimalesGestacion() {
             deviceError: false, diasSinAlimentar: false, statusMessage: '',
         };
 
-        navigation.navigate('MAT-CORRALDETAIL', {
+        navigation.navigate('GET-ANIMAL-DETAIL', {   // 👈 usa el mismo nombre de la ruta del Stack
             corralId: Number(item.corral) || item.corral,
             mockData,
             deviceError: mockData.deviceError,
@@ -80,6 +80,7 @@ export default function TodosAnimalesGestacion() {
             statusMessage: mockData.statusMessage,
         });
     };
+
 
     const Item = ({ item }: { item: Animal }) => (
         <TouchableOpacity activeOpacity={0.85} onPress={() => openAnimal(item)}>
