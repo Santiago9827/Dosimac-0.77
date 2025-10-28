@@ -17,8 +17,8 @@ export const MaintenaceStackNavigator = () => (
    <MaintenanceStack.Navigator screenOptions={{ headerShown: false }}>
       <MaintenanceStack.Screen name="Maintenace" component={MaintenanceScreen} />
       <MaintenanceStack.Screen name="View State" component={StateViewScreen} />
-      <MaintenanceStack.Screen name="AWR-STARTSCAN" component={AWRStartScanningScreen} />
-      <MaintenanceStack.Screen name="AWR-SCANRESULTS" component={AWRScanResultsScreen} />
+      {/* <MaintenanceStack.Screen name="AWR-STARTSCAN" component={AWRStartScanningScreen} /> */}
+      {/* <MaintenanceStack.Screen name="AWR-SCANRESULTS" component={AWRScanResultsScreen} /> */}
       <MaintenanceStack.Screen name="AWR-READ" component={AWRReadScreen} />
    </MaintenanceStack.Navigator>
 );

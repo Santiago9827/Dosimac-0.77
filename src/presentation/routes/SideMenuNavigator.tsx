@@ -26,6 +26,9 @@ import NoAlimentadosScreenMaternidad from './NoAlimentadosScreenMaternidad';
 
 import { createStackNavigator } from '@react-navigation/stack';
 import { AnimalSearchNavigator } from './AnimalSearchNavigator';
+import { AWRFlowStackNavigator } from './AWRFlowStackNavigator';
+
+
 
 
 // 👇 Ajusta la ruta según tu proyecto
@@ -105,6 +108,15 @@ export const SideMenuNavigator = () => {
         options={{ drawerIcon: ({ color }) => <IonIcon name="document-text-outline" color={color} />, title: t('common:Lista_instalaciones') }}
       />
 
+      <Drawer.Screen
+        name="AWR-STARTSCAN"
+        component={AWRFlowStackNavigator}
+        options={{
+          drawerIcon: ({ color }) => <IonIcon name="search-outline" color={color} />,
+          title: 'Dar de Alta AWR',
+        }}
+      />
+
       {/* Ajustes (oculto en el Drawer) */}
       <Drawer.Screen
         name="Settings"
@@ -154,6 +166,7 @@ export const SideMenuNavigator = () => {
           title: 'Buscar animal',
         }}
       />
+
 
 
 

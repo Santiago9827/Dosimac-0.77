@@ -7,10 +7,10 @@ import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { IonIcon } from '../components/shared/IonIcon';
 import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
 import { MaternityStackNavigator } from './Mat-StackNavigator';
-import { GestationStackNavigator } from './GestationStackNavigator';
 import { CTIFeedScreen } from '../screens/HomeScreen/CTIFeedScreen';
 import { globalColors } from '../theme/theme';
 import { isDebugMode } from '../../sharedTypes/globlaVars';
+import { GestationStackNavigator } from './GestationStackNavigator';
 
 const Tab = createBottomTabNavigator();
 

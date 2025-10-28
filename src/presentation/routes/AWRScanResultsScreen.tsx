@@ -17,20 +17,24 @@ export const AWRScanResultsScreen = ({ navigation }) => {
     const [scanning, setScanning] = useState(true);
     const [startState, setStartState] = useState(0);
     const [hasDevices, setHasDevices] = useState(false);
+
+    // Dialog “no devices”
     const [visible, setVisible] = useState(true);
 
     const [connecting, setConnecting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string>('');
+
+    // ✅ NUEVO: Dialog de éxito (solo botón Aceptar)
+    const [successVisible, setSuccessVisible] = useState(false);
+    const [connectedLabel, setConnectedLabel] = useState<string>('');
+
     const upsert = awrStore(s => s.upsert);
     const { connect, startReading } = useAwrConn();
-
-
 
     const handleNoDevicesAccept = () => {
         setVisible(false);
         try { ble.stopScanning(); } catch { }
         if (navigation.canGoBack()) navigation.goBack();
-
         else navigation.navigate('AWR-STARTSCAN' as never);
     };
 
@@ -158,7 +162,7 @@ export const AWRScanResultsScreen = ({ navigation }) => {
         }
     };
 
-    // == Conectar y navegar ==
+    // == Conectar y mostrar POPUP (sin ir a AWR-READ)
     const connectAndGo = async (device: BlePeripheral) => {
         setErrorMsg('');
         setConnecting(true);
@@ -166,25 +170,35 @@ export const AWRScanResultsScreen = ({ navigation }) => {
             await ble.bleConnection(device.id);
 
             // GUARDAR EN STORE
+            const label = labelFor(device);
             upsert({
                 id: device.id,
-                label: labelFor(device),
+                label,
                 localName: getLocalName(device),
                 lastSeen: Date.now(),
             });
+
             await connect(device.id);
             await startReading();
-            navigation.push('AWR-READ' as never, { id: device.id, label: labelFor(device) } as never);
+
+            // ✅ Mostrar diálogo de éxito (único botón Aceptar)
+            try { ble.stopScanning(); } catch { }
+            setConnectedLabel(label);
+            setSuccessVisible(true);
         } catch (e: any) {
             const msg = String(e?.message || e);
             if (msg.toLowerCase().includes('already')) {
+                const label = labelFor(device);
                 upsert({
                     id: device.id,
-                    label: labelFor(device),
+                    label,
                     localName: getLocalName(device),
                     lastSeen: Date.now(),
                 });
-                navigation.push('AWR-READ' as never, { id: device.id, label: labelFor(device) } as never);
+
+                try { ble.stopScanning(); } catch { }
+                setConnectedLabel(label);
+                setSuccessVisible(true);
             } else {
                 setErrorMsg(msg || 'No se pudo conectar');
             }
@@ -192,6 +206,21 @@ export const AWRScanResultsScreen = ({ navigation }) => {
             setConnecting(false);
         }
     };
+
+    // ✅ Handler único para ir a Home (Tabs)
+    const handleSuccessAccept = () => {
+        setSuccessVisible(false);
+        try { ble.stopScanning(); } catch { }
+        const parentNav = navigation.getParent?.();
+        if (parentNav) {
+            parentNav.navigate('Tabs' as never);
+        } else {
+            navigation.navigate('Tabs' as never);
+        }
+        // Si prefieres limpiar historial:
+        // parentNav?.reset({ index: 0, routes: [{ name: 'Tabs' as never }] });
+    };
+
     // === UI ===
     const RenderIsScanning = () => (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -258,6 +287,22 @@ export const AWRScanResultsScreen = ({ navigation }) => {
                     <RenderDevicesNotFound />
                 )
             )}
+
+            {/* ✅ Dialog de éxito: solo botón Aceptar */}
+            <Portal>
+                <Dialog visible={successVisible} dismissable={false}>
+                    <Dialog.Icon icon="check-circle" color="green" size={60} />
+                    <Dialog.Title style={{ color: 'green' }}>Conectado</Dialog.Title>
+                    <Dialog.Content>
+                        <Text variant="bodyLarge">
+                            Conexión establecida con {connectedLabel || 'el dispositivo'}.
+                        </Text>
+                    </Dialog.Content>
+                    <Dialog.Actions>
+                        <Button onPress={handleSuccessAccept}>Aceptar</Button>
+                    </Dialog.Actions>
+                </Dialog>
+            </Portal>
         </View>
     );
 };

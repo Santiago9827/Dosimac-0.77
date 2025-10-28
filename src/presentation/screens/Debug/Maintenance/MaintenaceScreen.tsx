@@ -63,13 +63,13 @@ export const MaintenanceScreen = () => {
         </Pressable>
 
         {/* NUEVO: Botón de pruebas AWR300 */}
-        <Pressable
+        {/* <Pressable
           android_ripple={{ color: 'white' }}
           style={[styles.boton, { backgroundColor: '#4f46e5' }]} // índigo
           onPress={() => navigation.navigate('AWR-STARTSCAN' as never)}
         >
           <Text style={styles.texto}>Prueba AWR300</Text>
-        </Pressable>
+        </Pressable> */}
       </View>
     </View>
   );
