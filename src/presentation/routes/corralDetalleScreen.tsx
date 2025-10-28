@@ -354,9 +354,7 @@ export default function CorralDetalleScreen() {
                             onLongPress={() => enterSelectMode(key)} // 1s para alternar selección
                             delayLongPress={1000}
                             onPress={() => {
-                                // Si quieres, aquí navegas a detalle SOLO si no estás seleccionando
                                 if (!isSelecting) {
-                                    // navigation.navigate('AnimalDetalle', { ...item });
                                 }
                             }}
                             style={({ pressed }) => ([
@@ -378,31 +376,43 @@ export default function CorralDetalleScreen() {
                         >
                             {/* Fila: checkbox SIEMPRE visible + ID + Crotal + menú */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    {/* Checkbox SIEMPRE visible */}
-                                    <TouchableOpacity
-                                        onPress={() => toggleSelect(key)}
-                                        activeOpacity={0.8}
-                                        style={{ marginRight: 10 }}
+                                <TouchableOpacity
+                                    onPress={() => toggleSelect(key)}
+                                    activeOpacity={0.8}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingVertical: 10,
+                                        paddingRight: 8,
+                                        paddingLeft: 4,
+                                        borderRadius: 10,
+                                        marginLeft: -4,
+                                        flexShrink: 1,   // no empuja el lado derecho
+                                    }}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 12 }}
+                                    accessibilityRole="checkbox"
+                                    accessibilityState={{ checked: isSelected }}
+                                    accessibilityLabel={`Seleccionar ID ${String(displayId)}`}
+                                >
+                                    {/* checkbox */}
+                                    <View
+                                        style={{
+                                            width: 22, height: 22, borderRadius: 6,
+                                            borderWidth: isSelected ? 0 : 2,
+                                            borderColor: isSelected ? 'transparent' : '#CBD5E1',
+                                            backgroundColor: isSelected ? '#4F46E5' : 'transparent',
+                                            alignItems: 'center', justifyContent: 'center'
+                                        }}
                                     >
-                                        <View
-                                            style={{
-                                                width: 22, height: 22, borderRadius: 6,
-                                                borderWidth: isSelected ? 0 : 2,
-                                                borderColor: isSelected ? 'transparent' : '#CBD5E1',
-                                                backgroundColor: isSelected ? '#4F46E5' : 'transparent',
-                                                alignItems: 'center', justifyContent: 'center'
-                                            }}
-                                        >
-                                            {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
-                                        </View>
-                                    </TouchableOpacity>
+                                        {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
+                                    </View>
 
-                                    <Ionicons name="paw-outline" size={16} color="#0f172a" />
+                                    <Ionicons name="paw-outline" size={16} color="#0f172a" style={{ marginLeft: 10 }} />
                                     <Text style={{ marginLeft: 6, color: '#0f172a', fontWeight: '800', fontSize: 16 }}>
                                         ID {String(displayId)}
                                     </Text>
-                                </View>
+                                </TouchableOpacity>
+
 
                                 {/* Menú contextual desactivado si hay selección para evitar confusión */}
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
