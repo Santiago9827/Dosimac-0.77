@@ -113,3 +113,4 @@ cd android
 gradlew.bat clean
 gradlew.bat assembleRelease    (para APK)
 gradlew.bat bundleRelease      (para AAB)
+npx install-expo-modules@latest para ver si lo uso
