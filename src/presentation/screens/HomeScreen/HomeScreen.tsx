@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   useWindowDimensions,
+  FlatList
 } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -52,10 +53,13 @@ export const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const insets = useSafeAreaInsets();
 
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isMd = width >= 768;
   const isLg = width >= 1024;
   const pagePX = isLg ? 48 : isMd ? 24 : 16;
+  const incHeight = !isMd
+    ? Math.round(Math.max(260, Math.min(420, height * 0.38))) // alto del bloque en móvil
+    : undefined;
 
   // —— Datos demo —— 
   const maternidad = { alimentados: 180, noAlimentados: 20 };
@@ -292,6 +296,7 @@ export const HomeScreen = () => {
 
       <ScrollView
         style={{ flex: 1 }}
+        nestedScrollEnabled
         contentContainerStyle={{
           paddingHorizontal: pagePX,
           paddingTop: 16,
@@ -343,24 +348,52 @@ export const HomeScreen = () => {
         </View>
 
         {/* ——— Incidencias ——— */}
+        {/* ——— Incidencias ——— */}
         <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidencias.length} />
 
-        <View
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            rowGap: 8,
-            columnGap: 8,
-            marginBottom: 16,
-          }}
-        >
-          {incidencias.map((it) => (
-            <View key={String(it.id)} style={{ flexBasis: gridCol, maxWidth: gridCol }}>
-              {renderIncidenciaCard(it)}
-            </View>
-          ))}
-        </View>
+        {!isMd ? (
+          // ===== MÓVIL: bloque con scroll propio =====
+          <View
+            style={{
+              borderWidth: 1,
+              borderRadius: 16,
+              borderColor: CARD_BORDER,
+              backgroundColor: CARD_BG,
+              ...SHADOW,
+              maxHeight: incHeight,         // 👈 limita altura y activa scroll interno
+              marginBottom: 16,
+            }}
+          >
+            <FlatList<Incidencia>
+              data={incidencias}
+              keyExtractor={(i) => String(i.id)}
+              renderItem={({ item }) => renderIncidenciaCard(item)}
+              ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+              contentContainerStyle={{ padding: 12 }}
+              showsVerticalScrollIndicator
+              nestedScrollEnabled
+            />
+          </View>
+        ) : (
+          // ===== TABLET/ESCRITORIO: grid como ya te gustaba =====
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              rowGap: 8,
+              columnGap: 8,
+              marginBottom: 16,
+            }}
+          >
+            {incidencias.map((it) => (
+              <View key={String(it.id)} style={{ flexBasis: gridCol, maxWidth: gridCol }}>
+                {renderIncidenciaCard(it)}
+              </View>
+            ))}
+          </View>
+        )}
+
 
         {/* CTA inferior */}
         <TouchableOpacity
