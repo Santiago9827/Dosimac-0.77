@@ -14,6 +14,8 @@ import {
     Alert,
     Dimensions,
     findNodeHandle,
+    FlatList,
+    useWindowDimensions,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -45,7 +47,7 @@ const DoneCircle = ({ done, onPress }: { done?: boolean; onPress: () => void }) 
 const TaskCard = ({
     tarea,
     onToggleDone,
-    onMore, // <- abre menú anclado
+    onMore,
 }: {
     tarea: Tarea;
     onToggleDone: (id: Tarea['id']) => void;
@@ -54,8 +56,6 @@ const TaskCard = ({
     const kebabRef = useRef<View>(null);
 
     const openAnchoredMenu = () => {
-        const node = findNodeHandle(kebabRef.current);
-        // medir posición absoluta del botón ⋮ en la ventana
         kebabRef.current?.measureInWindow((x, y, width, height) => {
             onMore(tarea, { x, y, width, height });
         });
@@ -63,7 +63,7 @@ const TaskCard = ({
 
     return (
         <Pressable
-            onLongPress={openAnchoredMenu} // atajo: long press abre menú
+            onLongPress={openAnchoredMenu}
             className="bg-white rounded-2xl border border-slate-200 mb-4 shadow-sm overflow-hidden"
             android_ripple={{ color: '#f1f5f9' }}
         >
@@ -81,16 +81,26 @@ const TaskCard = ({
                         </View>
                         <DoneCircle done={tarea.done} onPress={() => onToggleDone(tarea.id)} />
 
-                        {/* Botón ⋮ (ancla del menú) */}
+                        {/* ⋮ ancla del menú */}
                         <Pressable
-                            ref={kebabRef}
-                            onPress={openAnchoredMenu}
-                            className="ml-2 w-8 h-8 rounded-full items-center justify-center"
-                            android_ripple={{ color: '#e5e7eb' }}
+                            onLongPress={openAnchoredMenu}
+                            android_ripple={{ color: '#f1f5f9' }}
+                            style={{
+                                flex: 1,                        // 👈 llena el ancho de su columna
+                                backgroundColor: '#fff',
+                                borderRadius: 16,
+                                borderWidth: 1,
+                                borderColor: '#E2E8F0',
+                                marginBottom: 16,
+                                shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8,
+                                shadowOffset: { width: 0, height: 3 }, elevation: 1,
+                            }}
                         >
-                            {/* //tamaño de los  3 puntos */}
-                            <Ionicons name="ellipsis-vertical" size={22} color="#64748b" />
+                            <View style={{ padding: 16 }}>
+                                <View style={{ height: 1, backgroundColor: '#E2E8F0', marginVertical: 12 }} />
+                            </View>
                         </Pressable>
+
                     </View>
                 </View>
 
@@ -118,7 +128,7 @@ const TaskCard = ({
 };
 
 export default function TareasProgramadasScreen() {
-    // Habilitar LayoutAnimation en Android
+    // LayoutAnimation en Android
     useEffect(() => {
         if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
             UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -137,7 +147,7 @@ export default function TareasProgramadasScreen() {
         return [...pendientes, ...hechas];
     }, [tareas]);
 
-    // --- Crear / Editar ---
+    // --- Crear / editar ---
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<Tarea['id'] | null>(null);
     const [form, setForm] = useState<{ corral: string; asignadoA: string; descripcion: string }>({
@@ -159,7 +169,6 @@ export default function TareasProgramadasScreen() {
     };
     const closeAnchoredMenu = () => setMenuVisible(false);
 
-    // Crear
     const openCreate = () => {
         setEditingId(null);
         setForm({ corral: '', asignadoA: '', descripcion: '' });
@@ -167,7 +176,6 @@ export default function TareasProgramadasScreen() {
         setShowForm(true);
     };
 
-    // Editar
     const openEdit = (t: Tarea) => {
         setEditingId(t.id);
         setForm({ corral: t.corral, asignadoA: t.asignadoA, descripcion: t.descripcion });
@@ -175,7 +183,6 @@ export default function TareasProgramadasScreen() {
         setShowForm(true);
     };
 
-    // Eliminar
     const confirmDelete = (id: Tarea['id']) => {
         Alert.alert('Eliminar tarea', '¿Seguro que quieres eliminar esta tarea?', [
             { text: 'Cancelar', style: 'cancel' },
@@ -200,7 +207,6 @@ export default function TareasProgramadasScreen() {
 
     const handleSave = () => {
         if (!validate()) return;
-
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
         if (editingId != null) {
@@ -233,16 +239,33 @@ export default function TareasProgramadasScreen() {
 
     const saveDisabled = !form.corral.trim() || !form.descripcion.trim();
 
-    // ---- Render ----
+    const { width, height } = useWindowDimensions();
+    const isMd = width >= 768;
+    const isLg = width >= 1024;
+    const listMaxHeight = !isMd ? Math.round(Math.max(320, Math.min(560, height * 0.55))) : undefined;
+    const numCols = isLg ? 2 : 1;
+
     const MENU_W = 200;
     const SCREEN_W = Dimensions.get('window').width;
     const PADDING = 8;
 
-    // calcular posición del popover (alineado al borde derecho del botón)
     const menuLeft = anchor
         ? Math.max(PADDING, Math.min(anchor.x + anchor.width - MENU_W, SCREEN_W - MENU_W - PADDING))
         : 0;
     const menuTop = anchor ? anchor.y + anchor.height + 6 : 0;
+    const renderItem = ({ item }: { item: Tarea }) => (
+        <View style={{ flex: 1, minWidth: 0, padding: 8 }}>
+            <TaskCard
+                tarea={item}
+                onToggleDone={(id) => {
+                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                    setTareas(prev => prev.map(tt => (tt.id === id ? { ...tt, done: !tt.done } : tt)));
+                }}
+                onMore={openAnchoredMenu}
+            />
+        </View>
+    );
+
 
     return (
         <View className="flex-1 bg-slate-50">
@@ -256,39 +279,84 @@ export default function TareasProgramadasScreen() {
                     </View>
                 </View>
 
-                {/* Botón + (crear) */}
+                {/* Crear */}
                 <Pressable
                     onPress={openCreate}
                     accessibilityLabel="Crear nueva tarea"
-                    className="w-9 h-9 rounded-full items-center justify-center"
                     android_ripple={{ color: '#c7d2fe' }}
                     style={{
+                        width: 36, height: 36, borderRadius: 18,
+                        alignItems: 'center', justifyContent: 'center',
                         backgroundColor: '#4F46E5',
-                        shadowColor: '#000',
-                        shadowOpacity: 0.12,
-                        shadowRadius: 6,
-                        shadowOffset: { width: 0, height: 3 },
-                        elevation: 3,
+                        shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 6,
+                        shadowOffset: { width: 0, height: 3 }, elevation: 3,
                     }}
                 >
                     <Ionicons name="add" size={20} color="#fff" />
                 </Pressable>
+
             </View>
 
-            {/* Lista */}
-            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 96 }}>
-                {sortedTareas.map(t => (
-                    <TaskCard key={t.id} tarea={t} onToggleDone={(id) => {
-                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                        setTareas(prev => prev.map(tt => (tt.id === id ? { ...tt, done: !tt.done } : tt)));
-                    }} onMore={openAnchoredMenu} />
-                ))}
-            </ScrollView>
+            {/* ===== Lista ===== */}
+            {/** MÓVIL: tarjeta con scroll propio para no alargar la pantalla */}
+            {!isMd ? (
+                <View
+                    style={{
+                        borderWidth: 1,
+                        borderRadius: 16,
+                        borderColor: '#E2E8F0',
+                        backgroundColor: '#fff',
+                        marginHorizontal: 20,
+                        marginTop: 8,
+                        marginBottom: 16,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.06,
+                        shadowRadius: 8,
+                        shadowOffset: { width: 0, height: 3 },
+                        elevation: 1,
+                        maxHeight: listMaxHeight, // 👈 activa scroll interno
+                    }}
+                >
+                    <FlatList
+                        data={sortedTareas}
+                        renderItem={renderItem}
+                        keyExtractor={(i) => String(i.id)}
+                        numColumns={isLg ? 2 : 1}
+                        contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 96 }}
+                        showsVerticalScrollIndicator
+                    />
+                </View>
+            ) : (
+                /** TABLET/ESCRITORIO: scroll normal; opcionalmente 2 columnas */
+                <FlatList
+                    data={sortedTareas}
+                    keyExtractor={(i) => String(i.id)}
+                    renderItem={({ item }) => (
+                        <TaskCard
+                            tarea={item}
+                            onToggleDone={(id) => {
+                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                setTareas(prev => prev.map(tt => (tt.id === id ? { ...tt, done: !tt.done } : tt)));
+                            }}
+                            onMore={openAnchoredMenu}
+                        />
+                    )}
+                    numColumns={numCols}
+                    columnWrapperStyle={numCols > 1 ? { gap: 16 } : undefined}
+                    contentContainerStyle={{
+                        paddingHorizontal: 20,
+                        paddingTop: 12,
+                        paddingBottom: 96,
+                        gap: 16,
+                    }}
+                    showsVerticalScrollIndicator
+                    keyboardShouldPersistTaps="handled"
+                />
+            )}
 
             {/* --------- Popover anclado a ⋮ --------- */}
             <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={closeAnchoredMenu}>
                 <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.08)' }} onPress={closeAnchoredMenu}>
-                    {/* Contenedor absoluto del popover */}
                     <View style={{ position: 'absolute', top: menuTop, left: menuLeft, width: MENU_W }}>
                         <View
                             className="rounded-xl overflow-hidden"
@@ -331,7 +399,7 @@ export default function TareasProgramadasScreen() {
                 </Pressable>
             </Modal>
 
-            {/* --------- Modal Crear/Editar (hoja inferior) --------- */}
+            {/* --------- Modal Crear/Editar --------- */}
             <Modal visible={showForm} transparent animationType="slide" onRequestClose={() => setShowForm(false)}>
                 <Pressable className="flex-1 bg-black/40" onPress={() => setShowForm(false)}>
                     <KeyboardAvoidingView
@@ -409,7 +477,9 @@ export default function TareasProgramadasScreen() {
                                         opacity: saveDisabled ? 0.9 : 1,
                                     }}
                                 >
-                                    <Text className="text-white font-semibold">{editingId != null ? 'Guardar cambios' : 'Guardar'}</Text>
+                                    <Text className="text-white font-semibold">
+                                        {editingId != null ? 'Guardar cambios' : 'Guardar'}
+                                    </Text>
                                 </Pressable>
                             </View>
                         </Pressable>
