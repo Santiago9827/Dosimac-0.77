@@ -3,7 +3,7 @@
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react'
 import { Pressable, Text } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from '@expo/vector-icons/Ionicons';
 import { globalColors } from '../../theme/theme';
 import { IonIcon } from './IonIcon';
 

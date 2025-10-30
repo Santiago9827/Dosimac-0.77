@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import React, { useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, Dimensions, StyleSheet } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 

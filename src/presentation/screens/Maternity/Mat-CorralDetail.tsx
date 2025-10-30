@@ -1,12 +1,16 @@
 import { View, Text, Image, ScrollView, TouchableOpacity, Modal, Pressable, Animated, Dimensions, TextInput } from 'react-native';
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { CerdoMaternidad } from '../../../assets';
-import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import { DrawerItem } from '@react-navigation/drawer';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import Icon from '@expo/vector-icons/Ionicons';
+import type { ComponentProps } from 'react';
+
+type IoniconName = ComponentProps<typeof Icon>['name'];
+
 
 const ipServer = 'http://192.168.1.238:3010';
 const corralInfoUrl = (id: number) => `${ipServer}/corral/${id}`;
@@ -556,7 +560,7 @@ function DrawerGrabber() {
 
 function SectionTitle({
    icon, title, subtitle,
-}: { icon: string; title: string; subtitle?: string }) {
+}: { icon: IoniconName; title: string; subtitle?: string }) {
    return (
       <View
          style={{
@@ -590,7 +594,7 @@ function SectionTitle({
 function ListItem({
    icon, label, onPress, disabled,
 }: {
-   icon?: string; label: string; onPress: () => void; disabled?: boolean;
+   icon?: IoniconName; label: string; onPress: () => void; disabled?: boolean;
 }) {
    return (
       <Pressable
@@ -603,7 +607,7 @@ function ListItem({
             paddingVertical: 12, paddingHorizontal: 12,
          }}
       >
-         {!!icon && <Icon name={icon} size={18} color={disabled ? '#94A3B8' : '#334155'} />}
+         {icon && <Icon name={icon} size={18} color={disabled ? '#94A3B8' : '#334155'} />}
          <Text style={{ marginLeft: icon ? 10 : 0, color: disabled ? '#94A3B8' : '#0F172A', fontWeight: '800', flex: 1 }}>
             {label}
          </Text>

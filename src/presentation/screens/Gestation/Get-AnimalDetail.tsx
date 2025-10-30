@@ -1,13 +1,17 @@
 import { View, Text, Image, ScrollView, TouchableOpacity, Modal, Pressable, Animated, Dimensions, TextInput } from 'react-native';
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { CerdoMaternidad } from '../../../assets';
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from '@expo/vector-icons/Ionicons';
 import axios from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import { DrawerItem } from '@react-navigation/drawer';
 // import { CorralMatInfo } from '../../../libraries/interfaces/corral-Info.interface'; // si la tienes, ok
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+
+import type { ComponentProps } from 'react';
+
+type IoniconName = ComponentProps<typeof Icon>['name'];
 
 
 const ipServer = 'http://192.168.1.238:3010';
@@ -630,7 +634,7 @@ function DrawerGrabber() {
 
 function SectionTitle({
     icon, title, subtitle,
-}: { icon: string; title: string; subtitle?: string }) {
+}: { icon: IoniconName; title: string; subtitle?: string }) {
     return (
         <View
             style={{
@@ -664,7 +668,7 @@ function SectionTitle({
 function ListItem({
     icon, label, onPress, disabled,
 }: {
-    icon?: string; label: string; onPress: () => void; disabled?: boolean;
+    icon?: IoniconName; label: string; onPress: () => void; disabled?: boolean;
 }) {
     return (
         <Pressable

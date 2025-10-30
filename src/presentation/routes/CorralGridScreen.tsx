@@ -4,7 +4,7 @@ import {
     View, Text, FlatList, TextInput, TouchableOpacity,
     LayoutAnimation, Platform, UIManager, ScrollView, StyleSheet
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 
 type Animal = { corral: string; total: number; consumida: number };

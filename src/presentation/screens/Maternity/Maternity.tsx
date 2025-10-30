@@ -2,7 +2,7 @@ import React from 'react'
 import { Pressable, StyleSheet, Text, View, Alert, ScrollView } from 'react-native';
 import { List, TextInput } from 'react-native-paper'
 // import { Divider } from 'react-native-paper'
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from '@expo/vector-icons/Ionicons';
 import { ListItem } from '../../components/shared/ListItem';
 import { useNavigation } from '@react-navigation/native';
 
@@ -13,15 +13,15 @@ import { useNavigation } from '@react-navigation/native';
 
 export const MaternityScreen = () => {
   const [corral, setCorral] = React.useState('');
-  const navigation=useNavigation();
+  const navigation = useNavigation();
 
-  
+
   const goAnimalNoFeed = () => {
-  
+
     navigation.navigate('MAT-ANINOFEED' as never)
     console.log('Pulsado**')
   }
-  
+
   return (
 
     // <ListItem icon='bookmark-outline' label='Hola mundo' value='4' onPress={()=>Alert.alert('He pulsado')}/>

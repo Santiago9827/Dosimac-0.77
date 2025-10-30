@@ -4,7 +4,7 @@ import {
     SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet,
     KeyboardAvoidingView, Platform, Modal, Pressable, Dimensions, ScrollView
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation, useRoute, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { useAwrConn } from '../../stores/awrConnStore';
 

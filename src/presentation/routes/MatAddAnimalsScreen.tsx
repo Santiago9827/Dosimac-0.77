@@ -5,7 +5,7 @@ import {
     View, Text, TextInput, TouchableOpacity, FlatList, Alert, Platform,
 } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAwrConn } from '../../stores/awrConnStore';
 
 type RouteParams = {

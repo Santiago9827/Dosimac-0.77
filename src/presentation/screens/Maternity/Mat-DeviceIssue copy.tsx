@@ -2,7 +2,7 @@
 // import { View, Text, Image, ScrollView, TouchableOpacity, Modal, Pressable, Animated, Dimensions, TextInput } from 'react-native';
 // import React, { useEffect, useState, useRef, useMemo } from 'react';
 // import { CerdoMaternidad } from '../../../assets';
-// import Icon from 'react-native-vector-icons/Ionicons';
+// import Icon from '@expo/vector-icons/Ionicons';
 // import axios from 'axios';
 // import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // import { useRoute } from '@react-navigation/native';

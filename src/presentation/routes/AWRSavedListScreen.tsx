@@ -13,7 +13,7 @@ import {
     Button,
     Card,
 } from 'react-native-paper';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { awrStore } from '../../stores/awrStore';
 import { useAwrConn } from '../../stores/awrConnStore';
 

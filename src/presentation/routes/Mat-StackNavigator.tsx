@@ -14,7 +14,7 @@ import CorralMaternidadConAnimalesScreen from './CorralMaternidadConAnimalesScre
 import TodosAnimalesMaternidad from './TodosAnimalesMaternidad';
 import NoAlimentadosScreenMaternidad from './NoAlimentadosScreenMaternidad';
 import { TouchableOpacity } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { HamburgerMenu } from '../components/shared/HamburgerMenu';
 import IntroducirAnimalCorral from './IntroducirAnimalCorral';
 import IntroducirAnimalLote from './IntroducirAnimalLote';

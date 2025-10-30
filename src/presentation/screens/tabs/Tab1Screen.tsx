@@ -5,7 +5,7 @@ import { Pressable } from 'react-native'
 import { Text, View } from 'react-native'
 import { HamburgerMenu } from '../../components/shared/HamburgerMenu'
 
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from '@expo/vector-icons/Ionicons';
 // const myIcon = <Icon name="rocket" size={30} color="#900" />;
 
 export const Tab1Screen = () => {

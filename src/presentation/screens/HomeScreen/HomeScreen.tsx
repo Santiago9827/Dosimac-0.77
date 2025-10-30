@@ -6,7 +6,7 @@ import { HamburgerMenu } from '../../components/shared/HamburgerMenu';
 import { useTranslation } from 'react-i18next';
 import { DonutChart } from '../../components/shared/DonutChart';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type Incidencia = {
   id: string | number;

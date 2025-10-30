@@ -9,7 +9,7 @@
 //     NativeSyntheticEvent,
 //     TextInput,
 // } from 'react-native';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
+// import Ionicons from '@expo/vector-icons/Ionicons';
 
 // type Animal = { corral: string; total: number; consumida: number };
 // type Row = {

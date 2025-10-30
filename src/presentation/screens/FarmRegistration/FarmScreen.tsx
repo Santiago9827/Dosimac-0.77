@@ -15,13 +15,13 @@ import {
 } from 'react-native';
 import { Appbar, Button, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { GetFarmDataById, InsertFarmData, UpdateFarmData, deleteFarmById } from '../../../FarmDB/farmsDB';
+import { GetFarmDataById, InsertFarmData, UpdateFarmData, deleteFarmById } from '../../../FarmDB/farmsDB.native';
 import { farmFacility } from '../../../sharedTypes/farmInterface';
 import { vglobal } from '../../../sharedTypes/globlaVars';
 import { farmStore } from '../../../stores/store';
 // import { useTogglePasswordVisibility } from '../../hooks/useTogglePasswordVisibility';
 
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from '@expo/vector-icons/Ionicons';
 import { IonIcon } from '../../components/shared/IonIcon';
 
 export const FarmScreen = ({ navigation, route }) => {

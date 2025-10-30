@@ -6,7 +6,7 @@ import {
     LayoutAnimation, Platform, UIManager, Modal, Pressable
 } from 'react-native';
 import { useRoute, useNavigation, NavigationProp } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Dimensions, Alert } from 'react-native';
 import { Animated } from 'react-native';

@@ -7,11 +7,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 
 import { SideMenuNavigator } from './presentation/routes/SideMenuNavigator';
 
-import { InicialiceFarmDataTable } from './FarmDB/farmsDB';
+// import { InicialiceFarmDataTable } from './FarmDB/farmsDB';
 import { InicializeProgram } from './sharedTypes/globlaVars';
 import { RequestBluetoothPermissions } from './libraries/permissions/permissions';
 import i18n from './localization/i18n';
@@ -56,15 +57,16 @@ function LanguageGate({ children }: { children: React.ReactNode }) {
 
 export const App3 = () => {
    // Inicializaciones que quieres ejecutar una vez
-   InicialiceFarmDataTable();
+   // InicialiceFarmDataTable();
    RequestBluetoothPermissions();
+
 
    return (
       <LanguageGate>
          <NavigationContainer>
             <PaperProvider
                theme={theme}
-               settings={{ icon: (props) => <Icon {...props} /> }}
+               settings={{ icon: (props) => <Ionicons {...props} /> }}
             >
                <SafeAreaView style={{ flex: 1 }}>
                   <InicializeProgram />

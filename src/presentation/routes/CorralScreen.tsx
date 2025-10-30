@@ -5,7 +5,8 @@ import {
     KeyboardAvoidingView, Platform, Alert, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import NfcManager, { Ndef, NfcEvents } from 'react-native-nfc-manager';
 
