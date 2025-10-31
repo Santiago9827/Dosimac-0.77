@@ -18,6 +18,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { HamburgerMenu } from '../../components/shared/HamburgerMenu';
 import { DonutChart } from '../../components/shared/DonutChart';
 
+
 // ===== Tipos / const =====
 type Incidencia = {
   id: string | number;
@@ -116,7 +117,7 @@ export const HomeScreen = () => {
     { id: 1, area: 'Maternidad', corral: '1', descripcion: 'Bebedero con caudal bajo.' },
     { id: 2, area: 'Gestación', corral: '2', descripcion: 'Comedero bloqueado.' },
     { id: 3, area: 'Gestación', corral: '3', descripcion: 'Sensor de paso intermitente.' },
-    { id: 4, area: 'Maternidad', corral: '4', descripcion: 'Puerta sin cierre.' },
+    { id: 4, area: 'Maternidad', corral: '4', descripcion: 'Puerta sin cierrelllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll.' },
     { id: 5, area: 'Gestación', corral: '5', descripcion: 'Fallo de báscula.' },
     { id: 6, area: 'Maternidad', corral: '6', descripcion: 'Alarma de temperatura alta.' },
     { id: 7, area: 'Gestación', corral: '7', descripcion: 'Luz de emergencia encendida.' },
@@ -125,7 +126,7 @@ export const HomeScreen = () => {
     { id: 10, area: 'Maternidad', corral: '10', descripcion: 'Alarma de movimiento inusual.' },
     { id: 11, area: 'Gestación', corral: '11', descripcion: 'Fallo en el sistema de alimentación.' },
     { id: 12, area: 'Maternidad', corral: '12', descripcion: 'Sensor de humedad fuera de rango.' },
-    { id: 13, area: 'Gestación', corral: '13', descripcion: 'Problema eléctrico detectado.' },
+    { id: 13, area: 'Gestación', corral: '13', descripcion: 'Problema eléctrico detectadolllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll.' },
 
   ];
 
@@ -396,26 +397,39 @@ export const HomeScreen = () => {
 
 
         {/* CTA inferior */}
+        {/* CTA inferior (misma lógica, ancho compacto en web) */}
         <TouchableOpacity
           onPress={() => navigation.getParent()?.navigate('TareasProgramadas' as never)}
-          style={{
-            marginTop: 8,
-            borderRadius: 12,
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            backgroundColor: BRAND,
-            shadowColor: '#000',
-            shadowOpacity: 0.18,
-            shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 3,
-            alignSelf: 'stretch',
-          }}
+          activeOpacity={0.85}
+          style={[
+            {
+              marginTop: 8,
+              borderRadius: 12,
+              paddingHorizontal: 20,
+              paddingVertical: isMd ? 10 : 12,
+              backgroundColor: BRAND,
+              shadowColor: '#000',
+              shadowOpacity: 0.18,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 3,
+            },
+            isMd
+              ? {
+                width: '100%',    // ocupa el ancho disponible…
+                maxWidth: 580,    // …pero nunca más de 320px
+                alignSelf: 'center',
+              }
+              : {
+                alignSelf: 'stretch', // full-width en móvil
+              },
+          ]}
         >
           <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
             Tareas Programadas
           </Text>
         </TouchableOpacity>
+
       </ScrollView>
     </View>
   );
