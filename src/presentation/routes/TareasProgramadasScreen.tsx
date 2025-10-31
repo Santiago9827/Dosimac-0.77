@@ -1,24 +1,11 @@
 // TareasProgramadasScreen.tsx
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
-    View,
-    Text,
-    FlatList,
-    Pressable,
-    LayoutAnimation,
-    Platform,
-    UIManager,
-    TextInput,
-    Modal,
-    KeyboardAvoidingView,
-    Alert,
-    Dimensions,
-    useWindowDimensions,
-    StyleSheet,
+    View, Text, FlatList, Pressable, LayoutAnimation, Platform, UIManager,
+    TextInput, Modal, KeyboardAvoidingView, Alert, Dimensions, useWindowDimensions, StyleSheet,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 
 type Tarea = {
     id: string | number;
@@ -33,75 +20,89 @@ type AnchorRect = { x: number; y: number; width: number; height: number };
 const SURFACE_BG = '#F6F8FC';
 const CARD_BORDER = '#E2E8F0';
 const BRAND = '#4F46E5';
+const BRAND_SOFT_BG = 'rgba(79, 70, 229, 0.88)';
 const TEXT_DARK = '#0f172a';
 const TEXT_MID = '#475569';
 
+// ===== Compact + ajustes de ancho/gap =====
+const COMPACT = true;
+const SIDE_PAD = 16;
+const GRID_GAP = 12;
+
+const S = {
+    icon: COMPACT ? 16 : 18,
+    cardPadH: COMPACT ? 12 : 16,
+    cardPadV: COMPACT ? 10 : 16,
+    cardRadius: COMPACT ? 12 : 16,
+    colGapV: COMPACT ? 6 : 8,
+    label: COMPACT ? 12 : 14,
+    desc: COMPACT ? 14 : 16,
+    descLH: COMPACT ? 18 : 22,
+    pillH: COMPACT ? 8 : 10,
+    pillV: COMPACT ? 2 : 4,
+    divider: COMPACT ? 6 : 12,
+    done: COMPACT ? 22 : 28,
+    doneBW: COMPACT ? 1.5 : 2,
+};
+
 const shadowSm = Platform.select({
-    ios: {
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 3 },
-    },
+    ios: { shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
     android: { elevation: 2 },
     default: {},
 });
 
-const DoneCircle = ({ done, onPress }: { done?: boolean; onPress: () => void }) => (
-    <Pressable onPress={onPress} style={[styles.doneBtn, done ? styles.doneBtnOn : styles.doneBtnOff]}>
-        {done ? <Ionicons name="checkmark" size={16} color="#fff" /> : null}
+// ⬇️ botón done con variante para header morado
+const DoneCircle = ({
+    done, onPress, inHeader = false,
+}: { done?: boolean; onPress: () => void; inHeader?: boolean }) => (
+    <Pressable
+        onPress={onPress}
+        style={[
+            styles.doneBtn,
+            done ? styles.doneBtnOn : (inHeader ? styles.doneBtnOffHeader : styles.doneBtnOff),
+        ]}
+    >
+        {done ? <Ionicons name="checkmark" size={S.icon} color="#fff" /> : null}
     </Pressable>
 );
 
 const TaskCard = ({
-    tarea,
-    onToggleDone,
-    onMore,
-}: {
-    tarea: Tarea;
-    onToggleDone: (id: Tarea['id']) => void;
-    onMore: (tarea: Tarea, anchor: AnchorRect) => void;
-}) => {
+    tarea, onToggleDone, onMore,
+}: { tarea: Tarea; onToggleDone: (id: Tarea['id']) => void; onMore: (t: Tarea, a: AnchorRect) => void }) => {
     const kebabRef = useRef<View>(null);
-
     const openAnchoredMenu = () => {
-        kebabRef.current?.measureInWindow((x, y, width, height) => {
-            onMore(tarea, { x, y, width, height });
-        });
+        kebabRef.current?.measureInWindow((x, y, width, height) => onMore(tarea, { x, y, width, height }));
     };
 
     return (
         <Pressable style={[styles.card, shadowSm]} android_ripple={{ color: '#f1f5f9' }}>
-            <View style={styles.cardBody}>
-                {/* Fila superior */}
+            {/* HEADER MORADO */}
+            <View style={styles.cardHeader}>
                 <View style={styles.rowBetween}>
                     <View style={styles.rowCenter}>
-                        <Ionicons name="home-outline" size={18} color={TEXT_DARK} />
-                        <Text style={[styles.label, { marginLeft: 8 }]}>Corral</Text>
+                        <Ionicons name="home-outline" size={S.icon} color="#fff" />
+                        <Text style={[styles.labelOnBrand, { marginLeft: 8 }]}>Corral</Text>
                     </View>
 
                     <View style={styles.rowCenter}>
-                        <View style={styles.pill}>
-                            <Text style={styles.pillText}>{tarea.corral}</Text>
+                        <View style={styles.pillHeader}>
+                            <Text style={styles.pillTextHeader}>{tarea.corral}</Text>
                         </View>
 
-                        <DoneCircle done={tarea.done} onPress={() => onToggleDone(tarea.id)} />
+                        <DoneCircle inHeader done={tarea.done} onPress={() => onToggleDone(tarea.id)} />
 
-                        <Pressable
-                            ref={kebabRef}
-                            onPress={openAnchoredMenu}
-                            style={styles.kebabBtn}
-                            android_ripple={{ color: '#e5e7eb' }}
-                        >
-                            <Ionicons name="ellipsis-vertical" size={22} color="#64748b" />
+                        <Pressable ref={kebabRef} onPress={openAnchoredMenu} style={styles.kebabBtn} android_ripple={{ color: '#4338ca' }}>
+                            <Ionicons name="ellipsis-vertical" size={S.icon + 6} color="#fff" />
                         </Pressable>
                     </View>
                 </View>
+            </View>
 
-                {/* Asignado a */}
+            {/* CUERPO BLANCO */}
+            <View style={styles.cardBody}>
                 <View style={[styles.rowBetween, { marginTop: 6 }]}>
                     <View style={styles.rowCenter}>
-                        <Ionicons name="person-circle-outline" size={18} color={TEXT_MID} />
+                        <Ionicons name="person-circle-outline" size={S.icon} color={TEXT_MID} />
                         <Text style={[styles.label, { marginLeft: 8 }]}>Asignado a</Text>
                     </View>
                     <Text style={styles.assignee}>{tarea.asignadoA}</Text>
@@ -109,13 +110,9 @@ const TaskCard = ({
 
                 <View style={styles.divider} />
 
-                {/* Descripción */}
                 <View style={[styles.rowStart]}>
-                    <Ionicons name="clipboard-outline" size={18} color={TEXT_MID} style={{ marginTop: 2 }} />
-                    <Text
-                        style={[styles.desc, tarea.done ? { opacity: 0.7 } : null, { marginLeft: 8 }]}
-                        numberOfLines={4}
-                    >
+                    <Ionicons name="clipboard-outline" size={S.icon} color={TEXT_MID} style={{ marginTop: 2 }} />
+                    <Text style={[styles.desc, tarea.done ? { opacity: 0.7 } : null, { marginLeft: 8 }]} numberOfLines={2}>
                         {tarea.descripcion}
                     </Text>
                 </View>
@@ -125,7 +122,6 @@ const TaskCard = ({
 };
 
 export default function TareasProgramadasScreen() {
-    // Animaciones en Android
     useEffect(() => {
         if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
             UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -151,52 +147,29 @@ export default function TareasProgramadasScreen() {
         return [...pendientes, ...hechas];
     }, [tareas]);
 
-    // Crear/editar
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<Tarea['id'] | null>(null);
-    const [form, setForm] = useState<{ corral: string; asignadoA: string; descripcion: string }>({
-        corral: '',
-        asignadoA: '',
-        descripcion: '',
-    });
+    const [form, setForm] = useState<{ corral: string; asignadoA: string; descripcion: string }>({ corral: '', asignadoA: '', descripcion: '' });
     const [errors, setErrors] = useState<{ corral?: string; descripcion?: string }>({});
 
-    // Menú anclado
     const [menuVisible, setMenuVisible] = useState(false);
     const [menuTask, setMenuTask] = useState<Tarea | null>(null);
     const [anchor, setAnchor] = useState<AnchorRect | null>(null);
 
-    const openAnchoredMenu = (t: Tarea, a: AnchorRect) => {
-        setMenuTask(t);
-        setAnchor(a);
-        setMenuVisible(true);
-    };
+    const openAnchoredMenu = (t: Tarea, a: AnchorRect) => { setMenuTask(t); setAnchor(a); setMenuVisible(true); };
     const closeAnchoredMenu = () => setMenuVisible(false);
 
-    const openCreate = () => {
-        setEditingId(null);
-        setForm({ corral: '', asignadoA: '', descripcion: '' });
-        setErrors({});
-        setShowForm(true);
-    };
-
-    const openEdit = (t: Tarea) => {
-        setEditingId(t.id);
-        setForm({ corral: t.corral, asignadoA: t.asignadoA, descripcion: t.descripcion });
-        setErrors({});
-        setShowForm(true);
-    };
+    const openCreate = () => { setEditingId(null); setForm({ corral: '', asignadoA: '', descripcion: '' }); setErrors({}); setShowForm(true); };
+    const openEdit = (t: Tarea) => { setEditingId(t.id); setForm({ corral: t.corral, asignadoA: t.asignadoA, descripcion: t.descripcion }); setErrors({}); setShowForm(true); };
 
     const confirmDelete = (id: Tarea['id']) => {
         Alert.alert('Eliminar tarea', '¿Seguro que quieres eliminar esta tarea?', [
             { text: 'Cancelar', style: 'cancel' },
             {
-                text: 'Eliminar',
-                style: 'destructive',
-                onPress: () => {
+                text: 'Eliminar', style: 'destructive', onPress: () => {
                     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                     setTareas(prev => prev.filter(t => t.id !== id));
-                },
+                }
             },
         ]);
     };
@@ -214,18 +187,11 @@ export default function TareasProgramadasScreen() {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
         if (editingId != null) {
-            setTareas(prev =>
-                prev.map(t =>
-                    t.id === editingId
-                        ? {
-                            ...t,
-                            corral: form.corral.trim(),
-                            asignadoA: form.asignadoA.trim() || 'Sin asignar',
-                            descripcion: form.descripcion.trim(),
-                        }
-                        : t
-                )
-            );
+            setTareas(prev => prev.map(t =>
+                t.id === editingId
+                    ? { ...t, corral: form.corral.trim(), asignadoA: form.asignadoA.trim() || 'Sin asignar', descripcion: form.descripcion.trim() }
+                    : t,
+            ));
         } else {
             const nueva: Tarea = {
                 id: Date.now(),
@@ -236,33 +202,34 @@ export default function TareasProgramadasScreen() {
             };
             setTareas(prev => [nueva, ...prev]);
         }
-
         setShowForm(false);
         setEditingId(null);
     };
 
     const saveDisabled = !form.corral.trim() || !form.descripcion.trim();
+
     const { width, height } = useWindowDimensions();
-    const isLg = width >= 1024;
-    const numCols = isLg ? 2 : 1;
+    const numCols = width >= 1536 ? 3 : width >= 1024 ? 2 : 1;  // 3 columnas en grande
     const listKey = `cols-${numCols}`;
+
     const insets = useSafeAreaInsets();
     const [headerH, setHeaderH] = useState(0);
     const listHeight = Math.max(0, height - headerH - insets.top - insets.bottom);
 
-
+    // Ancho fijo por columna
+    const totalHPad = SIDE_PAD * 2;
+    const totalGaps = GRID_GAP * (numCols - 1);
+    const colPx = Math.max(0, Math.floor((width - totalHPad - totalGaps) / numCols));
 
     // Menú anclado
     const MENU_W = 200;
     const SCREEN_W = Dimensions.get('window').width;
     const PADDING = 8;
-    const menuLeft = anchor
-        ? Math.max(PADDING, Math.min(anchor.x + anchor.width - MENU_W, SCREEN_W - MENU_W - PADDING))
-        : 0;
+    const menuLeft = anchor ? Math.max(PADDING, Math.min(anchor.x + anchor.width - MENU_W, SCREEN_W - MENU_W - PADDING)) : 0;
     const menuTop = anchor ? anchor.y + anchor.height + 6 : 0;
 
     const renderItem = ({ item }: { item: Tarea }) => (
-        <View style={styles.colWrap}>
+        <View style={[styles.colWrap, { width: colPx }]}>
             <TaskCard
                 tarea={item}
                 onToggleDone={(id) => {
@@ -276,30 +243,18 @@ export default function TareasProgramadasScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: SURFACE_BG }]}>
-            {/* Header */}
-            <View style={styles.header}
-                onLayout={e => setHeaderH(e.nativeEvent.layout.height)}
-
-            >
+            <View style={styles.header} onLayout={e => setHeaderH(e.nativeEvent.layout.height)}>
                 <View style={styles.rowCenter}>
-                    <Ionicons name="calendar-outline" size={20} color={TEXT_DARK} />
+                    <Ionicons name="calendar-outline" size={20} color={BRAND} />
                     <Text style={styles.headerTitle}>Tareas Programadas</Text>
-                    <View style={styles.counter}>
-                        <Text style={styles.counterText}>{tareas.length}</Text>
-                    </View>
+                    <View style={styles.counter}><Text style={styles.counterText}>{tareas.length}</Text></View>
                 </View>
 
-                <Pressable
-                    onPress={openCreate}
-                    accessibilityLabel="Crear nueva tarea"
-                    android_ripple={{ color: '#c7d2fe' }}
-                    style={[styles.addBtn, shadowSm]}
-                >
+                <Pressable onPress={openCreate} accessibilityLabel="Crear nueva tarea" android_ripple={{ color: '#c7d2fe' }} style={[styles.addBtn, shadowSm]}>
                     <Ionicons name="add" size={20} color="#fff" />
                 </Pressable>
             </View>
 
-            {/* Lista */}
             <View style={{ height: listHeight }}>
                 <FlatList
                     key={listKey}
@@ -308,44 +263,30 @@ export default function TareasProgramadasScreen() {
                     renderItem={renderItem}
                     keyExtractor={(i) => String(i.id)}
                     numColumns={numCols}
-                    columnWrapperStyle={numCols > 1 ? { gap: 16 } : undefined}
-                    contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 96 }}
+                    columnWrapperStyle={numCols > 1 ? { gap: GRID_GAP } : undefined}
+                    contentContainerStyle={{ paddingHorizontal: SIDE_PAD, paddingTop: 8, paddingBottom: 64 }}
                     showsVerticalScrollIndicator
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                 />
             </View>
 
-            {/* Popover anclado a ⋮ */}
+            {/* Menú contextual */}
             <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={closeAnchoredMenu}>
                 <Pressable style={styles.menuBackdrop} onPress={closeAnchoredMenu}>
                     <View style={[styles.menuBox, { top: menuTop, left: menuLeft, width: MENU_W }, shadowSm]}>
-                        <Pressable
-                            onPress={() => {
-                                closeAnchoredMenu();
-                                if (menuTask) openEdit(menuTask);
-                            }}
-                            android_ripple={{ color: '#f1f5f9' }}
-                            style={styles.menuItem}
-                        >
+                        <Pressable onPress={() => { closeAnchoredMenu(); if (menuTask) openEdit(menuTask); }} android_ripple={{ color: '#f1f5f9' }} style={styles.menuItem}>
                             <Text style={styles.menuItemText}>Editar</Text>
                         </Pressable>
                         <View style={styles.menuDivider} />
-                        <Pressable
-                            onPress={() => {
-                                closeAnchoredMenu();
-                                if (menuTask) confirmDelete(menuTask.id);
-                            }}
-                            android_ripple={{ color: '#fee2e2' }}
-                            style={styles.menuItem}
-                        >
+                        <Pressable onPress={() => { closeAnchoredMenu(); if (menuTask) confirmDelete(menuTask.id); }} android_ripple={{ color: '#fee2e2' }} style={styles.menuItem}>
                             <Text style={[styles.menuItemText, { color: '#dc2626' }]}>Eliminar</Text>
                         </Pressable>
                     </View>
                 </Pressable>
             </Modal>
 
-            {/* Modal Crear/Editar */}
+            {/* Sheet Crear/Editar (igual que antes) */}
             <Modal visible={showForm} transparent animationType="slide" onRequestClose={() => setShowForm(false)}>
                 <Pressable style={styles.sheetBackdrop} onPress={() => setShowForm(false)}>
                     <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: undefined })} style={{ flex: 1, justifyContent: 'flex-end' }}>
@@ -353,60 +294,37 @@ export default function TareasProgramadasScreen() {
                             <View style={styles.sheetHandle} />
                             <Text style={styles.sheetTitle}>{editingId != null ? 'Editar tarea' : 'Nueva tarea'}</Text>
 
-                            {/* Corral */}
                             <View style={{ marginBottom: 12 }}>
                                 <Text style={styles.fieldLabel}>Corral</Text>
-                                <TextInput
-                                    placeholder="C-12"
-                                    value={form.corral}
+                                <TextInput placeholder="C-12" value={form.corral}
                                     onChangeText={(v) => setForm(f => ({ ...f, corral: v }))}
-                                    style={styles.input}
-                                    autoCapitalize="characters"
-                                    returnKeyType="next"
-                                />
+                                    style={styles.input} autoCapitalize="characters" returnKeyType="next" />
                                 {errors.corral ? <Text style={styles.errorText}>{errors.corral}</Text> : null}
                             </View>
 
-                            {/* Asignado a */}
                             <View style={{ marginBottom: 12 }}>
                                 <Text style={styles.fieldLabel}>Asignado a</Text>
-                                <TextInput
-                                    placeholder="Juan Pérez"
-                                    value={form.asignadoA}
+                                <TextInput placeholder="Juan Pérez" value={form.asignadoA}
                                     onChangeText={(v) => setForm(f => ({ ...f, asignadoA: v }))}
-                                    style={styles.input}
-                                    autoCapitalize="words"
-                                    returnKeyType="next"
-                                />
+                                    style={styles.input} autoCapitalize="words" returnKeyType="next" />
                             </View>
 
-                            {/* Descripción */}
                             <View style={{ marginBottom: 8 }}>
                                 <Text style={styles.fieldLabel}>Descripción</Text>
-                                <TextInput
-                                    placeholder="Describe la tarea…"
-                                    value={form.descripcion}
+                                <TextInput placeholder="Describe la tarea…" value={form.descripcion}
                                     onChangeText={(v) => setForm(f => ({ ...f, descripcion: v }))}
                                     style={[styles.input, { height: 88, textAlignVertical: 'top' }]}
-                                    multiline
-                                    numberOfLines={4}
-                                    returnKeyType="done"
-                                />
+                                    multiline numberOfLines={4} returnKeyType="done" />
                                 {errors.descripcion ? <Text style={styles.errorText}>{errors.descripcion}</Text> : null}
                             </View>
 
-                            {/* Acciones */}
                             <View style={{ flexDirection: 'row', marginTop: 16 }}>
                                 <Pressable onPress={() => setShowForm(false)} style={[styles.btn, styles.btnOutline]} android_ripple={{ color: '#e5e7eb' }}>
                                     <Text style={styles.btnOutlineText}>Cancelar</Text>
                                 </Pressable>
-
-                                <Pressable
-                                    disabled={saveDisabled}
-                                    onPress={handleSave}
+                                <Pressable disabled={saveDisabled} onPress={handleSave}
                                     style={[styles.btn, styles.btnPrimary, saveDisabled && { backgroundColor: '#c7d2fe' }]}
-                                    android_ripple={{ color: '#4338ca' }}
-                                >
+                                    android_ripple={{ color: '#4338ca' }}>
                                     <Text style={styles.btnPrimaryText}>{editingId != null ? 'Guardar cambios' : 'Guardar'}</Text>
                                 </Pressable>
                             </View>
@@ -419,17 +337,10 @@ export default function TareasProgramadasScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        minHeight: 0,
-    },
+    container: { flex: 1, minHeight: 0 },
     header: {
-        paddingHorizontal: 20,
-        paddingTop: 16,
-        paddingBottom: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     },
     rowCenter: { flexDirection: 'row', alignItems: 'center' },
     rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -438,55 +349,53 @@ const styles = StyleSheet.create({
     headerTitle: { marginLeft: 8, fontSize: 22, fontWeight: '800', color: TEXT_DARK },
     counter: { marginLeft: 8, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(226,232,240,0.7)' },
     counterText: { fontSize: 12, color: '#334155' },
+    addBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: BRAND },
 
-    addBtn: {
-        width: 36, height: 36, borderRadius: 18,
-        alignItems: 'center', justifyContent: 'center',
-        backgroundColor: BRAND,
+    // grid
+    colWrap: { minWidth: 0, paddingVertical: S.colGapV, flexGrow: 0, flexShrink: 0 },
+
+    // tarjeta
+    card: { backgroundColor: '#fff', borderRadius: S.cardRadius, borderWidth: 1, borderColor: CARD_BORDER, overflow: 'hidden' },
+
+    // HEADER morado
+    cardHeader: {
+        backgroundColor: BRAND_SOFT_BG,
+        paddingHorizontal: S.cardPadH,
+        paddingVertical: S.cardPadV - 2,
+        borderTopLeftRadius: S.cardRadius,
+        borderTopRightRadius: S.cardRadius,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: 'rgba(255,255,255,0.25)',
     },
+    labelOnBrand: { color: '#fff', fontSize: S.label, fontWeight: '700' },
+    pillHeader: { paddingHorizontal: S.pillH, paddingVertical: S.pillV, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.18)', marginRight: 8 },
+    pillTextHeader: { color: '#fff', fontWeight: '800' },
 
-    listContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 96 },
-    colWrap: { flex: 1, minWidth: 0, paddingVertical: 8 },
+    // cuerpo
+    cardBody: { paddingHorizontal: S.cardPadH, paddingVertical: S.cardPadV, backgroundColor: '#fff' },
 
-    card: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: CARD_BORDER,
-        overflow: 'hidden',
-    },
-    cardBody: { padding: 16 },
+    // textos
+    label: { color: TEXT_DARK, fontSize: S.label, fontWeight: '600' },
+    assignee: { color: TEXT_DARK, fontWeight: '600' },
+    divider: { height: 1, backgroundColor: CARD_BORDER, marginVertical: S.divider },
+    desc: { color: '#0f172a', lineHeight: S.descLH, fontSize: S.desc },
 
-    label: { color: TEXT_DARK, fontSize: 14, fontWeight: '600' },
-    pill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: '#E5E7EB', marginRight: 10 },
-    pillText: { color: '#0f172a', fontWeight: '700' },
-
-    doneBtn: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, marginRight: 8 },
+    // done
+    doneBtn: { width: S.done, height: S.done, borderRadius: S.done / 2, alignItems: 'center', justifyContent: 'center', borderWidth: S.doneBW, marginRight: 6 },
     doneBtnOn: { borderColor: '#22c55e', backgroundColor: '#22c55e' },
     doneBtnOff: { borderColor: '#cbd5e1', backgroundColor: 'transparent' },
+    doneBtnOffHeader: { borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'transparent' },
 
-    kebabBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+    kebabBtn: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
 
-    assignee: { color: TEXT_DARK, fontWeight: '600' },
-    divider: { height: 1, backgroundColor: CARD_BORDER, marginVertical: 12 },
-
-    desc: { color: '#0f172a', lineHeight: 20, fontSize: 16 },
-
-    // Popover
+    // popover
     menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.08)' },
-    menuBox: {
-        position: 'absolute',
-        backgroundColor: '#fff',
-        borderColor: '#e2e8f0',
-        borderWidth: 1,
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
+    menuBox: { position: 'absolute', backgroundColor: '#fff', borderColor: '#e2e8f0', borderWidth: 1, borderRadius: 12, overflow: 'hidden' },
     menuItem: { paddingHorizontal: 16, paddingVertical: 12 },
     menuItemText: { color: '#0f172a' },
     menuDivider: { height: 1, backgroundColor: '#f1f5f9' },
 
-    // Sheet
+    // sheet
     sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
     sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20 },
     sheetHandle: { alignSelf: 'center', width: 40, height: 6, borderRadius: 4, backgroundColor: '#e2e8f0', marginBottom: 10 },
@@ -494,14 +403,8 @@ const styles = StyleSheet.create({
 
     fieldLabel: { color: '#334155', marginBottom: 6 },
     input: {
-        backgroundColor: '#F8FAFC',
-        borderWidth: 1,
-        borderColor: '#CBD5E1',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        color: '#0f172a',
-        fontSize: 16,
+        backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 12,
+        paddingHorizontal: 12, paddingVertical: 10, color: '#0f172a', fontSize: 16,
     },
     errorText: { color: '#dc2626', fontSize: 12, marginTop: 4 },
 
