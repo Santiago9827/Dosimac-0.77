@@ -8,7 +8,7 @@ import { HomeDebugScreen } from '../screens/Debug/HomeDebugScreen/HomeDebugScree
 import { BLETestingScreen } from '../screens/Debug/BLETesting/BLETestingScreen';
 import { NfcScreen } from '../screens/Debug/NFC/NfcScreen';
 import { NfcScreen2 } from '../screens/Debug/NFC/NfcScreen2';
-import DbScreen from '../screens/Debug/database/dbScreen';
+// import DbScreen from '../screens/Debug/database/dbScreen';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect } from 'react';
 // import {ProductsScreen} from '../screens/products/ProductsScreen';
@@ -46,7 +46,7 @@ export const DebugNavigator = () => {
 
       <Stack.Screen name="Tag Reader2" component={NfcScreen2} />
 
-      <Stack.Screen name="DB Test" component={DbScreen} />
+      {/* <Stack.Screen name="DB Test" component={DbScreen} /> */}
 
 
 

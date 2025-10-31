@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Text,
   View,
@@ -7,7 +7,8 @@ import {
   Pressable,
   ScrollView,
   useWindowDimensions,
-  FlatList
+  FlatList,
+  Platform
 } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,7 +18,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { HamburgerMenu } from '../../components/shared/HamburgerMenu';
 import { DonutChart } from '../../components/shared/DonutChart';
-
 
 // ===== Tipos / const =====
 type Incidencia = {
@@ -49,6 +49,10 @@ const SHADOW: ViewStyle = {
   elevation: 1,
 };
 
+// === Altura uniforme (colapsado) y nº de líneas ===
+const CARD_H = 92;      // alto colapsado uniforme
+const DESC_LINES = 2;   // líneas visibles en colapsado
+
 export const HomeScreen = () => {
   const { t } = useTranslation(['common']);
   const navigation = useNavigation<NavigationProp<any>>();
@@ -59,7 +63,7 @@ export const HomeScreen = () => {
   const isLg = width >= 1024;
   const pagePX = isLg ? 48 : isMd ? 24 : 16;
   const incHeight = !isMd
-    ? Math.round(Math.max(260, Math.min(420, height * 0.38))) // alto del bloque en móvil
+    ? Math.round(Math.max(260, Math.min(420, height * 0.38)))
     : undefined;
 
   // —— Datos demo —— 
@@ -77,31 +81,24 @@ export const HomeScreen = () => {
   const stackGap = isMd ? 32 : 16;
 
   const StatRowCompact = ({ label, value }: { label: string; value: number }) => (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',   // mejor que 'baseline' para móvil
-        marginTop: 8,
-      }}
-    >
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
       <Text
         style={{
-          flex: 1,               // el label ocupa el espacio disponible
-          paddingRight: 14,      // 👈 separación fija con el número
+          flex: 1,
+          paddingRight: 14,
           fontSize: 13,
           color: '#64748B',
           lineHeight: 18,
         }}
         numberOfLines={1}
-        ellipsizeMode="tail"     // si no cabe, añade "..."
+        ellipsizeMode="tail"
       >
         {label}
       </Text>
-
       <Text
         style={{
-          minWidth: 36,          // 👈 reserva ancho para el número
-          textAlign: 'right',    // pegado a la derecha de su cajita
+          minWidth: 36,
+          textAlign: 'right',
           fontSize: 16,
           fontWeight: '700',
           color: '#0F172A',
@@ -115,9 +112,9 @@ export const HomeScreen = () => {
 
   const incidencias: Incidencia[] = [
     { id: 1, area: 'Maternidad', corral: '1', descripcion: 'Bebedero con caudal bajo.' },
-    { id: 2, area: 'Gestación', corral: '2', descripcion: 'Comedero bloqueado.' },
-    { id: 3, area: 'Gestación', corral: '3', descripcion: 'Sensor de paso intermitente.' },
-    { id: 4, area: 'Maternidad', corral: '4', descripcion: 'Puerta sin cierrelllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll.' },
+    { id: 2, area: 'Gestación', corral: '2', descripcion: 'Comedero bloqueado Bebedero con caudal bajo Bebedero con caudal bajo Bebedero con caudal bajo Bebedero con caudal bajo Bebedero con caudal bajo Bebedero con caudal bajo Bebedero con caudal bajo.' },
+    { id: 3, area: 'Gestación', corral: '3', descripcion: 'Sensor de paso intermitente Bebedero con caudal bajo Bebedero con caudal bajo Bebedero con caudal bajo Bebedero con caudal bajo Bebedero con caudal bajo Bebedero con caudal bajo.' },
+    { id: 4, area: 'Maternidad', corral: '4', descripcion: 'Puerta sin cierre .' },
     { id: 5, area: 'Gestación', corral: '5', descripcion: 'Fallo de báscula.' },
     { id: 6, area: 'Maternidad', corral: '6', descripcion: 'Alarma de temperatura alta.' },
     { id: 7, area: 'Gestación', corral: '7', descripcion: 'Luz de emergencia encendida.' },
@@ -126,17 +123,19 @@ export const HomeScreen = () => {
     { id: 10, area: 'Maternidad', corral: '10', descripcion: 'Alarma de movimiento inusual.' },
     { id: 11, area: 'Gestación', corral: '11', descripcion: 'Fallo en el sistema de alimentación.' },
     { id: 12, area: 'Maternidad', corral: '12', descripcion: 'Sensor de humedad fuera de rango.' },
-    { id: 13, area: 'Gestación', corral: '13', descripcion: 'Problema eléctrico detectadolllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll.' },
-
+    { id: 13, area: 'Gestación', corral: '13', descripcion: 'Problema eléctrico detectado' },
+    { id: 14, area: 'Maternidad', corral: '14', descripcion: 'Alarma de intrusión activada.' },
+    { id: 15, area: 'Gestación', corral: '15', descripcion: 'Fallo en el sistema de calefacción.' },
   ];
 
-  // —— Helpers UI —— 
-  const StatRow = ({ label, value }: { label: string; value: number }) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 6 }}>
-      <Text style={{ color: '#334155' }}>{label}</Text>
-      <Text style={{ color: '#0f172a', fontWeight: '600' }}>{value}</Text>
-    </View>
-  );
+  // —— Estado: IDs expandidos —— 
+  const [expandedIds, setExpandedIds] = useState<Set<Incidencia['id']>>(new Set());
+  const toggleExpanded = (id: Incidencia['id']) =>
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   const SectionTitle = ({ icon, text, count }: { icon: string; text: string; count?: number }) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -197,14 +196,13 @@ export const HomeScreen = () => {
           gap: stackGap,
         }}
       >
-        {/* Donut a la izquierda */}
+        {/* Donut */}
         <View
           style={{
             width: donutSize,
             height: donutSize,
             alignItems: 'center',
             justifyContent: 'center',
-            // evita que el donut “baje” cuando el texto tenga más líneas
             flexShrink: 0,
           }}
         >
@@ -222,67 +220,95 @@ export const HomeScreen = () => {
           />
         </View>
 
-        <View style={[
-          { flexGrow: 1 },
-          isMd
-            ? { width: statsWidth, paddingTop: statsTopOffset } // desktop/tablet
-            : { marginTop: statsTopOffset },                    // móvil: separa del donut
-        ]}
-        >
+        {/* Stats */}
+        <View style={[{ flexGrow: 1 }, isMd ? { width: statsWidth, paddingTop: statsTopOffset } : { marginTop: statsTopOffset }]}>
           <StatRowCompact label="Alimentados" value={alimentados} />
           <StatRowCompact label="No Alimentados" value={noAlimentados} />
           <View style={{ height: 1, marginVertical: 10, backgroundColor: CARD_BORDER }} />
           <StatRowCompact label="Totales" value={alimentados + noAlimentados} />
         </View>
-
       </View>
     </View>
   );
-  const renderIncidenciaCard = (item: Incidencia) => (
-    <Pressable
-      key={String(item.id)}
-      onPress={() => { }}
-      android_ripple={{ color: RIPPLE_RED }}
-      style={{
-        borderRadius: 16,
-        padding: 16,
-        borderWidth: 1,
-        backgroundColor: ITEM_BG_SOFT,
-        borderColor: ITEM_BORDER_SOFT,
-        ...SHADOW,
-      }}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+
+  // —— Card de incidencia con expand/collapse —— 
+  const renderIncidenciaCard = (item: Incidencia) => {
+    const isExpanded = expandedIds.has(item.id);
+    return (
+      <Pressable
+        key={String(item.id)}
+        onPress={() => toggleExpanded(item.id)} // alterna expandir/colapsar
+        android_ripple={{ color: RIPPLE_RED }}
+        style={{
+          borderRadius: 16,
+          padding: 16,
+          borderWidth: 1,
+          backgroundColor: ITEM_BG_SOFT,
+          borderColor: ITEM_BORDER_SOFT,
+          ...SHADOW,
+
+          // Colapsado: altura uniforme; expandido: auto
+          height: isExpanded ? undefined : CARD_H,
+          minHeight: CARD_H,
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`Incidencia en ${item.area}, Corral ${item.corral}`}
+        accessibilityHint={isExpanded ? 'Pulsa para contraer' : 'Pulsa para expandir'}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 999,
+              fontSize: 12,
+              fontWeight: '600',
+              backgroundColor: PILL_BG_STRONG,
+              color: PILL_TEXT_STRONG,
+            }}
+          >
+            {item.area}
+          </Text>
+          <Text
+            style={{
+              marginLeft: 8,
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 999,
+              backgroundColor: '#F1F5F9',
+              color: '#475569',
+              fontSize: 12,
+            }}
+          >
+            Corral {item.corral}
+          </Text>
+          <View style={{ flex: 1 }} />
+          <Ionicons
+            name={isExpanded ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color="#7c3aed"
+          />
+        </View>
+
         <Text
-          style={{
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            borderRadius: 999,
-            fontSize: 12,
-            fontWeight: '600',
-            backgroundColor: PILL_BG_STRONG,
-            color: PILL_TEXT_STRONG,
-          }}
+          style={[
+            {
+              marginTop: 8,
+              color: '#0f172a',
+              minWidth: 0,
+              lineHeight: 18,
+            },
+            Platform.OS === 'web' ? ({ wordBreak: 'break-word' } as any) : null,
+          ]}
+          numberOfLines={isExpanded ? undefined : DESC_LINES}
+          ellipsizeMode="tail"
         >
-          {item.area}
+          {item.descripcion}
         </Text>
-        <Text
-          style={{
-            marginLeft: 8,
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            borderRadius: 999,
-            backgroundColor: '#F1F5F9',
-            color: '#475569',
-            fontSize: 12,
-          }}
-        >
-          Corral {item.corral}
-        </Text>
-      </View>
-      <Text style={{ marginTop: 8, color: '#0f172a' }}>{item.descripcion}</Text>
-    </Pressable>
-  );
+
+      </Pressable>
+    );
+  };
 
   // —— Navegación —— 
   const goMaternidad = () => navigation.getParent()?.navigate(TAB_MATERNIDAD as never);
@@ -306,49 +332,42 @@ export const HomeScreen = () => {
         keyboardShouldPersistTaps="handled"
       >
         {/* ——— Indicadores ——— */}
-        <SectionTitle icon="analytics-outline" text={t('common:Indicadores') || 'Indicadores'} />
+        <View style={{ marginBottom: 12 }}>
+          <View style={{ flexDirection: isMd ? 'row' : 'column', gap: isMd ? 24 : 12, marginBottom: 24 }}>
+            {/* Maternidad */}
+            <Pressable
+              onPress={goMaternidad}
+              android_ripple={{ color: '#dbeafe' }}
+              style={[{ borderRadius: 16, overflow: 'hidden' }, isMd && { flex: 1 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Ir a Maternidad"
+            >
+              <IndicadorCard
+                label={t('common:Maternidad') || 'Maternidad'}
+                alimentados={maternidad.alimentados}
+                noAlimentados={maternidad.noAlimentados}
+                percent={pctM}
+              />
+            </Pressable>
 
-        <View
-          style={{
-            flexDirection: isMd ? 'row' : 'column',
-            gap: isMd ? 24 : 12,
-            marginBottom: 24,
-          }}
-        >
-          {/* Maternidad */}
-          <Pressable
-            onPress={goMaternidad}
-            android_ripple={{ color: '#dbeafe' }}
-            style={[{ borderRadius: 16, overflow: 'hidden' }, isMd && { flex: 1 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Ir a Maternidad"
-          >
-            <IndicadorCard
-              label={t('common:Maternidad') || 'Maternidad'}
-              alimentados={maternidad.alimentados}
-              noAlimentados={maternidad.noAlimentados}
-              percent={pctM}
-            />
-          </Pressable>
-
-          {/* Gestación */}
-          <Pressable
-            onPress={goGestacion}
-            android_ripple={{ color: '#dbeafe' }}
-            style={[{ borderRadius: 16, overflow: 'hidden' }, isMd && { flex: 1 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Ir a Gestación"
-          >
-            <IndicadorCard
-              label={t('common:Gestación') || 'Gestación'}
-              alimentados={gestacion.alimentados}
-              noAlimentados={gestacion.noAlimentados}
-              percent={pctG}
-            />
-          </Pressable>
+            {/* Gestación */}
+            <Pressable
+              onPress={goGestacion}
+              android_ripple={{ color: '#dbeafe' }}
+              style={[{ borderRadius: 16, overflow: 'hidden' }, isMd && { flex: 1 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Ir a Gestación"
+            >
+              <IndicadorCard
+                label={t('common:Gestación') || 'Gestación'}
+                alimentados={gestacion.alimentados}
+                noAlimentados={gestacion.noAlimentados}
+                percent={pctG}
+              />
+            </Pressable>
+          </View>
         </View>
 
-        {/* ——— Incidencias ——— */}
         {/* ——— Incidencias ——— */}
         <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidencias.length} />
 
@@ -361,7 +380,7 @@ export const HomeScreen = () => {
               borderColor: CARD_BORDER,
               backgroundColor: CARD_BG,
               ...SHADOW,
-              maxHeight: incHeight,         // 👈 limita altura y activa scroll interno
+              maxHeight: incHeight,
               marginBottom: 16,
             }}
           >
@@ -373,10 +392,13 @@ export const HomeScreen = () => {
               contentContainerStyle={{ padding: 12 }}
               showsVerticalScrollIndicator
               nestedScrollEnabled
+              // importante para que al cambiar altura por expandir
+              // el FlatList relayout correctamente
+              extraData={expandedIds}
             />
           </View>
         ) : (
-          // ===== TABLET/ESCRITORIO: grid como ya te gustaba =====
+          // ===== TABLET/ESCRITORIO: grid responsivo =====
           <View
             style={{
               flexDirection: 'row',
@@ -395,9 +417,7 @@ export const HomeScreen = () => {
           </View>
         )}
 
-
         {/* CTA inferior */}
-        {/* CTA inferior (misma lógica, ancho compacto en web) */}
         <TouchableOpacity
           onPress={() => navigation.getParent()?.navigate('TareasProgramadas' as never)}
           activeOpacity={0.85}
@@ -415,21 +435,14 @@ export const HomeScreen = () => {
               elevation: 3,
             },
             isMd
-              ? {
-                width: '100%',    // ocupa el ancho disponible…
-                maxWidth: 580,    // …pero nunca más de 320px
-                alignSelf: 'center',
-              }
-              : {
-                alignSelf: 'stretch', // full-width en móvil
-              },
+              ? { width: '100%', maxWidth: 580, alignSelf: 'center' }
+              : { alignSelf: 'stretch' },
           ]}
         >
           <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
             Tareas Programadas
           </Text>
         </TouchableOpacity>
-
       </ScrollView>
     </View>
   );
