@@ -18,7 +18,7 @@ import NfcManager, { Ndef, NfcEvents } from 'react-native-nfc-manager';
 
 type NFCRecord = { tnf: number; text?: string; uri?: string; payloadHex?: string };
 
-export default function CorralScreen() {
+export default function CorralScreen({ onClose }: { onClose?: () => void }) {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation<NavigationProp<any>>();
     const { width } = useWindowDimensions();
@@ -196,6 +196,7 @@ export default function CorralScreen() {
                 diasSinAlimentar: false,
                 statusMessage: 'Error: El motor no funciona',
             });
+            onClose?.(); // ✅ cerrar modal
             return;
         }
 
@@ -207,6 +208,7 @@ export default function CorralScreen() {
                 diasSinAlimentar: MOCKS[code].diasSinAlimentar,
                 statusMessage: MOCKS[code].statusMessage,
             });
+            onClose?.(); // ✅ cerrar modal
             return;
         }
 
@@ -217,6 +219,7 @@ export default function CorralScreen() {
             diasSinAlimentar: false,
             statusMessage: '',
         });
+        onClose?.(); // ✅ cerrar modal
     };
 
     return (
