@@ -65,6 +65,7 @@ export default function MaternidadScreen() {
         ? Math.round(Math.max(260, Math.min(420, height * 0.38)))
         : undefined;
     const gridCol = (isLg ? '32%' : isMd ? '48%' : '100%') as any;
+    const isXs = width < 480;
 
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [showCorralModal, setShowCorralModal] = React.useState(false);
@@ -492,51 +493,19 @@ export default function MaternidadScreen() {
                         <View
                             style={{
                                 flex: 1,
-                                backgroundColor: 'rgba(0,0,0,0.4)', // fondo oscuro translúcido
+                                backgroundColor: 'rgba(0,0,0,0.4)',
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                // 👉 En móvil deja un pequeño margen; en desktop 0 (como querías)
+                                paddingHorizontal: isXs ? 16 : 0,
+                                paddingVertical: isXs ? 16 : 0,
                             }}
                         >
-                            {/* CARD central compacta */}
-                            <View
-                                style={{
-                                    width: '90%',
-                                    maxWidth: 560,
-                                    backgroundColor: '#fff',
-                                    borderRadius: 20,
-                                    padding: 20,
-                                    shadowColor: '#000',
-                                    shadowOpacity: 0.15,
-                                    shadowRadius: 12,
-                                    elevation: 10,
-                                    position: 'relative',
-                                }}
-                            >
-                                <TouchableOpacity
-                                    onPress={() => setShowCorralModal(false)}
-                                    style={{
-                                        position: 'absolute',
-                                        top: 10,
-                                        right: 10,
-                                        zIndex: 10,
-                                        padding: 6,
-                                    }}
-                                >
-                                    <Ionicons name="close" size={22} color="#475569" />
-                                </TouchableOpacity>
-
-                                {/* Contenido scrollable del card */}
-                                <ScrollView
-                                    style={{ maxHeight: Dimensions.get('window').height * 0.75 }} // 👈 75% de la altura real
-                                    contentContainerStyle={{ paddingTop: 10, paddingBottom: 10 }}
-                                >
-                                    <CorralScreen onClose={() => setShowCorralModal(false)} />
-                                </ScrollView>
-                            </View>
+                            {/* una sola card */}
+                            <CorralScreen variant="modal" onClose={() => setShowCorralModal(false)} />
                         </View>
                     </Modal>
                 )}
-
 
             </ScrollView>
 
