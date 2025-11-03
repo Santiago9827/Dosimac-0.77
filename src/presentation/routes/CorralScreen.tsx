@@ -1,12 +1,18 @@
-// CorralScreen.tsx
+// screens/Maternity/CorralScreen.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-    View, Text, TextInput, TouchableOpacity,
-    KeyboardAvoidingView, Platform, Alert, ScrollView,
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    KeyboardAvoidingView,
+    Platform,
+    Alert,
+    ScrollView,
+    useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
-
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import NfcManager, { Ndef, NfcEvents } from 'react-native-nfc-manager';
 
@@ -15,15 +21,15 @@ type NFCRecord = { tnf: number; text?: string; uri?: string; payloadHex?: string
 export default function CorralScreen() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation<NavigationProp<any>>();
+    const { width } = useWindowDimensions();
 
     const [corral, setCorral] = useState('');
     const [scanning, setScanning] = useState(false);
     const [lastTag, setLastTag] = useState<any | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    // ====== MOCKS por corral ======
+    // ===== MOCKS =====
     const MOCKS: Record<string, any> = {
-        // corral 2: animal presente
         '2': {
             animal: {
                 id: 1235,
@@ -38,14 +44,12 @@ export default function CorralScreen() {
                 ultimaAlimentacion: '13/10/2025',
                 curva: 'Multiparas',
                 correccion: '100% curva',
-                consumo: { objetivo: 12000, actual: 11000 }, // 92%
+                consumo: { objetivo: 12000, actual: 11000 },
             },
             deviceError: true,
             diasSinAlimentar: true,
             statusMessage: '',
         },
-
-        // corral 3: otro animal
         '3': {
             animal: {
                 id: 987,
@@ -60,7 +64,7 @@ export default function CorralScreen() {
                 ultimaAlimentacion: '02/11/2025',
                 curva: 'General',
                 correccion: '95% curva',
-                consumo: { objetivo: 9000, actual: 6300 }, // 70%
+                consumo: { objetivo: 9000, actual: 6300 },
             },
             deviceError: false,
             diasSinAlimentar: false,
@@ -68,11 +72,14 @@ export default function CorralScreen() {
         },
     };
 
+    // ===== NFC SETUP =====
     useEffect(() => {
-        NfcManager.start().catch(() => { });
+        if (Platform.OS !== 'web') NfcManager.start().catch(() => { });
         return () => {
-            NfcManager.setEventListener(NfcEvents.DiscoverTag, null as any);
-            NfcManager.unregisterTagEvent().catch(() => { });
+            if (Platform.OS !== 'web') {
+                NfcManager.setEventListener(NfcEvents.DiscoverTag, null as any);
+                NfcManager.unregisterTagEvent().catch(() => { });
+            }
         };
     }, []);
 
@@ -87,12 +94,20 @@ export default function CorralScreen() {
                 let text: string | undefined;
                 let uri: string | undefined;
                 if (record?.payload && Array.isArray(record.payload)) {
-                    try { text = Ndef.text.decodePayload(Uint8Array.from(record.payload)); } catch { }
-                    if (!text) { try { uri = Ndef.uri.decodePayload(Uint8Array.from(record.payload)); } catch { } }
+                    try {
+                        text = Ndef.text.decodePayload(Uint8Array.from(record.payload));
+                    } catch { }
+                    if (!text) {
+                        try {
+                            uri = Ndef.uri.decodePayload(Uint8Array.from(record.payload));
+                        } catch { }
+                    }
                 }
                 return { tnf: record.tnf, text, uri, payloadHex: fmtHex(record.payload) };
             });
-        } catch { return []; }
+        } catch {
+            return [];
+        }
     };
 
     const pickCorralFromTag = (tag: any) => {
@@ -110,17 +125,31 @@ export default function CorralScreen() {
         const value = pickCorralFromTag(tag);
         if (value) setCorral(value);
         if (Platform.OS === 'ios') {
-            try { await NfcManager.setAlertMessageIOS?.('Etiqueta detectada'); } catch { }
+            try {
+                await NfcManager.setAlertMessageIOS?.('Etiqueta detectada');
+            } catch { }
         }
-        try { await NfcManager.unregisterTagEvent(); } catch { }
+        try {
+            await NfcManager.unregisterTagEvent();
+        } catch { }
         setScanning(false);
     }, []);
 
     const startScan = useCallback(async () => {
         setErrorMsg(null);
+
+        if (Platform.OS === 'web') {
+            setErrorMsg('La lectura NFC no está disponible en la versión web.');
+            return;
+        }
+
         try {
             const supported = await NfcManager.isSupported();
-            if (!supported) { setErrorMsg('Este dispositivo no soporta NFC.'); return; }
+            if (!supported) {
+                setErrorMsg('Este dispositivo no soporta NFC.');
+                return;
+            }
+
             const enabled = await NfcManager.isEnabled();
             if (!enabled) {
                 if (Platform.OS === 'android') {
@@ -128,9 +157,12 @@ export default function CorralScreen() {
                         { text: 'Cancelar', style: 'cancel' },
                         { text: 'Abrir Ajustes', onPress: () => NfcManager.goToNfcSetting?.() },
                     ]);
-                } else { setErrorMsg('NFC desactivado.'); }
+                } else {
+                    setErrorMsg('NFC desactivado.');
+                }
                 return;
             }
+
             setLastTag(null);
             setScanning(true);
             NfcManager.setEventListener(NfcEvents.DiscoverTag, handleTag);
@@ -138,21 +170,24 @@ export default function CorralScreen() {
         } catch (e: any) {
             setScanning(false);
             setErrorMsg(e?.message || 'No se pudo iniciar el escaneo.');
-            try { await NfcManager.unregisterTagEvent(); } catch { }
+            try {
+                await NfcManager.unregisterTagEvent();
+            } catch { }
         }
     }, [handleTag]);
 
     const stopScan = useCallback(async () => {
-        try { await NfcManager.unregisterTagEvent(); } catch { }
+        try {
+            await NfcManager.unregisterTagEvent();
+        } catch { }
         setScanning(false);
     }, []);
 
-    // === Buscar/navegar con mock según corral ===
+    // === Buscar con mock ===
     const onBuscar = () => {
         const code = (corral || '').trim();
         if (!code) return;
 
-        // Corral 1 => sin animal + error de motor
         if (code === '1') {
             navigation.navigate('MAT-CORRALDETAIL', {
                 corralId: 1,
@@ -164,7 +199,6 @@ export default function CorralScreen() {
             return;
         }
 
-        // Corral 2/3 => datos mock
         if (MOCKS[code]) {
             navigation.navigate('MAT-CORRALDETAIL', {
                 corralId: Number(code),
@@ -176,7 +210,6 @@ export default function CorralScreen() {
             return;
         }
 
-        // Otros => vacío sin error (o lo que prefieras)
         navigation.navigate('MAT-CORRALDETAIL', {
             corralId: Number(code),
             mockEmpty: true,
@@ -188,42 +221,69 @@ export default function CorralScreen() {
 
     return (
         <KeyboardAvoidingView
-            className="flex-1 bg-slate-50"
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+            className="flex-1 bg-slate-50"
             style={{ paddingBottom: insets.bottom + 8 }}
         >
             <ScrollView
                 keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator
+                showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
-                    paddingHorizontal: 20,
-                    paddingTop: 16,
-                    paddingBottom: 24 + insets.bottom,
+                    alignItems: 'center',
+                    paddingTop: 40,
+                    paddingBottom: 60,
                 }}
             >
-                {/* Título */}
-                <View>
-                    <Text className="text-slate-900 text-[22px] font-extrabold">Localizar corral</Text>
-                    <Text className="text-slate-500 mt-1">Número de corral o lectura NFC.</Text>
-                </View>
+                {/* Card principal */}
+                <View
+                    style={{
+                        width: '100%',
+                        maxWidth: 600,
+                        backgroundColor: '#fff',
+                        borderRadius: 24,
+                        padding: 20,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.08,
+                        shadowRadius: 10,
+                        shadowOffset: { width: 0, height: 4 },
+                        elevation: 3,
+                    }}
+                >
+                    {/* Título */}
+                    <Text style={{ fontSize: 22, fontWeight: '800', color: '#0f172a' }}>
+                        Localizar corral
+                    </Text>
+                    <Text style={{ color: '#64748B', marginTop: 4 }}>
+                        Número de corral o lectura NFC.
+                    </Text>
 
-                {/* Campo de entrada */}
-                <View className="mt-3">
-                    <Text className="text-slate-600 text-[18px] mb-2">Corral</Text>
+                    {/* Input */}
                     <View
-                        className="flex-row items-center rounded-2xl bg-white border px-3"
-                        style={{ borderColor: '#E2E8F0', height: 52 }}
+                        style={{
+                            marginTop: 20,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#F8FAFC',
+                            borderColor: '#E2E8F0',
+                            borderWidth: 1,
+                            borderRadius: 16,
+                            paddingHorizontal: 12,
+                            height: 50,
+                        }}
                     >
                         <Ionicons name="home-outline" size={20} color="#64748B" />
                         <TextInput
                             value={corral}
                             onChangeText={setCorral}
-                            placeholder="1234"
+                            placeholder="Ej. 1234"
                             placeholderTextColor="#94A3B8"
-                            className="flex-1 ml-2 text-slate-900"
-                            autoCapitalize="characters"
-                            autoCorrect={false}
+                            style={{
+                                flex: 1,
+                                marginLeft: 8,
+                                fontSize: 16,
+                                color: '#0f172a',
+                            }}
+                            keyboardType="numeric"
                             returnKeyType="search"
                             onSubmitEditing={onBuscar}
                         />
@@ -234,82 +294,69 @@ export default function CorralScreen() {
                         ) : null}
                     </View>
 
-                    {/* Botón Escanear / Detener */}
+                    {/* Escanear */}
                     <TouchableOpacity
                         onPress={scanning ? stopScan : startScan}
-                        className="mt-3 flex-row items-center justify-center rounded-2xl border py-3 bg-white"
-                        style={{ borderColor: scanning ? '#A7F3D0' : '#CBD5E1' }}
                         activeOpacity={0.9}
+                        style={{
+                            marginTop: 20,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 1,
+                            borderColor: scanning ? '#A7F3D0' : '#CBD5E1',
+                            backgroundColor: '#FFFFFF',
+                            borderRadius: 14,
+                            paddingVertical: 12,
+                            gap: 8,
+                        }}
                     >
                         <Ionicons
                             name={scanning ? 'stop-circle-outline' : 'scan-outline'}
                             size={18}
                             color={scanning ? '#059669' : '#16A34A'}
                         />
-                        <Text className="ml-2 text-slate-900 font-semibold">
-                            {scanning ? 'Detener escaneo' : 'Escanear'}
+                        <Text style={{ color: '#0f172a', fontWeight: '600' }}>
+                            {scanning ? 'Detener escaneo' : 'Escanear etiqueta NFC'}
                         </Text>
                     </TouchableOpacity>
 
-                    {errorMsg ? <Text className="mt-2 text-red-600">{errorMsg}</Text> : null}
-
-                    {/* Resultado de la etiqueta (debug) */}
-                    {lastTag ? (
-                        <View className="mt-3 rounded-2xl border p-3 bg-white" style={{ borderColor: '#E2E8F0' }}>
-                            <Text className="text-slate-800 font-semibold mb-2">Etiqueta detectada</Text>
-                            <Text className="text-slate-600">
-                                ID/UID: <Text className="font-semibold">{lastTag?.id || '—'}</Text>
-                            </Text>
-
-                            {Array.isArray(lastTag?.ndefMessage) && lastTag.ndefMessage.length > 0 ? (
-                                <View className="mt-2">
-                                    <Text className="text-slate-700 font-semibold mb-1">NDEF:</Text>
-                                    {decodeNdef(lastTag).map((r, idx) => (
-                                        <View key={idx} className="mb-1">
-                                            {r.text ? (
-                                                <Text className="text-slate-700">
-                                                    • Texto: <Text className="font-semibold">{r.text}</Text>
-                                                </Text>
-                                            ) : null}
-                                            {r.uri ? (
-                                                <Text className="text-slate-700">
-                                                    • URI: <Text className="font-semibold">{r.uri}</Text>
-                                                </Text>
-                                            ) : null}
-                                            {!r.text && !r.uri && r.payloadHex ? (
-                                                <Text className="text-slate-500 text-xs">• payload: {r.payloadHex}</Text>
-                                            ) : null}
-                                        </View>
-                                    ))}
-                                </View>
-                            ) : (
-                                <Text className="text-slate-500 mt-1">Sin NDEF o no legible.</Text>
-                            )}
-
-                            <View className="mt-2">
-                                <Text className="text-slate-500 text-xs">RAW:</Text>
-                                <Text className="text-slate-800 text-xs" selectable>
-                                    {JSON.stringify(lastTag, null, 2)}
-                                </Text>
-                            </View>
+                    {/* Error */}
+                    {errorMsg && (
+                        <View
+                            style={{
+                                marginTop: 12,
+                                backgroundColor: '#FEF2F2',
+                                borderRadius: 12,
+                                padding: 10,
+                                borderWidth: 1,
+                                borderColor: '#FECACA',
+                            }}
+                        >
+                            <Text style={{ color: '#B91C1C', fontWeight: '600' }}>{errorMsg}</Text>
                         </View>
-                    ) : null}
+                    )}
 
-                    {/* Botón Buscar */}
+                    {/* Buscar */}
                     <TouchableOpacity
                         disabled={!corral.trim()}
                         onPress={onBuscar}
-                        className="mt-4 rounded-xl px-4 py-3 active:opacity-90"
+                        activeOpacity={0.9}
                         style={{
+                            marginTop: 24,
                             backgroundColor: corral.trim() ? '#4F46E5' : '#C7D2FE',
+                            borderRadius: 14,
+                            paddingVertical: 14,
                             shadowColor: '#000',
-                            shadowOpacity: 0.18,
-                            shadowRadius: 8,
-                            shadowOffset: { width: 0, height: 4 },
-                            elevation: 3,
+                            shadowOpacity: 0.15,
+                            shadowRadius: 6,
+                            shadowOffset: { width: 0, height: 3 },
+                            elevation: 2,
                         }}
                     >
-                        <Text className="text-white text-center font-semibold">Buscar</Text>
+                        <Text style={{ color: 'white', textAlign: 'center', fontWeight: '700' }}>
+                            Buscar
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>

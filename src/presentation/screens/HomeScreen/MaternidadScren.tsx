@@ -17,9 +17,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-
 import { DonutChart } from '../../components/shared/DonutChart';
-
+import CorralScreen from '../../routes/CorralScreen';
 // ===== colores/const =====
 const SURFACE_BG = '#F6F8FC';
 const CARD_BG = '#FFFFFF';
@@ -41,17 +40,13 @@ const SHADOW = {
     elevation: 1,
 };
 
-// layout donut
 const LEFT_FLEX = 35;
 const RIGHT_FLEX = 68;
 const VALUE_W = 80;
 const CHEVRON_W = 18;
-
-// altura uniforme incidencias (colapsado)
 const CARD_H = 92;
 const DESC_LINES = 2;
 
-// ===== tipos =====
 type DatosMaternidad = { alimentados: number; noAlimentados: number };
 type Incidencia = {
     id: string | number;
@@ -71,8 +66,9 @@ export default function MaternidadScreen() {
         : undefined;
     const gridCol = (isLg ? '32%' : isMd ? '48%' : '100%') as any;
 
-    // ===== Header: 3 puntos + menú flotante =====
     const [menuOpen, setMenuOpen] = React.useState(false);
+    const [showCorralModal, setShowCorralModal] = React.useState(false);
+
     const btnRef = React.useRef<TouchableOpacity>(null);
     const [btnPos, setBtnPos] = React.useState({ x: 0, y: 0, w: 0, h: 0 });
 
@@ -82,14 +78,25 @@ export default function MaternidadScreen() {
             headerRight: () => (
                 <TouchableOpacity
                     ref={btnRef}
-                    onLayout={() => btnRef.current?.measureInWindow((x, y, w, h) => setBtnPos({ x, y, w, h }))}
+                    onLayout={() =>
+                        btnRef.current?.measureInWindow((x, y, w, h) =>
+                            setBtnPos({ x, y, w, h })
+                        )
+                    }
                     onPress={() =>
                         btnRef.current?.measureInWindow((x, y, w, h) => {
                             setBtnPos({ x, y, w, h });
                             setMenuOpen(true);
                         })
                     }
-                    style={{ marginRight: 12, width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}
+                    style={{
+                        marginRight: 12,
+                        width: 36,
+                        height: 36,
+                        borderRadius: 10,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
                     hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 >
                     <Ionicons name="ellipsis-vertical" size={20} color="#0f172a" />
@@ -123,7 +130,7 @@ export default function MaternidadScreen() {
     ];
 
 
-    // ===== Donut responsivo =====
+
     const [donutSize, setDonutSize] = React.useState(132);
     const computeDonutSize = (rowWidth: number) => {
         const leftPct = LEFT_FLEX / (LEFT_FLEX + RIGHT_FLEX);
@@ -132,7 +139,6 @@ export default function MaternidadScreen() {
         return Math.max(110, Math.min(132, Math.round(safe)));
     };
 
-    // ===== rows métricas =====
     const DANGER = '#DC2626';
     const OK = '#16A34A';
     const noAl = maternidad.noAlimentados;
@@ -164,11 +170,34 @@ export default function MaternidadScreen() {
                 <Comp
                     onPress={onPress}
                     android_ripple={onPress ? { color: '#e5e7eb' } : undefined}
-                    style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingVertical: 10,
+                    }}
                 >
-                    <Text style={{ flex: 1, color: labelColor ?? '#475569', marginRight: 8, flexShrink: 1, minWidth: 0 }}>{label}</Text>
+                    <Text
+                        style={{
+                            flex: 1,
+                            color: labelColor ?? '#475569',
+                            marginRight: 8,
+                            flexShrink: 1,
+                            minWidth: 0,
+                            fontSize: 15,
+                        }}
+                    >
+                        {label}
+                    </Text>
 
-                    <Text style={{ width: VALUE_W, textAlign: 'right', color: valueColor ?? '#0F172A', fontWeight: strong ? '800' : '600' }}>
+                    <Text
+                        style={{
+                            width: VALUE_W,
+                            textAlign: 'right',
+                            color: valueColor ?? '#0F172A',
+                            fontWeight: strong ? '800' : '600',
+                            fontSize: 16,
+                        }}
+                    >
                         {value}
                     </Text>
 
@@ -180,25 +209,34 @@ export default function MaternidadScreen() {
         );
     };
 
-    // ===== título de sección =====
+    // ===== Título de sección =====
     const SectionTitle = ({ icon, text, count }: { icon: string; text: string; count?: number }) => (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Ionicons name={icon as any} size={18} color="#0f172a" />
-                <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '800', fontSize: isLg ? 22 : isMd ? 20 : 18 }}>{text}</Text>
+                <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '800', fontSize: isLg ? 22 : isMd ? 20 : 18 }}>
+                    {text}
+                </Text>
             </View>
             {typeof count === 'number' && (
-                <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(226,232,240,0.7)' }}>
+                <View
+                    style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 2,
+                        borderRadius: 999,
+                        backgroundColor: 'rgba(226,232,240,0.7)',
+                    }}
+                >
                     <Text style={{ fontSize: 12, color: '#334155' }}>{count}</Text>
                 </View>
             )}
         </View>
     );
 
-    // ===== incidencias: expand/collapse =====
+    // ===== incidencias expandibles =====
     const [expandedIds, setExpandedIds] = React.useState<Set<Incidencia['id']>>(new Set());
     const toggleExpanded = (id: Incidencia['id']) =>
-        setExpandedIds(prev => {
+        setExpandedIds((prev) => {
             const next = new Set(prev);
             next.has(id) ? next.delete(id) : next.add(id);
             return next;
@@ -222,9 +260,6 @@ export default function MaternidadScreen() {
                     },
                     SHADOW as any,
                 ]}
-                accessibilityRole="button"
-                accessibilityLabel={`Incidencia en ${item.area}, Corral ${item.corral}`}
-                accessibilityHint={isExpanded ? 'Pulsa para contraer' : 'Pulsa para expandir'}
             >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text
@@ -258,15 +293,11 @@ export default function MaternidadScreen() {
                 </View>
 
                 <Text
-                    style={[
-                        {
-                            marginTop: 8,
-                            color: '#0f172a',
-                            minWidth: 0,
-                            lineHeight: 18,
-                        },
-                        Platform.OS === 'web' ? ({ wordBreak: 'break-word' } as any) : null,
-                    ]}
+                    style={{
+                        marginTop: 8,
+                        color: '#0f172a',
+                        lineHeight: 18,
+                    }}
                     numberOfLines={isExpanded ? undefined : DESC_LINES}
                     ellipsizeMode="tail"
                 >
@@ -280,73 +311,115 @@ export default function MaternidadScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: SURFACE_BG }}>
             <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ paddingHorizontal: pagePX, paddingTop: 16, paddingBottom: 24 }}
+                contentContainerStyle={{
+                    paddingHorizontal: pagePX,
+                    paddingTop: 16,
+                    paddingBottom: 24,
+                }}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* Donut + métricas */}
-                <View style={{ marginBottom: 24 }}>
+                {/* === BLOQUE 1: Donut + métricas mejorado === */}
+                <View
+                    style={{
+                        borderRadius: 18,
+                        backgroundColor: CARD_BG,
+                        ...SHADOW,
+                        marginBottom: 24,
+                        overflow: 'hidden',
+                    }}
+                    onLayout={(e) => setDonutSize(computeDonutSize(e.nativeEvent.layout.width))}
+                >
+                    {/* header degradado */}
                     <View
                         style={{
-                            borderWidth: 1,
-                            borderColor: CARD_BORDER,
-                            backgroundColor: CARD_BG,
-                            borderRadius: 16,
-                            padding: 16,
-                            overflow: 'hidden',
-                            ...SHADOW,
+                            backgroundColor: BRAND,
+                            paddingVertical: 12,
+                            paddingHorizontal: 18,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
                         }}
-                        onLayout={(e) => setDonutSize(computeDonutSize(e.nativeEvent.layout.width))}
                     >
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            {/* donut izquierda */}
-                            <View style={{ flex: LEFT_FLEX, alignItems: 'center', paddingRight: 8 }}>
-                                <DonutChart
-                                    size={donutSize}
-                                    strokeWidth={donutSize >= 128 ? 22 : donutSize >= 118 ? 20 : 18}
-                                    label="Maternidad"
-                                    segmentA={maternidad.alimentados}
-                                    segmentB={maternidad.noAlimentados}
-                                    colorA="#22C55E"
-                                    colorB="#EF4444"
-                                    lineCap="butt"
-                                    gapDegrees={0}
-                                    centerPercent={pct}
-                                />
-                            </View>
+                        <Text style={{ fontWeight: '700', color: '#fff', fontSize: 17 }}>Estado de Maternidad</Text>
+                        <Ionicons name="analytics-outline" size={20} color="#fff" />
+                    </View>
 
-                            {/* separador */}
-                            <View style={{ width: 1, backgroundColor: CARD_BORDER, alignSelf: 'stretch', marginHorizontal: 12 }} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                        {/* donut izquierda */}
+                        <View style={{ flex: LEFT_FLEX, alignItems: 'center', paddingRight: 8 }}>
+                            <DonutChart
+                                size={donutSize}
+                                strokeWidth={donutSize >= 128 ? 22 : donutSize >= 118 ? 20 : 18}
+                                label="Maternidad"
+                                segmentA={maternidad.alimentados}
+                                segmentB={maternidad.noAlimentados}
+                                colorA="#22C55E"
+                                colorB="#EF4444"
+                                lineCap="butt"
+                                centerPercent={pct}
+                            />
+                        </View>
 
-                            {/* métricas derecha */}
-                            <View style={{ flex: RIGHT_FLEX, paddingRight: 4 }}>
-                                <Row label="Alimentados" value={maternidad.alimentados} />
-                                <Row
-                                    label="No Alimentados"
-                                    value={maternidad.noAlimentados}
-                                    divider
-                                    action
+                        {/* separador */}
+                        <View style={{ width: 1, backgroundColor: CARD_BORDER, alignSelf: 'stretch', marginHorizontal: 12 }} />
+
+                        {/* métricas */}
+                        <View style={{ flex: RIGHT_FLEX, paddingRight: 4 }}>
+                            <Row label="Alimentados" value={maternidad.alimentados} />
+                            <Row
+                                label="No Alimentados"
+                                value={maternidad.noAlimentados}
+                                divider
+                                action
+                                onPress={() => navigation.navigate('NoAlimentadosMaternidad' as never)}
+                                labelColor={noAlColor}
+                                valueColor={noAlColor}
+                            />
+                            <Row
+                                label="Totales animales"
+                                value={total}
+                                strong
+                                divider
+                                action
+                                onPress={() => navigation.navigate('TodosAnimalesMaternidad' as never)}
+                            />
+
+                            {/* botones */}
+                            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                                {/* <TouchableOpacity
                                     onPress={() => navigation.navigate('NoAlimentadosMaternidad' as never)}
-                                    labelColor={noAlColor}
-                                    valueColor={noAlColor}
-                                />
-                                <Row
-                                    label="Totales animales"
-                                    value={total}
-                                    strong
-                                    divider
-                                    action
+                                    style={{
+                                        backgroundColor: BRAND,
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 14,
+                                        borderRadius: 10,
+                                    }}
+                                >
+                                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Ver no alimentados</Text>
+                                </TouchableOpacity> */}
+
+                                {/* <TouchableOpacity
                                     onPress={() => navigation.navigate('TodosAnimalesMaternidad' as never)}
-                                />
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: '#E2E8F0',
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 14,
+                                        borderRadius: 10,
+                                        backgroundColor: '#fff',
+                                    }}
+                                >
+                                    <Text style={{ color: '#0F172A', fontWeight: '700', fontSize: 14 }}>Ver totales</Text>
+                                </TouchableOpacity> */}
                             </View>
                         </View>
                     </View>
                 </View>
 
-                {/* Incidencias */}
+                {/* === BLOQUE 2: Incidencias (sin tocar) === */}
                 <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasMaternidad.length} />
 
                 {!isMd ? (
-                    // móvil: bloque con scroll propio
                     <View
                         style={{
                             borderWidth: 1,
@@ -366,11 +439,10 @@ export default function MaternidadScreen() {
                             contentContainerStyle={{ padding: 12 }}
                             showsVerticalScrollIndicator
                             nestedScrollEnabled
-                            extraData={expandedIds} // esencial para re-layout al expandir
+                            extraData={expandedIds}
                         />
                     </View>
                 ) : (
-                    // tablet/escritorio: grid responsivo
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, columnGap: 8, marginBottom: 16 }}>
                         {incidenciasMaternidad.map((it) => (
                             <View key={String(it.id)} style={{ flexBasis: gridCol, maxWidth: gridCol }}>
@@ -380,9 +452,15 @@ export default function MaternidadScreen() {
                     </View>
                 )}
 
-                {/* CTA inferior: Buscar corral */}
+                {/* === CTA inferior === */}
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('MAT-CORRAL' as never)}
+                    onPress={() => {
+                        if (Platform.OS === 'web') {
+                            setShowCorralModal(true);
+                        } else {
+                            navigation.navigate('MAT-CORRAL' as never);
+                        }
+                    }}
                     activeOpacity={0.85}
                     style={{
                         marginTop: 8,
@@ -400,14 +478,77 @@ export default function MaternidadScreen() {
                         maxWidth: isMd ? 580 : undefined,
                     }}
                 >
-                    <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>Buscar corral</Text>
+                    <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
+                        Buscar corral
+                    </Text>
                 </TouchableOpacity>
+                {Platform.OS === 'web' && (
+                    <Modal
+                        visible={showCorralModal}
+                        transparent
+                        animationType="slide"
+                        onRequestClose={() => setShowCorralModal(false)}
+                    >
+                        <View
+                            style={{
+                                flex: 1,
+                                backgroundColor: 'rgba(0,0,0,0.45)',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 20,
+                            }}
+                        >
+                            <View
+                                style={{
+                                    width: '100%',
+                                    maxWidth: 720,
+                                    backgroundColor: '#fff',
+                                    borderRadius: 20,
+                                    padding: 10,
+                                    overflow: 'hidden',
+                                    maxHeight: '90%',
+                                }}
+                            >
+                                {/* Cerrar */}
+                                <TouchableOpacity
+                                    onPress={() => setShowCorralModal(false)}
+                                    style={{
+                                        alignSelf: 'flex-end',
+                                        padding: 8,
+                                        marginRight: 6,
+                                    }}
+                                >
+                                    <Ionicons name="close-circle" size={26} color="#475569" />
+                                </TouchableOpacity>
+
+                                {/* Pantalla de corral */}
+                                <ScrollView style={{ flex: 1 }}>
+                                    <View style={{ paddingHorizontal: 10, paddingBottom: 20 }}>
+                                        {/* Aquí reusamos directamente el componente */}
+                                        <CorralScreen />
+                                    </View>
+                                </ScrollView>
+                            </View>
+                        </View>
+                    </Modal>
+                )}
+
             </ScrollView>
 
             {/* Menú flotante (3 puntos) */}
-            <Modal visible={menuOpen} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setMenuOpen(false)}>
+            <Modal
+                visible={menuOpen}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={() => setMenuOpen(false)}
+            >
                 <View style={{ flex: 1 }}>
-                    <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setMenuOpen(false)} />
+                    <TouchableOpacity
+                        style={StyleSheet.absoluteFill}
+                        activeOpacity={1}
+                        onPress={() => setMenuOpen(false)}
+                    />
                     {(() => {
                         const W = Dimensions.get('window').width;
                         const MENU_W = 220;
@@ -435,7 +576,6 @@ export default function MaternidadScreen() {
                                 }}
                             >
                                 <Text style={{ paddingHorizontal: 12, paddingVertical: 10, color: '#64748B', fontWeight: '700' }}>Acciones</Text>
-
                                 <TouchableOpacity
                                     onPress={() => {
                                         setMenuOpen(false);
@@ -455,7 +595,3 @@ export default function MaternidadScreen() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    // (reservado si luego quieres mover estilos aquí)
-});
