@@ -617,6 +617,8 @@ export const MatCorralDetail = () => {
    const navigation = useNavigation<NavigationProp<any>>();
    const [corraInfo, setCorralInfo] = useState<any | null>(null);
 
+
+
    const [animalState, setAnimalState] = useState({
       crotal: '—',
       curva: '—',
@@ -650,22 +652,34 @@ export const MatCorralDetail = () => {
    const winW = useWinWidth();
    const isMd = Platform.OS === 'web' && winW >= 900;
    const isLg = Platform.OS === 'web' && winW >= 1200;
-   const containerPadH = Platform.OS === 'web'
-      ? Math.max(16, Math.round(winW * 0.06))
-      : 16;
 
    const infoCols = isLg ? 3 : (isMd ? 2 : 1);
    const infoW = infoCols === 3 ? '32%' : infoCols === 2 ? '48%' : '100%';
-   const contentMax = 1680; // 1600–1760 va bien
-   const gutters = Platform.OS === 'web' ? Math.max(20, Math.round(winW * 0.05)) : 16;
 
-   // tamaños adaptativos para KPI e histograma
+   // tamaños adaptativos para KPI e histograma (más grandes)
    const isXl = Platform.OS === 'web' && winW >= 1440;
    const kpiFontSize = isXl ? 72 : (isLg ? 62 : (isMd ? 54 : 46));
-   const histoWidth = isMd ? Math.min(280, Math.round(winW * 0.22)) : 120;
-   const barW = isMd ? 10 : 6;
-   const barH = isMd ? 5 : 4;
+   // ===== TAMAÑOS QUE PUEDES TOCAR RÁPIDO =====
+   const pctFont = isMd ? 22 : 18;             // tamaño del "92%"
+   const pctOffsetY = isMd ? -28 : -22;           // separación vertical del % sobre la barra
 
+   const HISTO_BG_H = isMd ? 88 : 64;             // alto base del "fondo" gris del histograma
+   const histoWidth = isMd ? Math.min(360, Math.round(winW * 0.28)) : 180; // ancho del histograma
+   const barW = isMd ? 18 : 12;              // ancho de cada barra
+   const barH = isMd ? 15 : 14;               // multiplicador de altura de barras
+   const HISTO_SHIFT = isMd ? 20 : 10;           // desplazamiento vertical del histograma respecto al fondo gris
+   // Ancho del bloque KPI (ajústalo para centrar)
+   const KPI_AREA_PCT = isMd ? 50 : 100;
+
+   // Espacio entre KPI e histograma (para afinar el centrado)
+   const KPI_HISTO_SPACER = isMd ? 45 : 16; // sube/baja para moverlo
+
+   // Tamaño del histograma (ya grande)
+   const HISTO_WIDTH = isMd ? Math.min(440, Math.round(winW * 0.34)) : 220;
+   const KPI_HISTO_GAP = 36;
+   const legendFont = isMd ? 18 : 16;             // tamaño "200/600" y "33%"
+   const HISTO_NUDGE_Y = isMd ? 8 : -6;          // ajuste fino vertical del histograma
+   const HISTO_LEGEND_GAP = isMd ? 8 : 6;        // espacio entre barras y leyenda del histograma
    // --- Card para corral vacío (igual) ---
    const EmptyCorralCard = ({
       corralId,
@@ -865,25 +879,18 @@ export const MatCorralDetail = () => {
             style={{ flex: 1, backgroundColor: '#F1F5F9' }}
             contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
          >
-            {/* Card central responsive */}
-            <View style={[styles.card, { paddingHorizontal: gutters, maxWidth: contentMax, alignSelf: 'center' }]}>
+            <View style={[styles.card, { paddingHorizontal: 24 }]}>
                {hasAnimal && (
                   <Image
                      source={CerdoMaternidad}
                      resizeMode="contain"
-                     style={[
-                        styles.pigBg,
-                        isMd && { opacity: 0.12, top: 140 },
-                     ]}
+                     style={[styles.pigBg, Platform.OS === 'web' && winW >= 900 && { opacity: 0.12, top: 140 }]}
                   />
                )}
 
-               {/* Banda roja de error de dispositivo / status */}
                {(isDeviceError || !!statusMessage) && (
                   <View style={[styles.errorBand, { marginTop: 8 }]}>
-                     <Text style={styles.errorText}>
-                        {statusMessage || 'Error: El motor no funciona'}
-                     </Text>
+                     <Text style={styles.errorText}>{statusMessage || 'Error: El motor no funciona'}</Text>
                   </View>
                )}
 
@@ -894,50 +901,39 @@ export const MatCorralDetail = () => {
                   />
                ) : (
                   <>
-                     {/* fila chips: ID / Crotal (elástico) / Ciclo */}
-                     <View style={[styles.metaRow, isMd && styles.metaRowMd]}>
-                        <View style={styles.chipBlock}>
+                     {/* === ID · Crotal · Día · Ciclo — misma separación === */}
+                     <View style={styles.metaRowEven}>
+                        <View style={styles.metaCellEven}>
                            <Text style={styles.chipLabel}>ID</Text>
                            <Text style={styles.chipValue}>{animal?.id ?? '—'}</Text>
                         </View>
 
-                        <View style={[styles.chipBlock, styles.chipCrotal]}>
+                        <View style={[styles.metaCellEven, { minWidth: 0 }]}>
                            <Text style={styles.chipLabel}>Crotal</Text>
-                           <Text
-                              numberOfLines={1}
-                              ellipsizeMode="middle"
-                              style={[styles.chipValue, { flexShrink: 1 }]}
-                           >
+                           <Text numberOfLines={1} ellipsizeMode="middle" style={[styles.chipValue, { flexShrink: 1 }]}>
                               {animal?.crotal ?? '—'}
                            </Text>
                         </View>
 
-                        <View style={[styles.chipBlock, styles.chipRight]}>
+                        <View style={styles.metaCellEven}>
+                           <Text style={styles.chipLabel}>Día</Text>
+                           <Text style={styles.chipValue}>{animal?.dia ?? '—'}</Text>
+                        </View>
+
+                        <View style={styles.metaCellEven}>
                            <Text style={styles.chipLabel}>Ciclo</Text>
                            <Text style={styles.chipValue}>{animal?.ciclo ?? '—'}</Text>
                         </View>
                      </View>
 
-                     {/* Subestado + Día */}
-                     {!isMd ? (
-                        <View style={[styles.subRow]}>
-                           <Text style={styles.subTitle}>{animalState.subEstado ?? '—'}</Text>
-                           <View style={styles.dayPill}><Text style={styles.dayPillText}>Día</Text></View>
-                           <Text style={styles.dayNum}>{animal?.dia ?? '—'}</Text>
-                        </View>
-                     ) : (
-                        <View style={styles.headerRowMd}>
-                           <Text style={styles.subTitle}>{animalState.subEstado ?? '—'}</Text>
-                           <View style={{ flex: 1 }} />
-                           <View style={styles.dayBadge}>
-                              <Text style={styles.dayBadgeText}>Día {animal?.dia ?? '—'}</Text>
-                           </View>
-                        </View>
-                     )}
+                     {/* Subestado */}
+                     <View style={styles.headerRowMd}>
+                        <Text style={styles.subTitle}>{animalState.subEstado ?? '—'}</Text>
+                     </View>
 
                      {/* KPI + histograma */}
                      <View style={[styles.kpiRow, isMd && styles.kpiRowMd]}>
-                        <View style={{ flex: 1 }}>
+                        <View style={[styles.kpiLeft, { flexBasis: `${KPI_AREA_PCT}%`, marginRight: KPI_HISTO_GAP }]}>
                            <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                               <Text style={[styles.kpiNumber, { fontSize: kpiFontSize }]}>
                                  {actual.toLocaleString('es-ES')}
@@ -945,49 +941,87 @@ export const MatCorralDetail = () => {
                               <Text style={styles.kpiUnit}>gr</Text>
                            </View>
 
-                           <View style={{ marginTop: 8 }}>
+                           {/* barra + % anclado al final */}
+                           <View style={[styles.progressWrap, { width: '100%' }]}>
                               <View style={styles.barBg} />
                               <View style={[styles.barFill, { width: `${Math.min(100, pct)}%` }]} />
+                              <View style={[styles.pctAnchor, { left: `${Math.min(100, pct)}%`, top: pctOffsetY }]}>
+                                 <Text style={[styles.pctLabel, { fontSize: pctFont }]}>{pct}%</Text>
+                              </View>
                            </View>
 
+
+                           {/* Solo objetivo debajo (el % ya está arriba en la barra) */}
                            <View style={styles.kpiFootRow}>
-                              <Text style={styles.kpiFootText}>
+                              <Text style={styles.kpiFootTextStrong}>
                                  Objetivo {objetivo.toLocaleString('es-ES')} gr
                               </Text>
-                              <Text style={styles.kpiFootText}>{pct}%</Text>
                            </View>
                         </View>
+                        <View style={{ width: KPI_HISTO_SPACER }} />
 
-                        {/* histograma más ancho a la derecha */}
-                        <View style={[styles.histogram, isMd && styles.histogramMd, { width: histoWidth }]}>
-                           {[
-                              ['#10B981', 10], ['#10B981', 12], ['#EF4444', 5],
-                              ['#10B981', 12], ['#10B981', 5], ['#94A3B8', 12],
-                              ['#94A3B8', 12], ['#94A3B8', 12],
-                           ].map(([c, h], i) => (
-                              <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-end', marginLeft: i ? 8 : 0 }}>
-                                 <View style={{ height: 48, width: i === 4 ? barW * 1.6 : barW, backgroundColor: '#9CA3AF', position: 'absolute', borderTopLeftRadius: 6, borderTopRightRadius: 6 }} />
-                                 <View style={{ height: (h as number) * barH, width: i === 4 ? barW * 1.6 : barW, backgroundColor: c as string, borderTopLeftRadius: 6, borderTopRightRadius: 6 }} />
-                              </View>
-                           ))}
 
-                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                              <Text style={styles.kpiFootText}>200/600</Text>
-                              <Text style={styles.kpiFootText}>33%</Text>
+                        {/* histograma a la derecha, más grande */}
+                        <View
+                           style={[
+                              styles.histogram,
+                              isMd && styles.histogramMd,
+                              {
+                                 width: HISTO_WIDTH,
+                                 flexShrink: 0,
+                                 transform: [{ translateY: HISTO_NUDGE_Y }], // lo “sube” un poco
+                              },
+                           ]}
+                        >
+                           {/* fila de barras */}
+                           <View style={styles.histoBarsRow}>
+                              {[
+                                 ['#10B981', 10], ['#10B981', 12], ['#EF4444', 5],
+                                 ['#10B981', 12], ['#10B981', 5], ['#94A3B8', 12],
+                                 ['#94A3B8', 12], ['#94A3B8', 12],
+                              ].map(([c, h], i) => (
+                                 <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-end', marginLeft: i ? 10 : 0 }}>
+                                    <View style={{
+                                       height: HISTO_BG_H,
+                                       width: i === 4 ? barW * 1.8 : barW,
+                                       backgroundColor: '#9CA3AF',
+                                       position: 'absolute',
+                                       borderTopLeftRadius: 6, borderTopRightRadius: 6,
+                                    }} />
+                                    <View style={{
+                                       height: (h as number) * barH,
+                                       width: i === 4 ? barW * 1.8 : barW,
+                                       backgroundColor: c as string,
+                                       borderTopLeftRadius: 6, borderTopRightRadius: 6,
+                                    }} />
+                                 </View>
+                              ))}
+                           </View>
+
+                           {/* leyenda DEBAJO, alineada a la derecha */}
+                           <View style={[styles.histoLegendRow, { marginTop: HISTO_LEGEND_GAP }]}>
+                              <Text style={[styles.histoLegendPrimary, { fontSize: legendFont }]}>200/600</Text>
+                              <View style={styles.histoLegendDivider} />
+                              <Text style={[styles.histoLegendPrimary, { fontSize: legendFont }]}>33%</Text>
                            </View>
                         </View>
                      </View>
 
                      {/* banda dias sin alimentar */}
                      {hasDiasSinAlimentar && (
-                        <View style={[styles.errorBand, { marginTop: 12 }]}>
-                           <Text style={styles.errorText}>2 días sin alimentar</Text>
-                        </View>
+                        <>
+                           <View style={{ height: 20 }} />  {/* separador explícito */}
+                           <View style={styles.errorBand}>
+                              <Text style={styles.errorText}>2 días sin alimentar</Text>
+                           </View>
+                           <View style={{ height: 2 }} />
+                        </>
                      )}
+
 
                      {/* GRID de info */}
                      <View style={[styles.infoGrid]}>
-                        <View style={[styles.infoCell, { width: infoW }, isMd && styles.infoCellBox]}>
+                        <View style={[styles.infoCell, { width: infoW }]}>
                            <Text style={styles.infoLabel}>Curva</Text>
                            <View style={styles.infoRow}>
                               <Icon name="book-outline" size={18} color="#0f172a" />
@@ -1046,10 +1080,10 @@ export const MatCorralDetail = () => {
                   </>
                )}
             </View>
-         </ScrollView>
+         </ScrollView >
 
          {/* --- Barra inferior --- */}
-         <View
+         < View
             style={{
                position: 'absolute',
                left: 0,
@@ -1079,10 +1113,10 @@ export const MatCorralDetail = () => {
                   <Text style={{ color: '#fff', fontWeight: '700' }}>Operaciones</Text>
                </TouchableOpacity>
             </View>
-         </View>
+         </View >
 
          {/* Drawer lateral derecho */}
-         <Modal visible={drawer.open} transparent animationType="none" onRequestClose={() => drawer.hide()}>
+         < Modal visible={drawer.open} transparent animationType="none" onRequestClose={() => drawer.hide()}>
             <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' }} onPress={() => drawer.hide()} />
             <Animated.View
                style={{
@@ -1174,10 +1208,10 @@ export const MatCorralDetail = () => {
                   <ListItem icon="home-outline" label="Salida maternidad" onPress={() => openAction('salidaMaternidad')} disabled={!hasAnimal} />
                </ListGroup>
             </Animated.View>
-         </Modal>
+         </Modal >
 
          {/* Diálogos */}
-         <RadioDialog
+         < RadioDialog
             visible={dlgCurva}
             title="Seleccionar curva"
             options={['DEFECTO', 'PRIMALAS 2 FASE', 'CURVA GENERAL', 'ADAPTACION PRIM', 'ENFERMA', 'SEGUNDO CICLO']}
@@ -1257,7 +1291,7 @@ export const MatCorralDetail = () => {
                cb && cb();
             }}
          />
-      </View>
+      </View >
    );
 };
 
@@ -1271,11 +1305,10 @@ const styles = StyleSheet.create({
       padding: 12,
    },
 
-   // card contenedor
+   // card contenedor full width
    card: {
       width: '100%',
       alignSelf: 'stretch',
-      paddingHorizontal: 16,
       paddingTop: 12,
       paddingBottom: 16,
       position: 'relative',
@@ -1301,58 +1334,66 @@ const styles = StyleSheet.create({
       textAlign: 'center',
    },
 
-   // chips (fila superior reordenada)
-   metaRow: {
+   bandSpacer: { marginTop: 50 },
+
+
+   metaRowEven: {
       marginTop: 12,
       flexDirection: 'row',
       alignItems: 'center',
-      flexWrap: Platform.OS === 'web' ? 'nowrap' : 'wrap',
-      rowGap: 8,
+      justifyContent: 'space-between',
+      columnGap: 18,
    },
-   metaRowMd: {
-      columnGap: 24,
+   metaCellEven: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 0,
    },
-   chipBlock: { flexDirection: 'row', alignItems: 'center' },
-   chipCrotal: { flex: 1, minWidth: 260 },
-   chipRight: { marginLeft: 'auto' },
-   chipLabel: { fontSize: 12, color: '#475569', backgroundColor: '#E5E7EB', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
+
+   // chips
+   chipLabel: {
+      fontSize: 16,
+      color: '#475569',
+      backgroundColor: '#E5E7EB',
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 999,
+   },
    chipValue: { marginLeft: 8, fontSize: 16, color: '#334155', fontWeight: '600' },
 
-   // subestado + día
-   subRow: { marginTop: 16, flexDirection: 'row', alignItems: 'flex-end' },
-   subRowMd: { justifyContent: 'space-between' },
-   subTitle: { fontSize: 22, color: '#1E3A8A', fontWeight: '700' },
-   dayPill: { marginLeft: 'auto', backgroundColor: '#E5E7EB', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-   dayPillText: { color: '#64748B', fontSize: 13 },
-   dayNum: { marginLeft: 8, fontSize: 20, color: '#334155', fontWeight: '700' },
-
+   // título subestado
    headerRowMd: { marginTop: 16, flexDirection: 'row', alignItems: 'center' },
-   dayBadge: { backgroundColor: '#E5E7EB', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-   dayBadgeText: { color: '#334155', fontWeight: '800' },
+   subTitle: { fontSize: 22, color: '#1E3A8A', fontWeight: '700' },
 
    // KPI + histograma
    kpiRow: { marginTop: 12, flexDirection: 'column', rowGap: 12 },
-   kpiRowMd: { flexDirection: 'row', alignItems: 'flex-end', columnGap: 20 },
    kpiNumber: { fontSize: 54, color: '#475569', fontWeight: '700', letterSpacing: -1.5 },
    kpiUnit: { fontSize: 18, color: '#475569', marginLeft: 6 },
-   barBg: { height: 12, borderRadius: 999, backgroundColor: '#D1D5DB', width: '100%' },
-   barFill: { position: 'absolute', left: 0, top: 0, height: 12, borderRadius: 999, backgroundColor: '#22C55E' },
-   kpiFootRow: { marginTop: 6, flexDirection: 'row', justifyContent: 'space-between' },
-   kpiFootText: { color: '#475569' },
 
-   histogram: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 8 },
-   histogramMd: { marginTop: 0, minWidth: 140, alignSelf: 'flex-end' },
+   // barra de progreso y % anclado
+
+   barBg: { height: 14, borderRadius: 999, backgroundColor: '#D1D5DB', width: '100%' },
+   barFill: { position: 'absolute', left: 0, top: 0, height: 14, borderRadius: 999, backgroundColor: '#22C55E' },
+
+   kpiFootRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+   kpiFootText: { color: '#475569' },
+   kpiFootTextStrong: { color: '#0f172a', fontSize: 16, fontWeight: '800' },
+
+   // histograma grande
+   histoLegendText: { color: '#334155', fontSize: 16, fontWeight: '800' },
 
    // grid info
    infoGrid: { marginTop: 18, flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 14 },
    infoCell: {},
    infoCell2: { width: '48%' },
    infoCell3: { flexBasis: '31%', maxWidth: '31%' },
-   infoLabel: { fontSize: 16, color: '#64748B' },
+   infoLabel: { fontSize: 22, color: '#64748B' },
    infoRow: { marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 6 },
    infoValue: { fontSize: 18, color: '#334155', fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Menlo' : (Platform.OS === 'android' ? 'monospace' : undefined) },
 
-   // pill para valores tipo "Multiparas"
+   // pill
    pill: {
       backgroundColor: '#F1F5F9',
       borderWidth: 1,
@@ -1363,4 +1404,54 @@ const styles = StyleSheet.create({
       fontWeight: '800',
       color: '#0f172a',
    },
+   histogramCard: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      marginTop: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      backgroundColor: '#F8FAFC',
+      borderWidth: 1,
+      borderColor: '#E2E8F0',
+      alignSelf: 'flex-end',
+   },
+
+
+   progressWrap: { marginTop: 8, width: '74%', position: 'relative' },
+   pctAnchor: { position: 'absolute', transform: [{ translateX: -16 }] },
+   pctLabel: { color: '#334155', fontWeight: '800' },
+
+   histogramMd: { marginTop: 0, minWidth: 180, alignSelf: 'flex-end' },
+
+
+   histoLegendPrimary: { color: '#0f172a', fontWeight: '800' },
+   histoLegendDivider: { width: 1, height: 16, backgroundColor: '#CBD5E1', marginHorizontal: 10 },
+   kpiRowMd: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      justifyContent: 'flex-start', // importante: NO al extremo derecho
+      columnGap: 4,
+   },
+   kpiLeft: {
+      flexGrow: 0,
+      flexShrink: 1,
+      minWidth: 0,
+   },
+   // antes: histogram: { flexDirection: 'row', alignItems: 'flex-end', ... }
+   histogram: { flexDirection: 'column', alignItems: 'flex-end', marginTop: 8 },
+
+   // fila que contiene SOLO las barras
+   histoBarsRow: { flexDirection: 'row', alignItems: 'flex-end', alignSelf: 'flex-end' },
+
+   // debajo de las barras; ya existía, solo asegúrate de que quede a la derecha
+   histoLegendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      paddingHorizontal: 2,
+      alignSelf: 'stretch',
+   },
+
+
 });
