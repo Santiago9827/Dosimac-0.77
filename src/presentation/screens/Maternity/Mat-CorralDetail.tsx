@@ -4,19 +4,28 @@ import { CerdoMaternidad } from '../../../assets';
 import axios from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
-import { DrawerItem } from '@react-navigation/drawer';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Icon from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
+import { StyleSheet, Platform } from 'react-native';
 
 type IoniconName = ComponentProps<typeof Icon>['name'];
-
 
 const ipServer = 'http://192.168.1.238:3010';
 const corralInfoUrl = (id: number) => `${ipServer}/corral/${id}`;
 
 const CARD_BORDER = '#E2E8F0';
 const BRAND = '#4F46E5';
+
+// ===== util responsive =====
+const useWinWidth = () => {
+   const [w, setW] = React.useState(Dimensions.get('window').width);
+   React.useEffect(() => {
+      const sub = Dimensions.addEventListener('change', ({ window }) => setW(window.width));
+      return () => (sub as any)?.remove?.();
+   }, []);
+   return w;
+};
 
 const useRightDrawer = () => {
    const w = Math.min(340, Math.round(Dimensions.get('window').width * 0.88));
@@ -28,13 +37,11 @@ const useRightDrawer = () => {
       Animated.timing(tx, { toValue: 0, duration: 240, useNativeDriver: true }).start();
    };
 
-   // ✅ Nuevo: acepta callback para ejecutar acciones tras cerrar el drawer
    const hide = (after?: () => void) => {
       Animated.timing(tx, { toValue: w, duration: 220, useNativeDriver: true })
          .start(({ finished }) => {
             if (finished) {
                setOpen(false);
-               // Espera un frame a que se desmonte el Modal del drawer
                requestAnimationFrame(() => after?.());
             }
          });
@@ -46,6 +53,7 @@ const useRightDrawer = () => {
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
 
+// ====== Diálogos (sin cambios relevantes) ======
 function RadioDialog({
    visible, title, options, current, onClose, onAccept,
 }: {
@@ -163,37 +171,6 @@ function CrotalDialog({
             </View>
          </View>
       </Modal>
-   );
-}
-
-function ActionRow({
-   label,
-   onPress,
-   disabled = false,
-}: {
-   label: string;
-   onPress: () => void;
-   disabled?: boolean;
-}) {
-   return (
-      <Pressable
-         onPress={disabled ? undefined : onPress}
-         disabled={disabled}
-         android_ripple={disabled ? undefined : { color: '#e5e7eb' }}
-         style={{
-            opacity: disabled ? 0.45 : 1,
-            paddingVertical: 12,
-            paddingHorizontal: 8,
-            borderRadius: 10,
-            flexDirection: 'row',
-            alignItems: 'center',
-         }}
-      >
-         <Icon name="chevron-forward" size={16} color={disabled ? '#94A3B8' : '#0F172A'} />
-         <Text style={{ marginLeft: 6, fontWeight: '800', color: disabled ? '#94A3B8' : '#0F172A' }}>
-            {label}
-         </Text>
-      </Pressable>
    );
 }
 
@@ -631,6 +608,7 @@ function ListGroup({ children }: { children: React.ReactNode }) {
 
 const Divider = () => <View style={{ height: 1, backgroundColor: CARD_BORDER }} />;
 
+// ===================== COMPONENTE PRINCIPAL =====================
 export const MatCorralDetail = () => {
    const insets = useSafeAreaInsets();
    const route = useRoute<any>();
@@ -659,7 +637,6 @@ export const MatCorralDetail = () => {
       visible: boolean; title: string; message?: string; onAccept?: () => void;
    }>({ visible: false, title: '' });
 
-   // Info de corral (mock / backend)
    const [requestError, setRequestError] = useState(false);
 
    const drawer = useRightDrawer();
@@ -668,7 +645,28 @@ export const MatCorralDetail = () => {
    const [dlgSub, setDlgSub] = useState(false);
    const [dlgSalida, setDlgSalida] = useState(false);
    const [dlgCrotal, setDlgCrotal] = useState(false);
-   // --- Card para corral vacío ---
+
+   // responsive flags
+   const winW = useWinWidth();
+   const isMd = Platform.OS === 'web' && winW >= 900;
+   const isLg = Platform.OS === 'web' && winW >= 1200;
+   const containerPadH = Platform.OS === 'web'
+      ? Math.max(16, Math.round(winW * 0.06))
+      : 16;
+
+   const infoCols = isLg ? 3 : (isMd ? 2 : 1);
+   const infoW = infoCols === 3 ? '32%' : infoCols === 2 ? '48%' : '100%';
+   const contentMax = 1680; // 1600–1760 va bien
+   const gutters = Platform.OS === 'web' ? Math.max(20, Math.round(winW * 0.05)) : 16;
+
+   // tamaños adaptativos para KPI e histograma
+   const isXl = Platform.OS === 'web' && winW >= 1440;
+   const kpiFontSize = isXl ? 72 : (isLg ? 62 : (isMd ? 54 : 46));
+   const histoWidth = isMd ? Math.min(280, Math.round(winW * 0.22)) : 120;
+   const barW = isMd ? 10 : 6;
+   const barH = isMd ? 5 : 4;
+
+   // --- Card para corral vacío (igual) ---
    const EmptyCorralCard = ({
       corralId,
       onPressAdd,
@@ -701,8 +699,7 @@ export const MatCorralDetail = () => {
       };
 
       return (
-         <View style={{ marginTop: 24, alignItems: 'center', paddingHorizontal: 16 }}>
-            {/* Icono */}
+         <View style={{ marginTop: 24, alignItems: 'center' }}>
             <View
                style={{
                   width: 64, height: 64, borderRadius: 32,
@@ -715,7 +712,6 @@ export const MatCorralDetail = () => {
 
             <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>Sin animales</Text>
 
-            {/* Línea con chip "Corral X" */}
             <View
                style={{
                   marginTop: 14,
@@ -752,7 +748,6 @@ export const MatCorralDetail = () => {
                </View>
             </View>
 
-            {/* CTA */}
             <TouchableOpacity
                onPress={onPressAdd}
                activeOpacity={0.9}
@@ -773,7 +768,6 @@ export const MatCorralDetail = () => {
          </View>
       );
    };
-
 
    useEffect(() => {
       if (mockEmpty) {
@@ -850,9 +844,7 @@ export const MatCorralDetail = () => {
       });
    };
 
-   const onSalida = () => {
-      setDlgSalidaMotivo(true);
-   };
+   const onSalida = () => setDlgSalidaMotivo(true);
 
    const onAcceptSalidaMotivo = (motivo: string) => {
       askConfirm('Confirmar salida', `Motivo: ${motivo}. ¿Seguro?`, () => {
@@ -870,21 +862,27 @@ export const MatCorralDetail = () => {
    return (
       <View style={{ flex: 1 }}>
          <ScrollView
-            className="flex-1 bg-gray-100"
+            style={{ flex: 1, backgroundColor: '#F1F5F9' }}
             contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
          >
-            {hasAnimal && (
-               <Image
-                  source={CerdoMaternidad}
-                  className="w-fit h-2/3 absolute translate-x-3 translate-y-60 opacity-40"
-               />
-            )}
+            {/* Card central responsive */}
+            <View style={[styles.card, { paddingHorizontal: gutters, maxWidth: contentMax, alignSelf: 'center' }]}>
+               {hasAnimal && (
+                  <Image
+                     source={CerdoMaternidad}
+                     resizeMode="contain"
+                     style={[
+                        styles.pigBg,
+                        isMd && { opacity: 0.12, top: 140 },
+                     ]}
+                  />
+               )}
 
-            <View className="mx-4">
-               {(isDeviceError || statusMessage) && (
-                  <View className="mt-3 h-8 bg-red-500 rounded-md flex-col justify-center items-center">
-                     <Text className="text-white font-normal text-base">
-                        {statusMessage || 'Error:  El motor no funciona'}
+               {/* Banda roja de error de dispositivo / status */}
+               {(isDeviceError || !!statusMessage) && (
+                  <View style={[styles.errorBand, { marginTop: 8 }]}>
+                     <Text style={styles.errorText}>
+                        {statusMessage || 'Error: El motor no funciona'}
                      </Text>
                   </View>
                )}
@@ -892,238 +890,156 @@ export const MatCorralDetail = () => {
                {!hasAnimal ? (
                   <EmptyCorralCard
                      corralId={corralId}
-                     onPressAdd={() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId })}
+                     onPressAdd={() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId } as never)}
                   />
                ) : (
                   <>
-                     <View className="flex-row items-center mt-4">
-                        <View className="flex-row items-center mr-4">
-                           <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">
-                              ID
-                           </Text>
-                           <Text className="ml-2 text-[16px] text-gray-700 font-semibold">
-                              {animal?.id ?? '—'}
-                           </Text>
+                     {/* fila chips: ID / Crotal (elástico) / Ciclo */}
+                     <View style={[styles.metaRow, isMd && styles.metaRowMd]}>
+                        <View style={styles.chipBlock}>
+                           <Text style={styles.chipLabel}>ID</Text>
+                           <Text style={styles.chipValue}>{animal?.id ?? '—'}</Text>
                         </View>
 
-                        <View className="flex-row items-center mr-4 flex-shrink" style={{ minWidth: 0 }}>
-                           <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">
-                              Crotal
-                           </Text>
+                        <View style={[styles.chipBlock, styles.chipCrotal]}>
+                           <Text style={styles.chipLabel}>Crotal</Text>
                            <Text
-                              className="ml-2 text-[16px] text-gray-700 font-semibold"
                               numberOfLines={1}
                               ellipsizeMode="middle"
-                              style={{ flexShrink: 1 }}
+                              style={[styles.chipValue, { flexShrink: 1 }]}
                            >
                               {animal?.crotal ?? '—'}
                            </Text>
                         </View>
 
-                        <View className="flex-row items-center">
-                           <Text className="text-sm text-gray-600 px-2 py-0.5 bg-gray-200 rounded-full">
-                              Ciclo
-                           </Text>
-                           <Text className="ml-2 text-[16px] text-gray-700 font-semibold">
-                              {animal?.ciclo ?? '—'}
-                           </Text>
+                        <View style={[styles.chipBlock, styles.chipRight]}>
+                           <Text style={styles.chipLabel}>Ciclo</Text>
+                           <Text style={styles.chipValue}>{animal?.ciclo ?? '—'}</Text>
                         </View>
                      </View>
 
-                     <View className="flex-row justify-between mx-8 mt-6 items-end">
-                        <View className="flex-row flex-1">
-                           <Text className="text-2xl text-blue-900 font-semibold">
-                              {animalState.subEstado ?? '—'}
-                           </Text>
+                     {/* Subestado + Día */}
+                     {!isMd ? (
+                        <View style={[styles.subRow]}>
+                           <Text style={styles.subTitle}>{animalState.subEstado ?? '—'}</Text>
+                           <View style={styles.dayPill}><Text style={styles.dayPillText}>Día</Text></View>
+                           <Text style={styles.dayNum}>{animal?.dia ?? '—'}</Text>
                         </View>
-                        <View className="flex-row flex-1 justify-end">
-                           <Text className="text-base text-gray-500 px-2 bg-gray-200 rounded-full">
-                              {' '}
-                              Día
-                           </Text>
-                           <Text className="text-xl text-gray-600 font-semibold pl-2">
-                              {animal?.dia ?? '—'}
-                           </Text>
-                        </View>
-                     </View>
-
-                     <View className="flex-row justify-between mt-6">
-                        <View className="flex-col">
-                           <View className="flex-row items-baseline">
-                              <Text className="text-6xl text-gray-600 font-semibold tracking-tighter">
-                                 {actual.toLocaleString('es-ES')}
-                              </Text>
-                              <Text className="text-xl text-gray-600 font-normal ml-1 ">gr</Text>
+                     ) : (
+                        <View style={styles.headerRowMd}>
+                           <Text style={styles.subTitle}>{animalState.subEstado ?? '—'}</Text>
+                           <View style={{ flex: 1 }} />
+                           <View style={styles.dayBadge}>
+                              <Text style={styles.dayBadgeText}>Día {animal?.dia ?? '—'}</Text>
                            </View>
-                           <View>
-                              <View className="w-fit h-3 bg-gray-300 rounded-full" />
-                              <View
-                                 className="w-10/12 h-3 bg-green-500 rounded-full absolute"
-                                 style={{ width: `${Math.min(100, pct)}%` }}
-                              />
-                           </View>
-                           <View className="flex-row justify-between">
-                              <Text className="font-normal text-md">
-                                 {objetivo.toLocaleString('es-ES')} gr
-                              </Text>
-                              <Text className="font-normal text-md">{pct}%</Text>
-                           </View>
-                        </View>
-
-                        <View className="flex-col justify-end">
-                           <View className="flex-row ">
-                              <View className="flex-row items-end ml-1">
-                                 <View className="h-12 w-2 bg-gray-500 absolute rounded-t-full" />
-                                 <View className="h-10 w-2 bg-green-500 rounded-t-full" />
-                              </View>
-                              <View className="flex-row items-end ml-1">
-                                 <View className="h-12 w-2 bg-gray-500 absolute rounded-t-full" />
-                                 <View className="h-12 w-2 bg-green-500 rounded-t-full" />
-                              </View>
-                              <View className="flex-row items-end ml-1">
-                                 <View className="h-12 w-2 bg-gray-500 absolute rounded-t-full" />
-                                 <View className="h-5 w-2 bg-red-600 rounded-t-full" />
-                              </View>
-                              <View className="flex-row items-end ml-1">
-                                 <View className="h-12 w-2 bg-gray-500 absolute rounded-t-full" />
-                                 <View className="h-12 w-2 bg-green-500 rounded-t-full" />
-                              </View>
-                              <View className="flex-row items-end ml-1">
-                                 <View className="h-12 w-6 bg-gray-500 absolute rounded-t-full" />
-                                 <View className="h-5 w-6 bg-green-500 rounded-t-full" />
-                              </View>
-                              <View className="flex-row items-end ml-1">
-                                 <View className="h-12 w-2 bg-gray-500  rounded-t-full" />
-                              </View>
-                              <View className="flex-row items-end ml-1">
-                                 <View className="h-12 w-2 bg-gray-500  rounded-t-full" />
-                              </View>
-                              <View className="flex-row items-end ml-1">
-                                 <View className="h-12 w-2 bg-gray-500  rounded-t-full" />
-                              </View>
-                           </View>
-                           <View className="flex-row justify-between">
-                              <Text className="font-normal text-md">200/600</Text>
-                              <Text className="font-normal text-md">33%</Text>
-                           </View>
-                        </View>
-                     </View>
-
-                     {hasDiasSinAlimentar && (
-                        <View className="mt-4 h-8 bg-red-500 rounded-md flex-col justify-center items-center">
-                           <Text className="text-white font-normal text-base">2 días sin alimentar</Text>
                         </View>
                      )}
 
-                     <View className="flex-col stretch">
-                        <View className="flex-row justify-between mt-6">
-                           <View className="flex-col">
-                              <Text className="text-lg text-gray-600 font-normal">Curva</Text>
-                              <View className="flex-row">
-                                 <Icon
-                                    name="book-outline"
-                                    size={20}
-                                    color="black"
-                                    style={{ paddingTop: 4, marginRight: 5 }}
-                                 />
-                                 <Text className="text-xl text-gray-600 font-bold font-mono">
-                                    {animal?.curva ?? '—'}
-                                 </Text>
-                              </View>
+                     {/* KPI + histograma */}
+                     <View style={[styles.kpiRow, isMd && styles.kpiRowMd]}>
+                        <View style={{ flex: 1 }}>
+                           <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                              <Text style={[styles.kpiNumber, { fontSize: kpiFontSize }]}>
+                                 {actual.toLocaleString('es-ES')}
+                              </Text>
+                              <Text style={styles.kpiUnit}>gr</Text>
                            </View>
 
-                           <View className="flex-col">
-                              <Text className="text-lg text-gray-600 font-normal">Corrección</Text>
-                              <View className="flex-row">
-                                 <Icon
-                                    name="book-outline"
-                                    size={20}
-                                    color="black"
-                                    style={{ paddingTop: 4, marginRight: 5 }}
-                                 />
-                                 <Text className="text-xl text-gray-600 font-bold font-mono">
-                                    {animal?.correccion ?? '—'}
-                                 </Text>
-                              </View>
+                           <View style={{ marginTop: 8 }}>
+                              <View style={styles.barBg} />
+                              <View style={[styles.barFill, { width: `${Math.min(100, pct)}%` }]} />
+                           </View>
+
+                           <View style={styles.kpiFootRow}>
+                              <Text style={styles.kpiFootText}>
+                                 Objetivo {objetivo.toLocaleString('es-ES')} gr
+                              </Text>
+                              <Text style={styles.kpiFootText}>{pct}%</Text>
                            </View>
                         </View>
 
-                        <View className="flex-row justify-between mt-5">
-                           <View className="flex-col">
-                              <Text className="text-lg text-gray-600 font-normal">Fecha entrada</Text>
-                              <View className="flex-row">
-                                 <Icon
-                                    name="book-outline"
-                                    size={20}
-                                    color="black"
-                                    style={{ paddingTop: 4, marginRight: 5 }}
-                                 />
-                                 <Text className="text-xl text-gray-600 font-bold font-mono">
-                                    {animal?.fechas?.entrada ?? '—'}
-                                 </Text>
+                        {/* histograma más ancho a la derecha */}
+                        <View style={[styles.histogram, isMd && styles.histogramMd, { width: histoWidth }]}>
+                           {[
+                              ['#10B981', 10], ['#10B981', 12], ['#EF4444', 5],
+                              ['#10B981', 12], ['#10B981', 5], ['#94A3B8', 12],
+                              ['#94A3B8', 12], ['#94A3B8', 12],
+                           ].map(([c, h], i) => (
+                              <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-end', marginLeft: i ? 8 : 0 }}>
+                                 <View style={{ height: 48, width: i === 4 ? barW * 1.6 : barW, backgroundColor: '#9CA3AF', position: 'absolute', borderTopLeftRadius: 6, borderTopRightRadius: 6 }} />
+                                 <View style={{ height: (h as number) * barH, width: i === 4 ? barW * 1.6 : barW, backgroundColor: c as string, borderTopLeftRadius: 6, borderTopRightRadius: 6 }} />
                               </View>
+                           ))}
+
+                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                              <Text style={styles.kpiFootText}>200/600</Text>
+                              <Text style={styles.kpiFootText}>33%</Text>
                            </View>
-                           <View className="flex-col">
-                              <Text className="text-lg text-gray-600 font-normal">Fecha parto</Text>
-                              <View className="flex-row">
-                                 <Icon
-                                    name="book-outline"
-                                    size={20}
-                                    color="black"
-                                    style={{ paddingTop: 4, marginRight: 5 }}
-                                 />
-                                 <Text className="text-xl text-gray-600 font-bold font-mono">
-                                    {animal?.fechas?.parto ?? '—'}
-                                 </Text>
-                              </View>
+                        </View>
+                     </View>
+
+                     {/* banda dias sin alimentar */}
+                     {hasDiasSinAlimentar && (
+                        <View style={[styles.errorBand, { marginTop: 12 }]}>
+                           <Text style={styles.errorText}>2 días sin alimentar</Text>
+                        </View>
+                     )}
+
+                     {/* GRID de info */}
+                     <View style={[styles.infoGrid]}>
+                        <View style={[styles.infoCell, { width: infoW }, isMd && styles.infoCellBox]}>
+                           <Text style={styles.infoLabel}>Curva</Text>
+                           <View style={styles.infoRow}>
+                              <Icon name="book-outline" size={18} color="#0f172a" />
+                              <Text style={[styles.infoValue, styles.pill]}>{animal?.curva ?? '—'}</Text>
                            </View>
                         </View>
 
-                        <View className="flex-row justify-between mt-5">
-                           <View className="flex-col">
-                              <Text className="text-lg text-gray-600 font-normal">Nave</Text>
-                              <View className="flex-row">
-                                 <Icon
-                                    name="book-outline"
-                                    size={20}
-                                    color="black"
-                                    style={{ paddingTop: 4, marginRight: 5 }}
-                                 />
-                                 <Text className="text-xl text-gray-600 font-bold font-mono">
-                                    {animal?.nave ?? '—'}
-                                 </Text>
-                              </View>
-                           </View>
-                           <View className="flex-col">
-                              <Text className="text-lg text-gray-600 font-normal">Corral</Text>
-                              <View className="flex-row">
-                                 <Icon
-                                    name="book-outline"
-                                    size={20}
-                                    color="black"
-                                    style={{ paddingTop: 4, marginRight: 5 }}
-                                 />
-                                 <Text className="text-xl text-gray-600 font-bold font-mono">
-                                    {animal?.corral ?? corralId ?? '—'}
-                                 </Text>
-                              </View>
+                        <View style={[styles.infoCell, { width: infoW }]}>
+                           <Text style={styles.infoLabel}>Corrección</Text>
+                           <View style={styles.infoRow}>
+                              <Icon name="book-outline" size={18} color="#0f172a" />
+                              <Text style={styles.infoValue}>{animal?.correccion ?? '—'}</Text>
                            </View>
                         </View>
 
-                        <View className="flex-row justify-between mt-5">
-                           <View className="flex-col">
-                              <Text className="text-lg text-gray-600 font-normal">Última alimentación</Text>
-                              <View className="flex-row">
-                                 <Icon
-                                    name="book-outline"
-                                    size={20}
-                                    color="black"
-                                    style={{ paddingTop: 4, marginRight: 5 }}
-                                 />
-                                 <Text className="text-xl text-gray-600 font-bold font-mono">
-                                    {animal?.ultimaAlimentacion ?? '—'}
-                                 </Text>
-                              </View>
+                        <View style={[styles.infoCell, { width: infoW }]}>
+                           <Text style={styles.infoLabel}>Fecha entrada</Text>
+                           <View style={styles.infoRow}>
+                              <Icon name="book-outline" size={18} color="#0f172a" />
+                              <Text style={styles.infoValue}>{animal?.fechas?.entrada ?? '—'}</Text>
+                           </View>
+                        </View>
+
+                        <View style={[styles.infoCell, { width: infoW }]}>
+                           <Text style={styles.infoLabel}>Fecha parto</Text>
+                           <View style={styles.infoRow}>
+                              <Icon name="book-outline" size={18} color="#0f172a" />
+                              <Text style={styles.infoValue}>{animal?.fechas?.parto ?? '—'}</Text>
+                           </View>
+                        </View>
+
+                        <View style={[styles.infoCell, { width: infoW }]}>
+                           <Text style={styles.infoLabel}>Nave</Text>
+                           <View style={styles.infoRow}>
+                              <Icon name="book-outline" size={18} color="#0f172a" />
+                              <Text style={styles.infoValue}>{animal?.nave ?? '—'}</Text>
+                           </View>
+                        </View>
+
+                        <View style={[styles.infoCell, { width: infoW }]}>
+                           <Text style={styles.infoLabel}>Corral</Text>
+                           <View style={styles.infoRow}>
+                              <Icon name="book-outline" size={18} color="#0f172a" />
+                              <Text style={styles.infoValue}>{animal?.corral ?? corralId ?? '—'}</Text>
+                           </View>
+                        </View>
+
+                        <View style={[styles.infoCell, { width: '100%' }]}>
+                           <Text style={styles.infoLabel}>Última alimentación</Text>
+                           <View style={styles.infoRow}>
+                              <Icon name="book-outline" size={18} color="#0f172a" />
+                              <Text style={styles.infoValue}>{animal?.ultimaAlimentacion ?? '—'}</Text>
                            </View>
                         </View>
                      </View>
@@ -1201,7 +1117,7 @@ export const MatCorralDetail = () => {
                      <ListItem
                         icon="add-circle-outline"
                         label="Introducir animal"
-                        onPress={() => drawer.hide(() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId }))}
+                        onPress={() => drawer.hide(() => navigation.navigate('MAT-INTRO-ANIMAL', { corralId } as never))}
                      />
                   </ListGroup>
                ) : sub === 'PREPARTO' ? (
@@ -1308,15 +1224,12 @@ export const MatCorralDetail = () => {
             onAccept={applyCrotal}
          />
 
-         {/* Paso: Formulario de lactancia */}
          <LactanciaFormModal
             visible={dlgLactancia}
             onClose={() => setDlgLactancia(false)}
             onContinue={onContinueLactancia}
          />
 
-         {/* Paso: Elegir “destete” o “salida” */}
-         {/* ✅ Guardia para no mostrar si el drawer aún está abierto */}
          <NextStepModal
             visible={!drawer.open && dlgNextStep}
             onClose={() => setDlgNextStep(false)}
@@ -1324,7 +1237,6 @@ export const MatCorralDetail = () => {
             onSalida={onSalida}
          />
 
-         {/* Motivo de salida */}
          <RadioDialog
             visible={dlgSalidaMotivo}
             title="Motivo de salida"
@@ -1334,7 +1246,6 @@ export const MatCorralDetail = () => {
             onAccept={onAcceptSalidaMotivo}
          />
 
-         {/* Confirmaciones genéricas */}
          <ConfirmDialog
             visible={confirm.visible}
             title={confirm.title}
@@ -1349,3 +1260,107 @@ export const MatCorralDetail = () => {
       </View>
    );
 };
+
+// ===== estilos =====
+const styles = StyleSheet.create({
+   infoCellBox: {
+      backgroundColor: '#fff',
+      borderWidth: 1,
+      borderColor: CARD_BORDER,
+      borderRadius: 12,
+      padding: 12,
+   },
+
+   // card contenedor
+   card: {
+      width: '100%',
+      alignSelf: 'stretch',
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 16,
+      position: 'relative',
+   },
+
+   // cerdo fondo
+   pigBg: { position: 'absolute', top: 170, left: '5%', width: '90%', height: 240, opacity: 0.35 },
+
+   // banda error/alerta
+   errorBand: {
+      minHeight: 36,
+      width: '100%',
+      backgroundColor: '#EF4444',
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+   },
+   errorText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: Platform.OS === 'web' ? '600' : '400',
+      textAlign: 'center',
+   },
+
+   // chips (fila superior reordenada)
+   metaRow: {
+      marginTop: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: Platform.OS === 'web' ? 'nowrap' : 'wrap',
+      rowGap: 8,
+   },
+   metaRowMd: {
+      columnGap: 24,
+   },
+   chipBlock: { flexDirection: 'row', alignItems: 'center' },
+   chipCrotal: { flex: 1, minWidth: 260 },
+   chipRight: { marginLeft: 'auto' },
+   chipLabel: { fontSize: 12, color: '#475569', backgroundColor: '#E5E7EB', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
+   chipValue: { marginLeft: 8, fontSize: 16, color: '#334155', fontWeight: '600' },
+
+   // subestado + día
+   subRow: { marginTop: 16, flexDirection: 'row', alignItems: 'flex-end' },
+   subRowMd: { justifyContent: 'space-between' },
+   subTitle: { fontSize: 22, color: '#1E3A8A', fontWeight: '700' },
+   dayPill: { marginLeft: 'auto', backgroundColor: '#E5E7EB', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
+   dayPillText: { color: '#64748B', fontSize: 13 },
+   dayNum: { marginLeft: 8, fontSize: 20, color: '#334155', fontWeight: '700' },
+
+   headerRowMd: { marginTop: 16, flexDirection: 'row', alignItems: 'center' },
+   dayBadge: { backgroundColor: '#E5E7EB', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+   dayBadgeText: { color: '#334155', fontWeight: '800' },
+
+   // KPI + histograma
+   kpiRow: { marginTop: 12, flexDirection: 'column', rowGap: 12 },
+   kpiRowMd: { flexDirection: 'row', alignItems: 'flex-end', columnGap: 20 },
+   kpiNumber: { fontSize: 54, color: '#475569', fontWeight: '700', letterSpacing: -1.5 },
+   kpiUnit: { fontSize: 18, color: '#475569', marginLeft: 6 },
+   barBg: { height: 12, borderRadius: 999, backgroundColor: '#D1D5DB', width: '100%' },
+   barFill: { position: 'absolute', left: 0, top: 0, height: 12, borderRadius: 999, backgroundColor: '#22C55E' },
+   kpiFootRow: { marginTop: 6, flexDirection: 'row', justifyContent: 'space-between' },
+   kpiFootText: { color: '#475569' },
+
+   histogram: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 8 },
+   histogramMd: { marginTop: 0, minWidth: 140, alignSelf: 'flex-end' },
+
+   // grid info
+   infoGrid: { marginTop: 18, flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 14 },
+   infoCell: {},
+   infoCell2: { width: '48%' },
+   infoCell3: { flexBasis: '31%', maxWidth: '31%' },
+   infoLabel: { fontSize: 16, color: '#64748B' },
+   infoRow: { marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 6 },
+   infoValue: { fontSize: 18, color: '#334155', fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Menlo' : (Platform.OS === 'android' ? 'monospace' : undefined) },
+
+   // pill para valores tipo "Multiparas"
+   pill: {
+      backgroundColor: '#F1F5F9',
+      borderWidth: 1,
+      borderColor: CARD_BORDER,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 2,
+      fontWeight: '800',
+      color: '#0f172a',
+   },
+});
