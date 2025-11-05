@@ -1,4 +1,4 @@
-import { View, Text, Image, ScrollView, TouchableOpacity, Modal, Pressable, Animated, Dimensions, TextInput } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, Modal, Pressable, Animated, Dimensions, TextInput, ImageStyle } from 'react-native';
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { CerdoMaternidad } from '../../../assets';
 import axios from 'axios';
@@ -609,6 +609,11 @@ function ListGroup({ children }: { children: React.ReactNode }) {
 const Divider = () => <View style={{ height: 1, backgroundColor: CARD_BORDER }} />;
 
 export const MatCorralDetail = () => {
+   // arriba, junto a otros useState:
+   const [opsH, setOpsH] = React.useState(0);
+   const winH = Dimensions.get('window').height;
+   const TABBAR_H = Platform.OS === 'web' ? 64 : 56; // tu tab inferior
+
    const insets = useSafeAreaInsets();
    const route = useRoute<any>();
    const params = route.params ?? {};
@@ -649,31 +654,39 @@ export const MatCorralDetail = () => {
 
    // responsive flags
    const winW = useWinWidth();
-   const isMd = Platform.OS === 'web' && winW >= 900;
+   // const isMd = Platform.OS === 'web' && winW >= 900;
    const isLg = Platform.OS === 'web' && winW >= 1200;
-
-   const infoCols = isLg ? 3 : (isMd ? 2 : 1);
+   const isDesktop = Platform.OS === 'web' && winW >= 900;
+   const isPhone = winW <= 420;
+   const isMd = isDesktop && winW < 1200;
+   const useRowForKpi = true; //isLg || isMd;
+   const infoCols = isLg ? 3 : (useRowForKpi ? 2 : 1);
    const infoW = infoCols === 3 ? '32%' : infoCols === 2 ? '48%' : '100%';
+
+   const kpiFontSize = isLg ? 62 : (isDesktop ? 54 : (isPhone ? 52 : 46));
+   // const pctFont = isDesktop ? 22 : (isPhone ? 20 : 18);
+   const pctOffsetY = isDesktop ? -28 : -22
+
 
    // tamaños adaptativos para KPI e histograma (más grandes)
    const isXl = Platform.OS === 'web' && winW >= 1440;
-   const kpiFontSize = isXl ? 72 : (isLg ? 62 : (isMd ? 54 : 46));
    // ===== TAMAÑOS QUE PUEDES TOCAR RÁPIDO =====
-   const pctFont = isMd ? 22 : 18;             // tamaño del "92%"
-   const pctOffsetY = isMd ? -28 : -22;           // separación vertical del % sobre la barra
 
    const HISTO_BG_H = isMd ? 150 : 88;             // alto base del "fondo" gris del histograma
-   const barW = isMd ? 18 : 14;              // ancho de cada barra
-   const KPI_AREA_PCT = isMd ? 40 : 100;
-   const KPI_HISTO_GAP = 8;
-   const HISTO_WIDTH = isMd ? Math.min(440, Math.round(winW * 0.34)) : 260;
-   const legendFont = isMd ? 18 : 17;             // tamaño "200/600" y "33%"
-   const HISTO_NUDGE_Y = isMd ? 8 : 0;          // ajuste fino vertical del histograma
-   const HISTO_LEGEND_GAP = isMd ? 8 : 6;        // espacio entre barras y leyenda del histograma
+   const barW = isDesktop ? 18 : (isPhone ? 9 : 14);
+   const BAR_GAP = isDesktop ? 6 : 4;               // espacio entre barras del histograma
+   const KPI_AREA_PCT = useRowForKpi ? (isPhone ? 70 : 44) : 100;
+   const KPI_HISTO_GAP = 10;
+   const HISTO_WIDTH = useRowForKpi
+      ? (isDesktop ? Math.min(440, Math.round(winW * 0.34)) : 108)
+      : 260;
+   //  const legendFont = isMd ? 18 : 17;
+   const HISTO_NUDGE_Y = isDesktop ? 8 : 0;
+   const HISTO_LEGEND_GAP = isDesktop ? 8 : 6;
 
-   const CURRENT_BAR_INDEX = 4;   // la barra “actual”
-   const CURRENT_BAR_SCALE = 1.8; // cuánto se ensancha la actual
-   const CURRENT_BORDER_W = 2;   // grosor del borde negro
+   const CURRENT_BAR_INDEX = 4;
+   const CURRENT_BAR_SCALE = isDesktop ? 1.8 : 1.6
+   const CURRENT_BORDER_W = 2;
    const PIG_OPACITY_SM = 0.22;
    const PIG_OPACITY_MD = 0.26;
    const PIG_OPACITY_LG = 0.30;
@@ -880,9 +893,9 @@ export const MatCorralDetail = () => {
       <View style={{ flex: 1 }}>
          <ScrollView
             style={{ flex: 1, backgroundColor: '#F1F5F9' }}
-            contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
+            contentContainerStyle={{ paddingBottom: opsH + insets.bottom + 8 }}
          >
-            <View style={[styles.card, { paddingHorizontal: 24 }]}>
+            <View style={[styles.card, { paddingHorizontal: isPhone ? 16 : 24, minHeight: winH - (opsH + TABBAR_H + insets.bottom) }]}>
                {hasAnimal && (
                   <Image
                      source={CerdoMaternidad}
@@ -890,10 +903,10 @@ export const MatCorralDetail = () => {
                      style={[
                         styles.pigBg,
                         isLg
-                           ? { opacity: PIG_OPACITY_LG, transform: [{ scale: PIG_SCALE_LG }], top: 200 }
+                           ? { opacity: PIG_OPACITY_LG, transform: [{ scale: PIG_SCALE_LG }], top: 240 }
                            : isMd
-                              ? { opacity: PIG_OPACITY_MD, transform: [{ scale: PIG_SCALE_MD }], top: 200 }
-                              : { opacity: PIG_OPACITY_SM, transform: [{ scale: PIG_SCALE_SM }], top: 240 },
+                              ? { opacity: PIG_OPACITY_MD, transform: [{ scale: PIG_SCALE_MD }], top: 240 }
+                              : { opacity: PIG_OPACITY_SM, transform: [{ scale: PIG_SCALE_SM }], top: 300 },
                      ]}
                   />
 
@@ -943,8 +956,8 @@ export const MatCorralDetail = () => {
                      </View>
 
                      {/* KPI + histograma */}
-                     <View style={[styles.kpiRow, isMd && styles.kpiRowMd]}>
-                        <View style={[styles.kpiLeft, { flexBasis: `${KPI_AREA_PCT}%`, marginRight: KPI_HISTO_GAP }]}>
+                     <View style={[styles.kpiRow, styles.kpiRowMd]}>
+                        <View style={[styles.kpiLeft, { marginRight: KPI_HISTO_GAP }]}>
                            <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                               <Text style={[styles.kpiNumber, { fontSize: kpiFontSize }]}>
                                  {actual.toLocaleString('es-ES')}
@@ -952,30 +965,29 @@ export const MatCorralDetail = () => {
                               <Text style={styles.kpiUnit}>gr</Text>
                            </View>
 
-                           {/* barra + % anclado al final */}
                            <View style={[styles.progressWrap, { width: '100%' }]}>
                               <View style={styles.barBg} />
                               <View style={[styles.barFill, { width: `${Math.min(100, pct)}%` }]} />
                               <View style={[styles.pctAnchor, { left: `${Math.min(100, pct)}%`, top: pctOffsetY }]}>
-                                 <Text style={[styles.pctLabel, { fontSize: pctFont }]}>{pct}%</Text>
+                                 {/* <Text style={[styles.pctLabel, { fontSize: pctFont }]}>{pct}%</Text> */}
                               </View>
                            </View>
-                           <View style={styles.kpiFootRow}>
+                           {/* <View style={styles.kpiFootRow}>
                               <Text style={styles.kpiFootTextStrong}>
                                  Objetivo {objetivo.toLocaleString('es-ES')} gr
                               </Text>
-                           </View>
+                           </View> */}
                         </View>
-                        {/* <View style={{ width: KPI_HISTO_SPACER }} /> */}
+
                         <View
                            style={[
                               styles.histogram,
-                              isMd && styles.histogramMd,
+                              useRowForKpi && styles.histogramMd,
                               {
                                  width: HISTO_WIDTH,
                                  flexShrink: 0,
                                  transform: [{ translateY: HISTO_NUDGE_Y }],
-                                 marginTop: isMd ? 0 : 12,
+                                 marginTop: 0,
                               },
                            ]}
                         >
@@ -994,17 +1006,17 @@ export const MatCorralDetail = () => {
                                  const isCurrent = i === CURRENT_BAR_INDEX;
                                  const w = isCurrent ? barW * CURRENT_BAR_SCALE : barW;
                                  const hFill = Math.round(Math.max(0, Math.min(1, b.pct)) * HISTO_BG_H);
+                                 const radius = Math.round(w / 2); // píldora
 
                                  return (
                                     <View
                                        key={i}
                                        style={{
-                                          marginLeft: i ? 10 : 0,
+                                          marginLeft: i ? BAR_GAP : 0,          // <-- menos espacio entre barras
                                           height: HISTO_BG_H,
                                           width: w,
                                           backgroundColor: '#CBD5E1',
-                                          borderTopLeftRadius: 6,
-                                          borderTopRightRadius: 6,
+                                          borderRadius: radius,                 // <-- contenedor redondeado
                                           justifyContent: 'flex-end',
                                           overflow: 'hidden',
                                           borderWidth: isCurrent ? CURRENT_BORDER_W : 0,
@@ -1016,20 +1028,22 @@ export const MatCorralDetail = () => {
                                              height: hFill,
                                              width: '100%',
                                              backgroundColor: b.color,
+                                             borderRadius: radius,               // <-- relleno también redondeado
                                           }}
                                        />
                                     </View>
                                  );
                               })}
+
                            </View>
 
 
                            {/* leyenda DEBAJO, alineada a la derecha */}
-                           <View style={[styles.histoLegendRow, { marginTop: HISTO_LEGEND_GAP }]}>
+                           {/* <View style={[styles.histoLegendRow, { marginTop: HISTO_LEGEND_GAP }]}>
                               <Text style={[styles.histoLegendPrimary, { fontSize: legendFont }]}>200/600</Text>
                               <View style={styles.histoLegendDivider} />
                               <Text style={[styles.histoLegendPrimary, { fontSize: legendFont }]}>33%</Text>
-                           </View>
+                           </View> */}
                         </View>
                      </View>
 
@@ -1110,6 +1124,7 @@ export const MatCorralDetail = () => {
 
          {/* --- Barra inferior --- */}
          < View
+            onLayout={e => setOpsH(e.nativeEvent.layout.height)}
             style={{
                position: 'absolute',
                left: 0,
@@ -1336,6 +1351,7 @@ const styles = StyleSheet.create({
       paddingTop: 12,
       paddingBottom: 16,
       position: 'relative',
+      // overflow: 'hidden',
    },
 
    // cerdo fondo
@@ -1345,8 +1361,9 @@ const styles = StyleSheet.create({
       width: '90%',
       height: 500,
       opacity: 0.2,
-      pointerEvents: 'none',
       alignSelf: 'center',
+      zIndex: -1,
+      // bottom: 0,
    },
 
    errorBand: {
@@ -1459,8 +1476,9 @@ const styles = StyleSheet.create({
       flexGrow: 0,
       flexShrink: 1,
       minWidth: 0,
+      paddingRight: 8,
    },
-   histogram: { flexDirection: 'column', alignItems: 'flex-end', marginTop: 0 },
+   histogram: { flexDirection: 'column', alignItems: 'flex-end', marginTop: 0, marginBottom: 2 },
 
    histoBarsRow: { flexDirection: 'row', alignItems: 'flex-end', alignSelf: 'flex-end' },
 
