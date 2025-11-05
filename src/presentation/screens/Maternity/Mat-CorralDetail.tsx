@@ -652,6 +652,8 @@ export const MatCorralDetail = () => {
    const [dlgSub, setDlgSub] = useState(false);
    const [dlgSalida, setDlgSalida] = useState(false);
    const [dlgCrotal, setDlgCrotal] = useState(false);
+   const [contentW, setContentW] = React.useState(0);
+
 
    // responsive flags
    const winW = useWinWidth();
@@ -663,17 +665,18 @@ export const MatCorralDetail = () => {
    const useRowForKpi = true; //isLg || isMd;
    const infoCols = isLg ? 3 : (useRowForKpi ? 2 : 1);
    const infoW = infoCols === 3 ? '32%' : infoCols === 2 ? '48%' : '100%';
+   const pctOffsetY = isDesktop ? -28 : -22
+
 
    const kpiFontSize = isLg ? 62 : (isDesktop ? 54 : (isPhone ? 52 : 46));
    // const pctFont = isDesktop ? 22 : (isPhone ? 20 : 18);
-   const pctOffsetY = isDesktop ? -28 : -22
-   const GRID_COLS = isLg ? 3 : 2;                     // 3 en desktop, 2 en el resto
-   const GRID_GAP = isPhone ? 10 : 14;               // separaciones más pequeñas en móvil
-   const CONTENT_PAD_H = isPhone ? 16 : 24;           // mismo padding que usas en la card
-   const GRID_AVAILABLE_W = winW - CONTENT_PAD_H * 2; // ancho útil dentro de la card
-   const infoCellW = Math.floor(
-      (GRID_AVAILABLE_W - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
-   );
+   // const GRID_COLS = isLg ? 3 : 2;                     // 3 en desktop, 2 en el resto
+   // const GRID_GAP = isPhone ? 10 : 14;               // separaciones más pequeñas en móvil
+   // const CONTENT_PAD_H = isPhone ? 16 : 24;           // mismo padding que usas en la card
+   // const GRID_AVAILABLE_W = winW - CONTENT_PAD_H * 2; // ancho útil dentro de la card
+   // const infoCellW = Math.floor(
+   //    (GRID_AVAILABLE_W - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
+   // );
 
 
 
@@ -707,7 +710,14 @@ export const MatCorralDetail = () => {
    const PIG_SCALE_SM = 1.08;
    const PIG_SCALE_MD = 1.18;
    const PIG_SCALE_LG = 1.28;
+   const THREE_COL_MIN = 980; // ajusta: 960–1024
+   const GRID_COLS = (Platform.OS === 'web' && contentW >= THREE_COL_MIN) ? 3 : 2;
 
+   // si calculas ancho por celda:
+   const GRID_GAP = isPhone ? 10 : 14;
+   const CONTENT_PAD_H = isPhone ? 16 : 24;
+   const GRID_AVAILABLE_W = (contentW || winW) - CONTENT_PAD_H * 2;
+   const infoCellW = Math.floor((GRID_AVAILABLE_W - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS);
 
 
 
@@ -909,7 +919,10 @@ export const MatCorralDetail = () => {
             style={{ flex: 1, backgroundColor: '#F1F5F9' }}
             contentContainerStyle={{ paddingBottom: opsH + insets.bottom + 8 }}
          >
-            <View style={[styles.card, { paddingHorizontal: isPhone ? 16 : 24, minHeight: winH - (opsH + TABBAR_H + insets.bottom) }]}>
+            <View
+               onLayout={(e) => setContentW(e.nativeEvent.layout.width)}
+
+               style={[styles.card, { paddingHorizontal: isPhone ? 16 : 24, minHeight: winH - (opsH + TABBAR_H + insets.bottom) }]}>
                {hasAnimal && (
                   <Image
                      source={CerdoMaternidad}
