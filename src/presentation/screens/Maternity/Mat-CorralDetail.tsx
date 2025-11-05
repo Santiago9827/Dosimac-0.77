@@ -662,12 +662,12 @@ export const MatCorralDetail = () => {
    const pctFont = isMd ? 22 : 18;             // tamaño del "92%"
    const pctOffsetY = isMd ? -28 : -22;           // separación vertical del % sobre la barra
 
-   const HISTO_BG_H = isMd ? 150 : 64;             // alto base del "fondo" gris del histograma
-   const barW = isMd ? 18 : 12;              // ancho de cada barra
+   const HISTO_BG_H = isMd ? 150 : 88;             // alto base del "fondo" gris del histograma
+   const barW = isMd ? 18 : 14;              // ancho de cada barra
    const KPI_AREA_PCT = isMd ? 40 : 100;
    const KPI_HISTO_GAP = 8;
-   const HISTO_WIDTH = isMd ? Math.min(440, Math.round(winW * 0.34)) : 220;
-   const legendFont = isMd ? 18 : 16;             // tamaño "200/600" y "33%"
+   const HISTO_WIDTH = isMd ? Math.min(440, Math.round(winW * 0.34)) : 260;
+   const legendFont = isMd ? 18 : 17;             // tamaño "200/600" y "33%"
    const HISTO_NUDGE_Y = isMd ? 8 : 0;          // ajuste fino vertical del histograma
    const HISTO_LEGEND_GAP = isMd ? 8 : 6;        // espacio entre barras y leyenda del histograma
 
@@ -975,6 +975,7 @@ export const MatCorralDetail = () => {
                                  width: HISTO_WIDTH,
                                  flexShrink: 0,
                                  transform: [{ translateY: HISTO_NUDGE_Y }],
+                                 marginTop: isMd ? 0 : 12,
                               },
                            ]}
                         >
@@ -1439,7 +1440,7 @@ const styles = StyleSheet.create({
    },
 
 
-   progressWrap: { marginTop: 8, position: 'relative' },
+   progressWrap: { marginTop: 8, marginBottom: 10, position: 'relative' },
    pctAnchor: { position: 'absolute', transform: [{ translateX: -16 }] },
    pctLabel: { color: '#334155', fontWeight: '800' },
 
