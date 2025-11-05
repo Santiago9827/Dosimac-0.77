@@ -623,6 +623,7 @@ export const MatCorralDetail = () => {
 
 
 
+
    const [animalState, setAnimalState] = useState({
       crotal: '—',
       curva: '—',
@@ -666,6 +667,14 @@ export const MatCorralDetail = () => {
    const kpiFontSize = isLg ? 62 : (isDesktop ? 54 : (isPhone ? 52 : 46));
    // const pctFont = isDesktop ? 22 : (isPhone ? 20 : 18);
    const pctOffsetY = isDesktop ? -28 : -22
+   const GRID_COLS = isLg ? 3 : 2;                     // 3 en desktop, 2 en el resto
+   const GRID_GAP = isPhone ? 10 : 14;               // separaciones más pequeñas en móvil
+   const CONTENT_PAD_H = isPhone ? 16 : 24;           // mismo padding que usas en la card
+   const GRID_AVAILABLE_W = winW - CONTENT_PAD_H * 2; // ancho útil dentro de la card
+   const infoCellW = Math.floor(
+      (GRID_AVAILABLE_W - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
+   );
+
 
 
    // tamaños adaptativos para KPI e histograma (más grandes)
@@ -683,6 +692,10 @@ export const MatCorralDetail = () => {
    //  const legendFont = isMd ? 18 : 17;
    const HISTO_NUDGE_Y = isDesktop ? 8 : 0;
    const HISTO_LEGEND_GAP = isDesktop ? 8 : 6;
+   const moveDayToTitle = winW <= 560;
+   const isNarrow = winW <= 560;
+   const compactMeta = winW <= 560;
+
 
    const CURRENT_BAR_INDEX = 4;
    const CURRENT_BAR_SCALE = isDesktop ? 1.8 : 1.6
@@ -694,6 +707,7 @@ export const MatCorralDetail = () => {
    const PIG_SCALE_SM = 1.08;
    const PIG_SCALE_MD = 1.18;
    const PIG_SCALE_LG = 1.28;
+
 
 
 
@@ -926,33 +940,60 @@ export const MatCorralDetail = () => {
                ) : (
                   <>
                      {/* === ID · Crotal · Día · Ciclo  */}
-                     <View style={styles.metaRowEven}>
+                     <View style={[styles.metaRowEven, isNarrow && styles.metaRowTight]}>
+                        {/* ID */}
                         <View style={styles.metaCellEven}>
-                           <Text style={styles.chipLabel}>ID</Text>
-                           <Text style={styles.chipValue}>{animal?.id ?? '—'}</Text>
+                           <Text style={[styles.chipLabel, isNarrow && styles.chipLabelSm]}>ID</Text>
+                           <Text style={[styles.chipValue, isNarrow && styles.chipValueSm]}>
+                              {animal?.id ?? '—'}
+                           </Text>
                         </View>
 
-                        <View style={[styles.metaCellEven, { minWidth: 0 }]}>
-                           <Text style={styles.chipLabel}>Crotal</Text>
-                           <Text numberOfLines={1} ellipsizeMode="middle" style={[styles.chipValue, { flexShrink: 1 }]}>
+                        {/* Crotal (da más ancho y auto-escala en 1 línea) */}
+                        <View style={[styles.metaCellEven, styles.metaCellGrow2]}>
+                           <Text style={[styles.chipLabel, isNarrow && styles.chipLabelSm]}>Crotal</Text>
+                           <Text
+                              numberOfLines={1}
+                              adjustsFontSizeToFit
+                              minimumFontScale={0.6}
+                              style={[styles.chipValue, isNarrow && styles.chipValueSm, { flexShrink: 1 }]}
+                           >
                               {animal?.crotal ?? '—'}
                            </Text>
                         </View>
 
-                        <View style={styles.metaCellEven}>
-                           <Text style={styles.chipLabel}>Día</Text>
-                           <Text style={styles.chipValue}>{animal?.dia ?? '—'}</Text>
-                        </View>
+                        {/* Día (solo si NO va en el título) */}
+                        {!moveDayToTitle && (
+                           <View style={styles.metaCellEven}>
+                              <Text style={[styles.chipLabel, isNarrow && styles.chipLabelSm]}>Día</Text>
+                              <Text style={[styles.chipValue, isNarrow && styles.chipValueSm]}>
+                                 {animal?.dia ?? '—'}
+                              </Text>
+                           </View>
+                        )}
 
+                        {/* Ciclo */}
                         <View style={styles.metaCellEven}>
-                           <Text style={styles.chipLabel}>Ciclo</Text>
-                           <Text style={styles.chipValue}>{animal?.ciclo ?? '—'}</Text>
+                           <Text style={[styles.chipLabel, isNarrow && styles.chipLabelSm]}>Ciclo</Text>
+                           <Text style={[styles.chipValue, isNarrow && styles.chipValueSm]}>
+                              {animal?.ciclo ?? '—'}
+                           </Text>
                         </View>
                      </View>
 
+
+
+
                      {/* Subestado */}
-                     <View style={styles.headerRowMd}>
+                     <View style={[styles.headerRowMd, { justifyContent: 'space-between' }]}>
                         <Text style={styles.subTitle}>{animalState.subEstado ?? '—'}</Text>
+
+                        {moveDayToTitle && (
+                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <Text style={styles.chipLabel}>Día</Text>
+                              <Text style={styles.chipValue}>{animal?.dia ?? '—'}</Text>
+                           </View>
+                        )}
                      </View>
 
                      {/* KPI + histograma */}
@@ -1060,63 +1101,79 @@ export const MatCorralDetail = () => {
 
 
                      {/* GRID de info */}
-                     <View style={[styles.infoGrid]}>
-                        <View style={[styles.infoCell, { width: infoW }]}>
-                           <Text style={styles.infoLabel}>Curva</Text>
+                     <View style={[styles.infoGrid, { columnGap: GRID_GAP, rowGap: GRID_GAP }]}>
+                        <View style={[styles.infoCell, { width: infoCellW }]}>
+                           <Text style={[styles.infoLabel, isPhone && styles.infoLabelSm]}>Curva</Text>
                            <View style={styles.infoRow}>
                               <Icon name="book-outline" size={18} color="#0f172a" />
-                              <Text style={[styles.infoValue, styles.pill]}>{animal?.curva ?? '—'}</Text>
+                              <Text style={[styles.infoValue, styles.pill, isPhone && styles.pillSm]}>
+                                 {animal?.curva ?? '—'}
+                              </Text>
                            </View>
                         </View>
 
-                        <View style={[styles.infoCell, { width: infoW }]}>
-                           <Text style={styles.infoLabel}>Corrección</Text>
+                        <View style={[styles.infoCell, { width: infoCellW }]}>
+                           <Text style={[styles.infoLabel, isPhone && styles.infoLabelSm]}>Corrección</Text>
                            <View style={styles.infoRow}>
                               <Icon name="book-outline" size={18} color="#0f172a" />
-                              <Text style={styles.infoValue}>{animal?.correccion ?? '—'}</Text>
+                              <Text style={[styles.infoValue, isPhone && styles.infoValueSm]}>
+                                 {animal?.correccion ?? '—'}
+                              </Text>
                            </View>
                         </View>
 
-                        <View style={[styles.infoCell, { width: infoW }]}>
-                           <Text style={styles.infoLabel}>Fecha entrada</Text>
+                        <View style={[styles.infoCell, { width: infoCellW }]}>
+                           <Text style={[styles.infoLabel, isPhone && styles.infoLabelSm]}>Fecha entrada</Text>
                            <View style={styles.infoRow}>
                               <Icon name="book-outline" size={18} color="#0f172a" />
-                              <Text style={styles.infoValue}>{animal?.fechas?.entrada ?? '—'}</Text>
+                              <Text style={[styles.infoValue, isPhone && styles.infoValueSm]}>
+                                 {animal?.fechas?.entrada ?? '—'}
+                              </Text>
                            </View>
                         </View>
 
-                        <View style={[styles.infoCell, { width: infoW }]}>
-                           <Text style={styles.infoLabel}>Fecha parto</Text>
+                        <View style={[styles.infoCell, { width: infoCellW }]}>
+                           <Text style={[styles.infoLabel, isPhone && styles.infoLabelSm]}>Fecha parto</Text>
                            <View style={styles.infoRow}>
                               <Icon name="book-outline" size={18} color="#0f172a" />
-                              <Text style={styles.infoValue}>{animal?.fechas?.parto ?? '—'}</Text>
+                              <Text style={[styles.infoValue, isPhone && styles.infoValueSm]}>
+                                 {animal?.fechas?.parto ?? '—'}
+                              </Text>
                            </View>
                         </View>
 
-                        <View style={[styles.infoCell, { width: infoW }]}>
-                           <Text style={styles.infoLabel}>Nave</Text>
+                        <View style={[styles.infoCell, { width: infoCellW }]}>
+                           <Text style={[styles.infoLabel, isPhone && styles.infoLabelSm]}>Nave</Text>
                            <View style={styles.infoRow}>
                               <Icon name="book-outline" size={18} color="#0f172a" />
-                              <Text style={styles.infoValue}>{animal?.nave ?? '—'}</Text>
+                              <Text style={[styles.infoValue, isPhone && styles.infoValueSm]}>
+                                 {animal?.nave ?? '—'}
+                              </Text>
                            </View>
                         </View>
 
-                        <View style={[styles.infoCell, { width: infoW }]}>
-                           <Text style={styles.infoLabel}>Corral</Text>
+                        <View style={[styles.infoCell, { width: infoCellW }]}>
+                           <Text style={[styles.infoLabel, isPhone && styles.infoLabelSm]}>Corral</Text>
                            <View style={styles.infoRow}>
                               <Icon name="book-outline" size={18} color="#0f172a" />
-                              <Text style={styles.infoValue}>{animal?.corral ?? corralId ?? '—'}</Text>
+                              <Text style={[styles.infoValue, isPhone && styles.infoValueSm]}>
+                                 {animal?.corral ?? corralId ?? '—'}
+                              </Text>
                            </View>
                         </View>
 
+                        {/* Si quieres que 'Última alimentación' ocupe toda la fila, déjalo a 100% */}
                         <View style={[styles.infoCell, { width: '100%' }]}>
-                           <Text style={styles.infoLabel}>Última alimentación</Text>
+                           <Text style={[styles.infoLabel, isPhone && styles.infoLabelSm]}>Última alimentación</Text>
                            <View style={styles.infoRow}>
                               <Icon name="book-outline" size={18} color="#0f172a" />
-                              <Text style={styles.infoValue}>{animal?.ultimaAlimentacion ?? '—'}</Text>
+                              <Text style={[styles.infoValue, isPhone && styles.infoValueSm]}>
+                                 {animal?.ultimaAlimentacion ?? '—'}
+                              </Text>
                            </View>
                         </View>
                      </View>
+
                   </>
                )}
             </View>
@@ -1426,7 +1483,6 @@ const styles = StyleSheet.create({
    kpiFootTextStrong: { color: '#0f172a', fontSize: 16, fontWeight: '800' },
 
    histoLegendText: { color: '#334155', fontSize: 16, fontWeight: '800' },
-   infoGrid: { marginTop: 18, flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 14 },
    infoCell: {},
    infoCell2: { width: '48%' },
    infoCell3: { flexBasis: '31%', maxWidth: '31%' },
@@ -1489,6 +1545,43 @@ const styles = StyleSheet.create({
       paddingHorizontal: 2,
       alignSelf: 'stretch',
    },
+   metaCellCompact: {
+      flexGrow: 0,
+      flexShrink: 0,           // no se estira ni se encoge la “celda”
+      justifyContent: 'flex-start',
+      minWidth: 0,
+   },
+
+
+   chipValueSm: {
+      fontSize: 12,
+
+   },
+   metaRowTight: { columnGap: 8 },           // menos espacio en pantallas estrechas
+   metaCellGrow2: { flexGrow: 2, flexBasis: 0 }, // Crotal con más ancho
+
+   chipLabelSm: {
+      fontSize: 12,
+      paddingHorizontal: 6,
+      paddingVertical: 1,
+   },
+   infoLabelSm: { fontSize: 18 },     // antes 22
+   infoValueSm: { fontSize: 16 },     // antes 18
+   pillSm: {
+      paddingHorizontal: 8,
+      paddingVertical: 1,
+   },
+
+   // (tu grid ya tenía wrap; mantenlo)
+   infoGrid: {
+      marginTop: 18,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      columnGap: 14, // se sobrescribe dinámicamente con GRID_GAP
+      rowGap: 14
+   },
+
+
 
 
 });
