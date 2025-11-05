@@ -664,11 +664,11 @@ export const MatCorralDetail = () => {
 
    const HISTO_BG_H = isMd ? 150 : 64;             // alto base del "fondo" gris del histograma
    const barW = isMd ? 18 : 12;              // ancho de cada barra
-   const KPI_AREA_PCT = isMd ? 40 : 80;
+   const KPI_AREA_PCT = isMd ? 40 : 100;
    const KPI_HISTO_GAP = 8;
    const HISTO_WIDTH = isMd ? Math.min(440, Math.round(winW * 0.34)) : 220;
    const legendFont = isMd ? 18 : 16;             // tamaño "200/600" y "33%"
-   const HISTO_NUDGE_Y = isMd ? 8 : -6;          // ajuste fino vertical del histograma
+   const HISTO_NUDGE_Y = isMd ? 8 : 0;          // ajuste fino vertical del histograma
    const HISTO_LEGEND_GAP = isMd ? 8 : 6;        // espacio entre barras y leyenda del histograma
 
    const CURRENT_BAR_INDEX = 4;   // la barra “actual”
@@ -1395,7 +1395,7 @@ const styles = StyleSheet.create({
    headerRowMd: { marginTop: 16, flexDirection: 'row', alignItems: 'center' },
    subTitle: { fontSize: 22, color: '#1E3A8A', fontWeight: '700' },
 
-   kpiRow: { marginTop: 12, flexDirection: 'column', rowGap: 12 },
+   kpiRow: { marginTop: 12, flexDirection: 'column', rowGap: 12, alignItems: 'stretch' },
    kpiNumber: { fontSize: 54, color: '#475569', fontWeight: '700', letterSpacing: -1.5 },
    kpiUnit: { fontSize: 18, color: '#475569', marginLeft: 6 },
 
@@ -1439,7 +1439,7 @@ const styles = StyleSheet.create({
    },
 
 
-   progressWrap: { marginTop: 8, width: '74%', position: 'relative' },
+   progressWrap: { marginTop: 8, position: 'relative' },
    pctAnchor: { position: 'absolute', transform: [{ translateX: -16 }] },
    pctLabel: { color: '#334155', fontWeight: '800' },
 
