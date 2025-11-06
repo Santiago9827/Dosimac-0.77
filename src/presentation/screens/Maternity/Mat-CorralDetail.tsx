@@ -613,6 +613,10 @@ export const MatCorralDetail = () => {
    const [opsH, setOpsH] = React.useState(0);
    const winH = Dimensions.get('window').height;
    const TABBAR_H = Platform.OS === 'web' ? 64 : 56; // tu tab inferior
+   const isWeb = Platform.OS === 'web';
+   const [showKpiTip, setShowKpiTip] = useState(false);
+   const [hoverBarIdx, setHoverBarIdx] = useState<number | null>(null);
+
 
    const insets = useSafeAreaInsets();
    const route = useRoute<any>();
@@ -653,6 +657,10 @@ export const MatCorralDetail = () => {
    const [dlgSalida, setDlgSalida] = useState(false);
    const [dlgCrotal, setDlgCrotal] = useState(false);
    const [contentW, setContentW] = React.useState(0);
+   const tipSizes = isWeb
+      ? { padH: 14, padV: 12, radius: 14, minW: 180, title: 12, text: 16 } // Web (más grande)
+      : { padH: 10, padV: 8, radius: 10, minW: 150, title: 11, text: 12 }; // Móvil (más pequeño)
+
 
 
    // responsive flags
@@ -666,7 +674,7 @@ export const MatCorralDetail = () => {
    const infoCols = isLg ? 3 : (useRowForKpi ? 2 : 1);
    const infoW = infoCols === 3 ? '32%' : infoCols === 2 ? '48%' : '100%';
    const pctOffsetY = isDesktop ? -28 : -22
-
+   const placeTipAbove = winW <= 560;
 
    const kpiFontSize = isLg ? 62 : (isDesktop ? 54 : (isPhone ? 52 : 46));
    // const pctFont = isDesktop ? 22 : (isPhone ? 20 : 18);
@@ -1012,26 +1020,49 @@ export const MatCorralDetail = () => {
                      {/* KPI + histograma */}
                      <View style={[styles.kpiRow, styles.kpiRowMd]}>
                         <View style={[styles.kpiLeft, { marginRight: KPI_HISTO_GAP }]}>
-                           <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                              <Text style={[styles.kpiNumber, { fontSize: kpiFontSize }]}>
-                                 {actual.toLocaleString('es-ES')}
-                              </Text>
-                              <Text style={styles.kpiUnit}>gr</Text>
-                           </View>
-
-                           <View style={[styles.progressWrap, { width: '100%' }]}>
-                              <View style={styles.barBg} />
-                              <View style={[styles.barFill, { width: `${Math.min(100, pct)}%` }]} />
-                              <View style={[styles.pctAnchor, { left: `${Math.min(100, pct)}%`, top: pctOffsetY }]}>
-                                 {/* <Text style={[styles.pctLabel, { fontSize: pctFont }]}>{pct}%</Text> */}
+                           {/* wrapper relativo con hover solo en web */}
+                           <View
+                              style={{ position: 'relative', alignSelf: 'flex-start' }}
+                              {...(isWeb ? {
+                                 onMouseEnter: () => setShowKpiTip(true),
+                                 onMouseLeave: () => setShowKpiTip(false),
+                              } : {})}
+                           >
+                              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                                 <Text style={[styles.kpiNumber, { fontSize: kpiFontSize }]}>
+                                    {actual.toLocaleString('es-ES')}
+                                 </Text>
+                                 <Text style={styles.kpiUnit}>gr</Text>
                               </View>
+
+                              <View style={[styles.progressWrap, { width: '100%' }]}>
+                                 <View style={styles.barBg} />
+                                 <View style={[styles.barFill, { width: `${Math.min(100, pct)}%` }]} />
+                                 <View style={[styles.pctAnchor, { left: `${Math.min(100, pct)}%`, top: pctOffsetY }]} />
+                              </View>
+
+                              {/* Tooltip KPI: 11.000/12.000 gr + 92% */}
+                              {isWeb && showKpiTip && (
+                                 <View style={[placeTipAbove ? styles.tipTopBig : styles.tipRightBig]}>
+                                    <Text style={styles.tipTitle}>Consumo</Text>
+
+                                    <Text numberOfLines={1} ellipsizeMode="clip" style={[styles.tipTextBig, { flexShrink: 0 }]}>
+                                       {`${actual.toLocaleString('es-ES')}/${objetivo.toLocaleString('es-ES')} gr`}
+                                    </Text>
+
+                                    <Text style={[styles.tipTextBig, { opacity: 0.85 }]}>{pct}%</Text>
+                                 </View>
+                              )}
+
                            </View>
-                           {/* <View style={styles.kpiFootRow}>
+                        </View>
+
+                        {/* <View style={styles.kpiFootRow}>
                               <Text style={styles.kpiFootTextStrong}>
                                  Objetivo {objetivo.toLocaleString('es-ES')} gr
                               </Text>
                            </View> */}
-                        </View>
+
 
                         <View
                            style={[
@@ -1059,36 +1090,86 @@ export const MatCorralDetail = () => {
                               ].map((b, i) => {
                                  const isCurrent = i === CURRENT_BAR_INDEX;
                                  const w = isCurrent ? barW * CURRENT_BAR_SCALE : barW;
+                                 const radius = Math.round(w / 2);
                                  const hFill = Math.round(Math.max(0, Math.min(1, b.pct)) * HISTO_BG_H);
-                                 const radius = Math.round(w / 2); // píldora
 
                                  return (
                                     <View
                                        key={i}
                                        style={{
-                                          marginLeft: i ? BAR_GAP : 0,          // <-- menos espacio entre barras
-                                          height: HISTO_BG_H,
+                                          marginLeft: i ? BAR_GAP : 0,
                                           width: w,
-                                          backgroundColor: '#CBD5E1',
-                                          borderRadius: radius,                 // <-- contenedor redondeado
+                                          height: HISTO_BG_H,
+                                          position: 'relative',        // contenedor SIN overflow
                                           justifyContent: 'flex-end',
-                                          overflow: 'hidden',
-                                          borderWidth: isCurrent ? CURRENT_BORDER_W : 0,
-                                          borderColor: isCurrent ? '#000' : 'transparent',
                                        }}
                                     >
-                                       <View
-                                          style={{
-                                             height: hFill,
-                                             width: '100%',
-                                             backgroundColor: b.color,
-                                             borderRadius: radius,               // <-- relleno también redondeado
-                                          }}
-                                       />
+                                       {/* Área interactiva: funciona en móvil y web */}
+                                       <Pressable
+                                          onPressIn={() => setHoverBarIdx(i)}
+                                          onPressOut={() => setHoverBarIdx(null)}
+                                          onHoverIn={() => setHoverBarIdx(i)}    // web
+                                          onHoverOut={() => setHoverBarIdx(null)}
+                                          accessibilityRole="button"
+                                          accessibilityLabel={`Intervalo ${i + 1}, ${Math.round(b.pct * 100)}%`}
+                                          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderRadius: radius }}
+                                       >
+                                          {/* Píldora gris con overflow para recortar el fill */}
+                                          <View
+                                             style={{
+                                                position: 'absolute',
+                                                left: 0,
+                                                bottom: 0,
+                                                width: '100%',
+                                                height: HISTO_BG_H,
+                                                backgroundColor: '#CBD5E1',
+                                                borderRadius: radius,
+                                                overflow: 'hidden',
+                                                borderWidth: isCurrent ? CURRENT_BORDER_W : 0,
+                                                borderColor: isCurrent ? '#000' : 'transparent',
+                                                justifyContent: 'flex-end',
+                                             }}
+                                          >
+                                             <View
+                                                style={{
+                                                   position: 'absolute',
+                                                   left: 0,
+                                                   right: 0,
+                                                   bottom: 0,
+                                                   height: hFill,
+                                                   backgroundColor: b.color,
+                                                   borderRadius: radius,
+                                                }}
+                                             />
+                                          </View>
+
+                                       </Pressable>
+
+                                       {/* Tooltip (fuera del overflow) */}
+                                       {hoverBarIdx === i && (
+                                          <View
+                                             style={{
+                                                position: 'absolute',
+                                                bottom: HISTO_BG_H + 6,             // encima de la barra
+                                                left: '50%',
+                                                transform: [{ translateX: -18 }],
+                                                backgroundColor: '#0f172a',
+                                                paddingHorizontal: 6,
+                                                paddingVertical: 3,
+                                                borderRadius: 6,
+                                                shadowColor: '#000',
+                                                shadowOpacity: 0.2,
+                                                shadowRadius: 6,
+                                                shadowOffset: { width: 0, height: 3 },
+                                                zIndex: 10,
+                                             }}
+                                          >
+                                             <Text style={styles.tipText}>{Math.round(b.pct * 100)}%</Text>
+                                          </View>
+                                       )}
                                     </View>
                                  );
                               })}
-
                            </View>
 
 
@@ -1560,7 +1641,7 @@ const styles = StyleSheet.create({
    },
    metaCellCompact: {
       flexGrow: 0,
-      flexShrink: 0,           // no se estira ni se encoge la “celda”
+      flexShrink: 0,
       justifyContent: 'flex-start',
       minWidth: 0,
    },
@@ -1570,28 +1651,97 @@ const styles = StyleSheet.create({
       fontSize: 12,
 
    },
-   metaRowTight: { columnGap: 8 },           // menos espacio en pantallas estrechas
-   metaCellGrow2: { flexGrow: 2, flexBasis: 0 }, // Crotal con más ancho
+   metaRowTight: { columnGap: 8 },
+   metaCellGrow2: { flexGrow: 2, flexBasis: 0 },
 
    chipLabelSm: {
       fontSize: 12,
       paddingHorizontal: 6,
       paddingVertical: 1,
    },
-   infoLabelSm: { fontSize: 18 },     // antes 22
-   infoValueSm: { fontSize: 16 },     // antes 18
+   infoLabelSm: { fontSize: 18 },
+   infoValueSm: { fontSize: 16 },
    pillSm: {
       paddingHorizontal: 8,
       paddingVertical: 1,
    },
-
-   // (tu grid ya tenía wrap; mantenlo)
    infoGrid: {
       marginTop: 18,
       flexDirection: 'row',
       flexWrap: 'wrap',
-      columnGap: 14, // se sobrescribe dinámicamente con GRID_GAP
+      columnGap: 14,
       rowGap: 14
+   },
+
+
+   tip: {
+      position: 'absolute',
+      bottom: '100%',
+      marginBottom: 8,
+      left: 0,
+      backgroundColor: '#0f172a',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 8,
+      shadowColor: '#000',
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      zIndex: 10,
+   },
+   tipText: {
+      color: '#fff',
+      fontSize: 12,
+      fontWeight: '800',
+   },
+   tipRightBig: {
+      position: 'absolute',
+      left: '100%',
+      marginLeft: 14,
+      top: -8,
+      backgroundColor: '#0f172a',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderRadius: 14,
+      shadowColor: '#000',
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      zIndex: 20,
+      pointerEvents: 'none',
+      minWidth: 180,
+   },
+
+   tipTitle: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: '800',
+      marginBottom: 6,
+   },
+
+   tipTextBig: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '800',
+   },
+
+   tipTopBig: {
+      position: 'absolute',
+      right: 0,                 // alineado al borde derecho del número
+      bottom: '100%',           // por encima del KPI
+      marginBottom: 10,
+      backgroundColor: '#0f172a',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderRadius: 14,
+      shadowColor: '#000',
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      zIndex: 60,               // más alto para que nunca quede detrás
+      elevation: 24,            // Android: asegura superposición
+      pointerEvents: 'none',
+      minWidth: 180,
    },
 
 
