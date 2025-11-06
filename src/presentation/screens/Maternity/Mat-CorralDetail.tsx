@@ -674,7 +674,7 @@ export const MatCorralDetail = () => {
    const infoCols = isLg ? 3 : (useRowForKpi ? 2 : 1);
    const infoW = infoCols === 3 ? '32%' : infoCols === 2 ? '48%' : '100%';
    const pctOffsetY = isDesktop ? -28 : -22
-   const placeTipAbove = winW <= 560;
+   const placeTipAbove = Platform.OS !== 'web' || winW <= 560;
 
    const kpiFontSize = isLg ? 62 : (isDesktop ? 54 : (isPhone ? 52 : 46));
    // const pctFont = isDesktop ? 22 : (isPhone ? 20 : 18);
@@ -1042,17 +1042,31 @@ export const MatCorralDetail = () => {
                               </View>
 
                               {/* Tooltip KPI: 11.000/12.000 gr + 92% */}
-                              {isWeb && showKpiTip && (
-                                 <View style={[placeTipAbove ? styles.tipTopBig : styles.tipRightBig]}>
-                                    <Text style={styles.tipTitle}>Consumo</Text>
+                              {showKpiTip && (
+                                 <View
+                                    style={[
+                                       placeTipAbove ? styles.tipTopBig : styles.tipRightBig,
+                                       // centrar horizontalmente cuando va arriba
+                                       placeTipAbove ? { left: '50%', transform: [{ translateX: -tipSizes.minW / 2 }] } : null,
+                                       {
+                                          paddingHorizontal: tipSizes.padH,
+                                          paddingVertical: tipSizes.padV,
+                                          borderRadius: tipSizes.radius,
+                                          minWidth: tipSizes.minW,
+                                       },
+                                    ]}
 
-                                    <Text numberOfLines={1} ellipsizeMode="clip" style={[styles.tipTextBig, { flexShrink: 0 }]}>
+                                 >
+                                    <Text style={[styles.tipTitle, { fontSize: tipSizes.title }]}>Consumo</Text>
+                                    <Text style={[styles.tipTextBig, { fontSize: tipSizes.text }]}>
                                        {`${actual.toLocaleString('es-ES')}/${objetivo.toLocaleString('es-ES')} gr`}
                                     </Text>
-
-                                    <Text style={[styles.tipTextBig, { opacity: 0.85 }]}>{pct}%</Text>
+                                    <Text style={[styles.tipTextBig, { fontSize: tipSizes.text, opacity: 0.85 }]}>
+                                       {pct}%
+                                    </Text>
                                  </View>
                               )}
+
 
                            </View>
                         </View>
@@ -1727,8 +1741,7 @@ const styles = StyleSheet.create({
 
    tipTopBig: {
       position: 'absolute',
-      right: 0,                 // alineado al borde derecho del número
-      bottom: '100%',           // por encima del KPI
+      bottom: '100%',
       marginBottom: 10,
       backgroundColor: '#0f172a',
       paddingHorizontal: 14,
@@ -1738,8 +1751,8 @@ const styles = StyleSheet.create({
       shadowOpacity: 0.25,
       shadowRadius: 12,
       shadowOffset: { width: 0, height: 6 },
-      zIndex: 60,               // más alto para que nunca quede detrás
-      elevation: 24,            // Android: asegura superposición
+      zIndex: 60,
+      elevation: 24,
       pointerEvents: 'none',
       minWidth: 180,
    },
