@@ -110,9 +110,15 @@ export default function NoAlimentadosScreenMaternidad() {
     const dataSorted = useMemo(() => {
         const copy = [...data];
         copy.sort((a, b) => {
-            const ad = a.diasSinAlimentar ?? 0;
-            const bd = b.diasSinAlimentar ?? 0;
-            return sort.dir === 'asc' ? ad - bd : bd - ad;
+            if (sort.key === 'dias') {
+                const ad = a.diasSinAlimentar ?? 0;
+                const bd = b.diasSinAlimentar ?? 0;
+                return sort.dir === 'asc' ? ad - bd : bd - ad;
+            } else {
+                const ac = parseInt(a.corral);
+                const bc = parseInt(b.corral);
+                return sort.dir === 'asc' ? ac - bc : bc - ac;
+            }
         });
         return copy;
     }, [data, sort]);
@@ -239,6 +245,77 @@ export default function NoAlimentadosScreenMaternidad() {
                 </TouchableOpacity>
             </View>
 
+            {/* Filtro de orden visible */}
+            {/* Filtro de orden visible */}
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    paddingHorizontal: 20,
+                    marginBottom: 10,
+                    gap: 10,
+                }}
+            >
+                {/* Botón de orden */}
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() =>
+                        setSort((prev) => ({
+                            ...prev,
+                            dir: prev.dir === 'asc' ? 'desc' : 'asc',
+                        }))
+                    }
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: '#EDE9FE',
+                        paddingHorizontal: 18,
+                        paddingVertical: 10,
+                        borderRadius: 999,
+                        gap: 8,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.05,
+                        shadowRadius: 4,
+                    }}
+                >
+                    <Ionicons
+                        name={sort.key === 'dias' ? 'time-outline' : 'home-outline'}
+                        size={18}
+                        color={BRAND}
+                    />
+                    <Text style={{ color: BRAND, fontWeight: '700', fontSize: 14 }}>
+                        Orden: {sort.key === 'dias' ? 'Días sin alimentar' : 'Corral'}
+                    </Text>
+                    <Ionicons
+                        name={sort.dir === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'}
+                        size={18}
+                        color={BRAND}
+                    />
+                </TouchableOpacity>
+
+                {/* Botón X fuera del chip */}
+                {sort.key !== 'dias' && (
+                    <TouchableOpacity
+                        onPress={() => setSort({ key: 'dias', dir: 'desc' })}
+                        style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 999,
+                            backgroundColor: '#F4F4F5',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB',
+                        }}
+                    >
+                        <Ionicons name="close" size={18} color="#6B7280" />
+                    </TouchableOpacity>
+                )}
+            </View>
+
+
+
             {/* Scroll vertical, columna centrada */}
             <ScrollView
                 contentContainerStyle={{
@@ -323,6 +400,7 @@ export default function NoAlimentadosScreenMaternidad() {
                     })()}
                 </View>
             </Modal>
+
         </SafeAreaView>
     );
 }

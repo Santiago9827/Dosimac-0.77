@@ -65,10 +65,26 @@ function RadioDialog({
    return (
       <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }} onPress={onClose} />
-         <View style={{
-            position: 'absolute', left: 20, right: 20, top: '26%', backgroundColor: '#fff', borderRadius: 16, padding: 16,
-            borderWidth: 1, borderColor: CARD_BORDER, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 16,
-         }}>
+         <View
+            style={{
+               position: 'absolute',
+               top: '26%',
+               alignSelf: 'center',
+               width: '90%',
+               maxWidth: 520,
+               backgroundColor: '#fff',
+               borderRadius: 16,
+               padding: 16,
+               borderWidth: 1,
+               borderColor: CARD_BORDER,
+               shadowColor: '#000',
+               shadowOpacity: 0.15,
+               shadowRadius: 16,
+               shadowOffset: { width: 0, height: 8 },
+               elevation: 16,
+            }}
+         >
+
             <Text style={{ fontWeight: '900', fontSize: 16, color: '#0f172a', marginBottom: 10 }}>{title}</Text>
             {options.map(op => (
                <Pressable key={op} onPress={() => setVal(op)} android_ripple={{ color: '#e5e7eb' }} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }}>
@@ -1380,7 +1396,7 @@ export const MatCorralDetail = () => {
                   <ListGroup>
                      <ListItem
                         icon="exit-outline"
-                        label="Salida"
+                        label="Salida animal"
                         onPress={() => drawer.hide(() => setDlgSalidaMotivo(true))}
                      />
                   </ListGroup>

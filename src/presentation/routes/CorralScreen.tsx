@@ -314,6 +314,7 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
                 diasSinAlimentar: MOCKS[code].diasSinAlimentar,
                 statusMessage: MOCKS[code].statusMessage,
             });
+            setCorral("")
             return;
         }
 
@@ -324,6 +325,7 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
             diasSinAlimentar: false,
             statusMessage: '',
         });
+        setCorral("")
     };
 
     const cardBase = {
