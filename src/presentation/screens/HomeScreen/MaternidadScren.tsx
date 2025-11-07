@@ -125,9 +125,9 @@ export default function MaternidadScreen() {
         { id: 10, area: 'Maternidad', corral: '2012', descripcion: 'Alarma de movimiento inusual.' },
         { id: 11, area: 'Maternidad', corral: '2013', descripcion: 'Fallo en el sistema de alimentación.' },
         { id: 12, area: 'Maternidad', corral: '2014', descripcion: 'Sensor de humedad fuera de rango.' },
-        { id: 13, area: 'Maternidad', corral: '2015', descripcion: 'Problema eléctrico detectado.' },
-        { id: 14, area: 'Maternidad', corral: '2016', descripcion: 'Alarma de intrusión activada.' },
-        { id: 15, area: 'Maternidad', corral: '2017', descripcion: 'Fallo en el sistema de calefacción.' },
+        // { id: 13, area: 'Maternidad', corral: '2015', descripcion: 'Problema eléctrico detectado.' },
+        // { id: 14, area: 'Maternidad', corral: '2016', descripcion: 'Alarma de intrusión activada.' },
+        // { id: 15, area: 'Maternidad', corral: '2017', descripcion: 'Fallo en el sistema de calefacción.' },
     ];
 
 
@@ -341,7 +341,7 @@ export default function MaternidadScreen() {
                             justifyContent: 'space-between',
                         }}
                     >
-                        <Text style={{ fontWeight: '700', color: '#fff', fontSize: 17 }}>Estado de Maternidad</Text>
+                        <Text style={{ fontWeight: '700', color: '#fff', fontSize: 17 }}> Maternidad</Text>
                         <Ionicons name="analytics-outline" size={20} color="#fff" />
                     </View>
 
@@ -351,7 +351,7 @@ export default function MaternidadScreen() {
                             <DonutChart
                                 size={donutSize}
                                 strokeWidth={donutSize >= 128 ? 22 : donutSize >= 118 ? 20 : 18}
-                                label="Maternidad"
+                                label=""
                                 segmentA={maternidad.alimentados}
                                 segmentB={maternidad.noAlimentados}
                                 colorA="#22C55E"
@@ -452,16 +452,9 @@ export default function MaternidadScreen() {
                         ))}
                     </View>
                 )}
-
                 {/* === CTA inferior === */}
                 <TouchableOpacity
-                    onPress={() => {
-                        if (Platform.OS === 'web') {
-                            setShowCorralModal(true);
-                        } else {
-                            navigation.navigate('MAT-CORRAL' as never);
-                        }
-                    }}
+                    onPress={() => navigation.navigate('MAT-CORRAL' as never)}
                     activeOpacity={0.85}
                     style={{
                         marginTop: 8,
@@ -483,29 +476,7 @@ export default function MaternidadScreen() {
                         Buscar corral
                     </Text>
                 </TouchableOpacity>
-                {Platform.OS === 'web' && (
-                    <Modal
-                        visible={showCorralModal}
-                        transparent
-                        animationType="fade"
-                        onRequestClose={() => setShowCorralModal(false)}
-                    >
-                        <View
-                            style={{
-                                flex: 1,
-                                backgroundColor: 'rgba(0,0,0,0.4)',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                // 👉 En móvil deja un pequeño margen; en desktop 0 (como querías)
-                                paddingHorizontal: isXs ? 16 : 0,
-                                paddingVertical: isXs ? 16 : 0,
-                            }}
-                        >
-                            {/* una sola card */}
-                            <CorralScreen variant="modal" onClose={() => setShowCorralModal(false)} />
-                        </View>
-                    </Modal>
-                )}
+
 
             </ScrollView>
 

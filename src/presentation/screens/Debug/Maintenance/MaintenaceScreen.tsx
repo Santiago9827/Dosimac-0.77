@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { deleteAllFarms, seedDbFarmList } from '../../../../FarmDB/farmsDB.native';
+// import { deleteAllFarms, seedDbFarmList } from '../../../../FarmDB/farmsDB.native';
 import { Appbar } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
@@ -13,14 +13,14 @@ export const MaintenanceScreen = () => {
   const navigation = useNavigation();
 
   const deleteFarmsStore = () => {
-    deleteAllFarms();
+    // deleteAllFarms();
     UseSetNewFarm(0);
     farmStore.persist.clearStorage();
   };
 
   const seedFarmsStore = () => {
-    deleteAllFarms();
-    seedDbFarmList();
+    // deleteAllFarms();
+    // seedDbFarmList();
     UseSetNewFarm(1);
   };
 

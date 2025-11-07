@@ -8,7 +8,8 @@ import {
   ScrollView,
   useWindowDimensions,
   FlatList,
-  Platform
+  Platform,
+  StyleSheet
 } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -53,6 +54,8 @@ const SHADOW: ViewStyle = {
 const CARD_H = 92;      // alto colapsado uniforme
 const DESC_LINES = 2;   // líneas visibles en colapsado
 
+const MAX_INCIDENCIAS_WEB = 12; // ★
+
 export const HomeScreen = () => {
   const { t } = useTranslation(['common']);
   const navigation = useNavigation<NavigationProp<any>>();
@@ -61,6 +64,7 @@ export const HomeScreen = () => {
   const { width, height } = useWindowDimensions();
   const isMd = width >= 768;
   const isLg = width >= 1024;
+  const isWeb = Platform.OS === 'web'; // ★
   const pagePX = isLg ? 48 : isMd ? 24 : 16;
   const incHeight = !isMd
     ? Math.round(Math.max(260, Math.min(420, height * 0.38)))
@@ -80,8 +84,10 @@ export const HomeScreen = () => {
   const statsTopOffset = isLg ? 16 : isMd ? 12 : 10;
   const stackGap = isMd ? 32 : 16;
 
+
   const StatRowCompact = ({ label, value }: { label: string; value: number }) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+
       <Text
         style={{
           flex: 1,
@@ -95,6 +101,7 @@ export const HomeScreen = () => {
       >
         {label}
       </Text>
+
       <Text
         style={{
           minWidth: 36,
@@ -172,64 +179,102 @@ export const HomeScreen = () => {
     alimentados,
     noAlimentados,
     percent,
+    headerTitle,
+    headerBg,
+    headerIcon,
   }: {
     label: string;
     alimentados: number;
     noAlimentados: number;
     percent: number;
+    headerTitle?: string;
+    headerBg?: string;
+    headerIcon?: string;
+
   }) => (
     <View
       style={{
-        padding: isLg ? 20 : 16,
+        padding: 0,
         borderWidth: 1,
         borderRadius: 16,
         backgroundColor: CARD_BG,
         borderColor: CARD_BORDER,
+        overflow: 'hidden',
         ...SHADOW,
         minHeight: donutSize + (isLg ? 40 : 32),
       }}
     >
-      <View
-        style={{
-          flexDirection: isMd ? 'row' : 'column',
-          alignItems: isMd ? 'flex-start' : 'center',
-          gap: stackGap,
-        }}
-      >
-        {/* Donut */}
+
+      {/*  Header coloreado */}
+      {headerTitle && (
         <View
           style={{
-            width: donutSize,
-            height: donutSize,
+            backgroundColor: headerBg || '#E0E7FF',
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderBottomWidth: 1,
+            borderBottomColor: CARD_BORDER,
+            flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
+            gap: 8,
           }}
         >
-          <DonutChart
-            size={donutSize}
-            strokeWidth={donutStroke}
-            label={label}
-            segmentA={alimentados}
-            segmentB={noAlimentados}
-            colorA="#22C55E"
-            colorB="#EF4444"
-            lineCap="butt"
-            gapDegrees={0}
-            centerPercent={percent}
-          />
+          {headerIcon ? <Ionicons name={headerIcon as any} size={16} color="#111827" /> : null}
+          <Text style={{ fontWeight: '700', fontSize: 13, color: '#111827' }} numberOfLines={1}>
+            {headerTitle}
+          </Text>
         </View>
+      )}
 
-        {/* Stats */}
-        <View style={[{ flexGrow: 1 }, isMd ? { width: statsWidth, paddingTop: statsTopOffset } : { marginTop: statsTopOffset }]}>
-          <StatRowCompact label="Alimentados" value={alimentados} />
-          <StatRowCompact label="No Alimentados" value={noAlimentados} />
-          <View style={{ height: 1, marginVertical: 10, backgroundColor: CARD_BORDER }} />
-          <StatRowCompact label="Totales" value={alimentados + noAlimentados} />
+      <View
+        style={{
+          padding: isLg ? 20 : 16,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: isMd ? 'row' : 'column',
+            alignItems: isMd ? 'flex-start' : 'center',
+            gap: stackGap,
+          }}
+        >
+          {/* Donut */}
+          <View
+            style={{
+              width: donutSize,
+              height: donutSize,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+
+            <DonutChart
+              size={donutSize}
+              strokeWidth={donutStroke}
+              label=""
+              segmentA={alimentados}
+              segmentB={noAlimentados}
+              colorA="#22C55E"
+              colorB="#EF4444"
+              lineCap="butt"
+              gapDegrees={0}
+              centerPercent={percent}
+            />
+          </View>
+
+          {/* Stats */}
+          <View style={[{ flexGrow: 1 }, isMd ? { width: statsWidth, paddingTop: statsTopOffset } : { marginTop: statsTopOffset }]}>
+            <StatRowCompact label="Alimentados" value={alimentados} />
+            <StatRowCompact label="No Alimentados" value={noAlimentados} />
+            <View style={{ height: 1, marginVertical: 10, backgroundColor: CARD_BORDER }} />
+            <StatRowCompact label="Totales" value={alimentados + noAlimentados} />
+          </View>
         </View>
       </View>
     </View>
   );
+
 
   // —— Card de incidencia con expand/collapse —— 
   const renderIncidenciaCard = (item: Incidencia) => {
@@ -347,6 +392,9 @@ export const HomeScreen = () => {
                 alimentados={maternidad.alimentados}
                 noAlimentados={maternidad.noAlimentados}
                 percent={pctM}
+                headerTitle={t('common:Maternidad') || 'Maternidad'}
+                headerBg="#E0E7FF"
+                headerIcon="paw-outline"
               />
             </Pressable>
 
@@ -363,6 +411,8 @@ export const HomeScreen = () => {
                 alimentados={gestacion.alimentados}
                 noAlimentados={gestacion.noAlimentados}
                 percent={pctG}
+                headerTitle={t('common:Gestación') || 'Gestación'}
+                headerIcon="paw-outline"
               />
             </Pressable>
           </View>
@@ -371,8 +421,14 @@ export const HomeScreen = () => {
         {/* ——— Incidencias ——— */}
         <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidencias.length} />
 
+        {/* Aviso de “hay más” solo en Web y vista grid */}
+        {isWeb && isMd && incidencias.length > MAX_INCIDENCIAS_WEB && (
+          <Text style={{ marginBottom: 8, color: '#64748B', fontSize: 12 }}>
+            {MAX_INCIDENCIAS_WEB} de {incidencias.length}.
+          </Text>
+        )}
+
         {!isMd ? (
-          // ===== MÓVIL: bloque con scroll propio =====
           <View
             style={{
               borderWidth: 1,
@@ -392,8 +448,6 @@ export const HomeScreen = () => {
               contentContainerStyle={{ padding: 12 }}
               showsVerticalScrollIndicator
               nestedScrollEnabled
-              // importante para que al cambiar altura por expandir
-              // el FlatList relayout correctamente
               extraData={expandedIds}
             />
           </View>
@@ -409,7 +463,7 @@ export const HomeScreen = () => {
               marginBottom: 16,
             }}
           >
-            {incidencias.map((it) => (
+            {(isWeb ? incidencias.slice(0, MAX_INCIDENCIAS_WEB) : incidencias).map((it) => (
               <View key={String(it.id)} style={{ flexBasis: gridCol, maxWidth: gridCol }}>
                 {renderIncidenciaCard(it)}
               </View>

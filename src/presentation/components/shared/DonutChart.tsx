@@ -1,117 +1,113 @@
+// components/shared/DonutChart.tsx
 import React from 'react';
-import { View } from 'react-native';
-import Svg, { G, Circle, Text as SvgText } from 'react-native-svg';
+import { View, Text, StyleSheet } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
 
 type Props = {
-    size?: number;                // tamaño total (px)
-    strokeWidth?: number;         // grosor del aro
-    label: string;                // texto bajo el % (centro)
-    segmentA: number;             // valor “verde” (alimentados)
-    segmentB: number;             // valor “rojo” (no alimentados)
-    colorA?: string;              // color segmento A
-    colorB?: string;              // color segmento B
-    lineCap?: 'butt' | 'round';   // extremos rectos o redondos
-    gapDegrees?: number;          // separación angular entre segmentos (0 = sin gap)
-    centerPercent?: number;       // % a mostrar en el centro
+    size: number;                 // diámetro total
+    strokeWidth: number;          // grosor del aro
+    label?: string;               // texto bajo el %, opcional
+    centerPercent: number;        // número (0-100) que mostramos como %
+    segmentA: number;             // valor del primer segmento
+    segmentB: number;             // valor del segundo segmento
+    colorA: string;               // color segmento A
+    colorB: string;               // color segmento B
+    lineCap?: 'butt' | 'round';   // estilo de remate del trazo
+    gapDegrees?: number;          // (opcional) separación entre segmentos (0 por defecto)
 };
 
 export const DonutChart: React.FC<Props> = ({
-    size = 140,
-    strokeWidth = 18,
+    size,
+    strokeWidth,
     label,
+    centerPercent,
     segmentA,
     segmentB,
-    colorA = '#22C55E',
-    colorB = '#EF4444',
+    colorA,
+    colorB,
     lineCap = 'butt',
-    gapDegrees = 0,
-    centerPercent,
+    gapDegrees = 0, // nota: ahora mismo lo dejamos en 0 (sin separación)
 }) => {
     const radius = (size - strokeWidth) / 2;
-    const cx = size / 2;
-    const cy = size / 2;
+    const center = size / 2;
     const circumference = 2 * Math.PI * radius;
 
-    const total = Math.max(0, segmentA) + Math.max(0, segmentB);
-    const a = total ? segmentA / total : 0;
-    const b = total ? segmentB / total : 0;
+    const a = Math.max(0, segmentA);
+    const b = Math.max(0, segmentB);
+    const total = a + b;
 
-    // Longitudes de arco para cada segmento
-    const arcA = circumference * a;
-    const arcB = circumference * b;
+    // Longitud de cada arco (en px a lo largo de la circunferencia)
+    const lenA = total > 0 ? (a / total) * circumference : 0;
+    const lenB = total > 0 ? (b / total) * circumference : 0;
 
-    // Separación (si la quisieras): se reparte entre ambos
-    const gapLen = (gapDegrees / 360) * circumference;
-    const arcAWithGap = Math.max(0, arcA - gapLen / 2);
-    const arcBWithGap = Math.max(0, arcB - gapLen / 2);
+    // Rotación de inicio del segundo arco (en grados)
+    const degA = total > 0 ? (a / total) * 360 : 0;
+    const startAngle = -90; // empezamos arriba (12 en punto)
 
-    // dash arrays (longitud visible, longitud oculta)
-    const dashArrayA = `${arcAWithGap} ${circumference - arcAWithGap}`;
-    const dashArrayB = `${arcBWithGap} ${circumference - arcBWithGap}`;
+    const hasLabel = !!(label && label.trim());
 
-    // Rotaciones: empezamos en -90º para que arranque arriba
-    // El segundo segmento empieza donde acaba el primero + gap
-    const rotA = -90;
-    const rotB = -90 + (a * 360) + (gapDegrees / 2);
-
-    const percent = typeof centerPercent === 'number'
-        ? Math.max(0, Math.min(100, centerPercent))
-        : Math.round(a * 100);
+    // Tamaños de texto proporcionales al tamaño del donut
+    const percentFont = Math.max(12, Math.round(size * 0.18));
+    const labelFont = Math.max(10, Math.round(size * 0.11));
 
     return (
         <View style={{ width: size, height: size }}>
             <Svg width={size} height={size}>
-                {/* Segmento A (alimentados) */}
-                <G rotation={rotA} origin={`${cx}, ${cy}`}>
-                    <Circle
-                        cx={cx}
-                        cy={cy}
-                        r={radius}
-                        stroke={colorA}
-                        strokeWidth={strokeWidth}
-                        fill="transparent"
-                        strokeDasharray={dashArrayA}
-                        strokeLinecap={lineCap}
-                    />
-                </G>
-
-                {/* Segmento B (no alimentados) */}
-                {b > 0 && (
-                    <G rotation={rotB} origin={`${cx}, ${cy}`}>
+                {/* Segmento A */}
+                {lenA > 0 && (
+                    <G rotation={startAngle} origin={`${center}, ${center}`}>
                         <Circle
-                            cx={cx}
-                            cy={cy}
+                            cx={center}
+                            cy={center}
                             r={radius}
-                            stroke={colorB}
+                            stroke={colorA}
                             strokeWidth={strokeWidth}
-                            fill="transparent"
-                            strokeDasharray={dashArrayB}
                             strokeLinecap={lineCap}
+                            fill="transparent"
+                            strokeDasharray={`${lenA} ${circumference}`}
+                            strokeDashoffset={0}
                         />
                     </G>
                 )}
 
-                {/* Texto central */}
-                <SvgText
-                    x={cx}
-                    y={cy - 2}
-                    textAnchor="middle"
-                    fontSize={22}
-                    fontWeight="700"
-                    fill="#111827"
-                >
-                    {`${percent}%`}
-                </SvgText>
-                <SvgText
-                    x={cx}
-                    y={cy + 20}
-                    textAnchor="middle"
-                    fontSize={12}
-                    fill="#6B7280"
-                >
-                    {label}
-                </SvgText>
+                {/* Segmento B (arranca al terminar A) */}
+                {lenB > 0 && (
+                    <G rotation={startAngle + degA + (gapDegrees || 0)} origin={`${center}, ${center}`}>
+                        <Circle
+                            cx={center}
+                            cy={center}
+                            r={radius}
+                            stroke={colorB}
+                            strokeWidth={strokeWidth}
+                            strokeLinecap={lineCap}
+                            fill="transparent"
+                            strokeDasharray={`${lenB} ${circumference}`}
+                            strokeDashoffset={0}
+                        />
+                    </G>
+                )}
             </Svg>
+
+            {/* Centro absoluto: % + (label opcional) */}
+            <View style={[StyleSheet.absoluteFillObject, styles.center]}>
+                <Text style={{ fontSize: percentFont, fontWeight: '800', color: '#111827' }}>
+                    {Math.round(Number.isFinite(centerPercent) ? centerPercent : 0)}%
+                </Text>
+                {hasLabel ? (
+                    <Text style={{ marginTop: 2, fontSize: labelFont, color: '#6B7280' }}>
+                        {label}
+                    </Text>
+                ) : null}
+            </View>
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    center: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+});
+
+export default DonutChart;

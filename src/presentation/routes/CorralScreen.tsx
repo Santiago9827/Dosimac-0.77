@@ -1,5 +1,5 @@
 // screens/Maternity/CorralScreen.tsx
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
     View,
     Text,
@@ -16,11 +16,144 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import NfcManager, { Ndef, NfcEvents } from 'react-native-nfc-manager';
 
+const CardInner = React.memo(
+    ({
+        corral,
+        setCorral,
+        onBuscar,
+        scanning,
+        startScan,
+        stopScan,
+        errorMsg,
+        inputRef,
+    }: any) => {
+        return (
+            <>
+                {/* Título */}
+                <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a' }}>
+                    Localizar corral
+                </Text>
+                <Text style={{ color: '#64748B', marginTop: 4 }}>
+                    Número de corral o lectura NFC.
+                </Text>
+
+                {/* Input */}
+                <View
+                    style={{
+                        marginTop: 16,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: '#F8FAFC',
+                        borderColor: '#E2E8F0',
+                        borderWidth: 1,
+                        borderRadius: 14,
+                        paddingHorizontal: 12,
+                        height: 48,
+                    }}
+                >
+                    <Ionicons name="home-outline" size={20} color="#64748B" />
+                    <TextInput
+                        ref={inputRef}
+                        value={corral}
+                        onChangeText={setCorral}
+                        placeholder="1234"
+                        placeholderTextColor="#94A3B8"
+                        style={{
+                            flex: 1,
+                            marginLeft: 8,
+                            fontSize: 16,
+                            color: '#0f172a',
+                            borderWidth: 0,
+                            backgroundColor: 'transparent',
+                        }}
+                        keyboardType="numeric"
+                        returnKeyType="search"
+                        onSubmitEditing={onBuscar}
+                        {...(Platform.OS === 'web' && {
+                            onFocus: (e: any) => (e.target.style.outline = 'none'),
+                            onBlur: (e: any) => (e.target.style.outline = 'none'),
+                        })}
+                    />
+
+
+                    {corral ? (
+                        <TouchableOpacity onPress={() => setCorral('')}>
+                            <Ionicons name="close-circle" size={18} color="#94A3B8" />
+                        </TouchableOpacity>
+                    ) : null}
+                </View>
+
+                {/* Escanear */}
+                <TouchableOpacity
+                    onPress={scanning ? stopScan : startScan}
+                    activeOpacity={0.9}
+                    style={{
+                        marginTop: 14,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 1,
+                        borderColor: scanning ? '#A7F3D0' : '#CBD5E1',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 12,
+                        paddingVertical: 12,
+                        gap: 8,
+                    }}
+                >
+                    <Ionicons
+                        name={scanning ? 'stop-circle-outline' : 'scan-outline'}
+                        size={18}
+                        color={scanning ? '#059669' : '#16A34A'}
+                    />
+                    <Text style={{ color: '#0f172a', fontWeight: '600' }}>
+                        {scanning ? 'Detener escaneo' : 'Escanear etiqueta NFC'}
+                    </Text>
+                </TouchableOpacity>
+
+                {/* Error */}
+                {errorMsg && (
+                    <View
+                        style={{
+                            marginTop: 10,
+                            backgroundColor: '#FEF2F2',
+                            borderRadius: 10,
+                            padding: 10,
+                            borderWidth: 1,
+                            borderColor: '#FECACA',
+                        }}
+                    >
+                        <Text style={{ color: '#B91C1C', fontWeight: '600' }}>{errorMsg}</Text>
+                    </View>
+                )}
+
+                {/* Buscar */}
+                <TouchableOpacity
+                    disabled={!corral.trim()}
+                    onPress={onBuscar}
+                    activeOpacity={0.9}
+                    style={{
+                        marginTop: 18,
+                        backgroundColor: corral.trim() ? '#4F46E5' : '#C7D2FE',
+                        borderRadius: 12,
+                        paddingVertical: 14,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.12,
+                        shadowRadius: 6,
+                        shadowOffset: { width: 0, height: 3 },
+                        elevation: 2,
+                    }}
+                >
+                    <Text style={{ color: 'white', textAlign: 'center', fontWeight: '700' }}>
+                        Buscar
+                    </Text>
+                </TouchableOpacity>
+            </>
+        );
+    }
+);
+
 type NFCRecord = { tnf: number; text?: string; uri?: string; payloadHex?: string };
-type Props = {
-    variant?: 'page' | 'modal';
-    onClose?: () => void; // ← para cerrar el modal desde dentro
-};
+type Props = { variant?: 'page' | 'modal'; onClose?: () => void };
 
 export default function CorralScreen({ variant = 'page', onClose }: Props) {
     const insets = useSafeAreaInsets();
@@ -31,8 +164,8 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
     const [scanning, setScanning] = useState(false);
     const [lastTag, setLastTag] = useState<any | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const inputRef = useRef<TextInput>(null);
 
-    // ===== MOCKS =====
     const MOCKS: Record<string, any> = {
         '2': {
             animal: {
@@ -103,9 +236,7 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
                 }
                 return { tnf: record.tnf, text, uri, payloadHex: fmtHex(record.payload) };
             });
-        } catch {
-            return [];
-        }
+        } catch { return []; }
     };
 
     const pickCorralFromTag = (tag: any) => {
@@ -131,12 +262,10 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
 
     const startScan = useCallback(async () => {
         setErrorMsg(null);
-
         if (Platform.OS === 'web') {
             setErrorMsg('La lectura NFC no está disponible en la versión web.');
             return;
         }
-
         try {
             const supported = await NfcManager.isSupported();
             if (!supported) { setErrorMsg('Este dispositivo no soporta NFC.'); return; }
@@ -144,13 +273,11 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
             const enabled = await NfcManager.isEnabled();
             if (!enabled) {
                 if (Platform.OS === 'android') {
-                    Alert.alert('NFC desactivado', 'Activa el NFC en Ajustes para escanear etiquetas.', [
+                    Alert.alert('NFC desactivado', 'Activa el NFC en Ajustes.', [
                         { text: 'Cancelar', style: 'cancel' },
                         { text: 'Abrir Ajustes', onPress: () => NfcManager.goToNfcSetting?.() },
                     ]);
-                } else {
-                    setErrorMsg('NFC desactivado.');
-                }
+                } else setErrorMsg('NFC desactivado.');
                 return;
             }
 
@@ -170,28 +297,14 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
         setScanning(false);
     }, []);
 
-    // helper para navegar y CERRAR el modal si existe
     const goToDetail = (params: any) => {
         navigation.navigate('MAT-CORRALDETAIL', params);
-        // en web usamos modal: ciérralo
         onClose?.();
     };
 
-    // === Buscar con mock ===
     const onBuscar = () => {
         const code = (corral || '').trim();
         if (!code) return;
-
-        if (code === '1') {
-            goToDetail({
-                corralId: 1,
-                mockEmpty: true,
-                deviceError: true,
-                diasSinAlimentar: false,
-                statusMessage: 'Error: El motor no funciona',
-            });
-            return;
-        }
 
         if (MOCKS[code]) {
             goToDetail({
@@ -213,116 +326,6 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
         });
     };
 
-    // -------- UI chunks --------
-    const CardInner = () => (
-        <>
-            {/* Título */}
-            <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a' }}>
-                Localizar corral
-            </Text>
-            <Text style={{ color: '#64748B', marginTop: 4 }}>
-                Número de corral o lectura NFC.
-            </Text>
-
-            {/* Input */}
-            <View
-                style={{
-                    marginTop: 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: '#F8FAFC',
-                    borderColor: '#E2E8F0',
-                    borderWidth: 1,
-                    borderRadius: 14,
-                    paddingHorizontal: 12,
-                    height: 48,
-                }}
-            >
-                <Ionicons name="home-outline" size={20} color="#64748B" />
-                <TextInput
-                    value={corral}
-                    onChangeText={setCorral}
-                    placeholder="Ej. 1234"
-                    placeholderTextColor="#94A3B8"
-                    style={{ flex: 1, marginLeft: 8, fontSize: 16, color: '#0f172a' }}
-                    keyboardType="numeric"
-                    returnKeyType="search"
-                    onSubmitEditing={onBuscar}
-                />
-                {corral ? (
-                    <TouchableOpacity onPress={() => setCorral('')}>
-                        <Ionicons name="close-circle" size={18} color="#94A3B8" />
-                    </TouchableOpacity>
-                ) : null}
-            </View>
-
-            {/* Escanear */}
-            <TouchableOpacity
-                onPress={scanning ? stopScan : startScan}
-                activeOpacity={0.9}
-                style={{
-                    marginTop: 14,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderWidth: 1,
-                    borderColor: scanning ? '#A7F3D0' : '#CBD5E1',
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 12,
-                    paddingVertical: 12,
-                    gap: 8,
-                }}
-            >
-                <Ionicons
-                    name={scanning ? 'stop-circle-outline' : 'scan-outline'}
-                    size={18}
-                    color={scanning ? '#059669' : '#16A34A'}
-                />
-                <Text style={{ color: '#0f172a', fontWeight: '600' }}>
-                    {scanning ? 'Detener escaneo' : 'Escanear etiqueta NFC'}
-                </Text>
-            </TouchableOpacity>
-
-            {/* Error */}
-            {errorMsg && (
-                <View
-                    style={{
-                        marginTop: 10,
-                        backgroundColor: '#FEF2F2',
-                        borderRadius: 10,
-                        padding: 10,
-                        borderWidth: 1,
-                        borderColor: '#FECACA',
-                    }}
-                >
-                    <Text style={{ color: '#B91C1C', fontWeight: '600' }}>{errorMsg}</Text>
-                </View>
-            )}
-
-            {/* Buscar */}
-            <TouchableOpacity
-                disabled={!corral.trim()}
-                onPress={onBuscar}
-                activeOpacity={0.9}
-                style={{
-                    marginTop: 18,
-                    backgroundColor: corral.trim() ? '#4F46E5' : '#C7D2FE',
-                    borderRadius: 12,
-                    paddingVertical: 14,
-                    shadowColor: '#000',
-                    shadowOpacity: 0.12,
-                    shadowRadius: 6,
-                    shadowOffset: { width: 0, height: 3 },
-                    elevation: 2,
-                }}
-            >
-                <Text style={{ color: 'white', textAlign: 'center', fontWeight: '700' }}>
-                    Buscar
-                </Text>
-            </TouchableOpacity>
-        </>
-    );
-
     const cardBase = {
         width: '100%' as const,
         maxWidth: 600,
@@ -336,33 +339,6 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
         elevation: 3,
     };
 
-    if (variant === 'modal') {
-        // dentro de CorralScreen, en la rama variant === 'modal'
-        return (
-            <View
-                style={[
-                    cardBase,
-                    {
-                        width: '100%',
-                        maxWidth: 460,
-                        padding: 24,
-                        position: 'relative',
-                    },
-                ]}
-            >
-                <TouchableOpacity
-                    onPress={onClose}
-                    style={{ position: 'absolute', top: 12, right: 12, zIndex: 10, padding: 6 }}
-                >
-                    <Ionicons name="close" size={22} color="#475569" />
-                </TouchableOpacity>
-                <CardInner />
-            </View>
-        );
-
-    }
-
-    // variante "page": pantalla completa con la card centrada
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -374,7 +350,16 @@ export default function CorralScreen({ variant = 'page', onClose }: Props) {
                 contentContainerStyle={{ alignItems: 'center', paddingTop: 40, paddingBottom: 60 }}
             >
                 <View style={cardBase}>
-                    <CardInner />
+                    <CardInner
+                        corral={corral}
+                        setCorral={setCorral}
+                        onBuscar={onBuscar}
+                        scanning={scanning}
+                        startScan={startScan}
+                        stopScan={stopScan}
+                        errorMsg={errorMsg}
+                        inputRef={inputRef}
+                    />
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
