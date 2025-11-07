@@ -1,6 +1,14 @@
 // screens/Gestation/GestationScreen.tsx
 import React from 'react';
-import { View, Text, Pressable, FlatList, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  FlatList,
+  TouchableOpacity,
+  ScrollView,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DonutChart } from '../../components/shared/DonutChart';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
@@ -11,6 +19,7 @@ const CARD_BG = '#FFFFFF';
 const CARD_BORDER = '#E6EAF2';
 const BRAND = '#4F46E5';
 
+const INCIDENT_BLOCK_BG = '#FFFFFF';
 const INCIDENT_ITEM_BG = '#FEE2E2';
 const INCIDENT_ITEM_BORDER = '#FECACA';
 const INCIDENT_PILL_BG = '#FCA5A5';
@@ -30,6 +39,9 @@ const RIGHT_FLEX = 68;
 const VALUE_W = 80;
 const CHEVRON_W = 18;
 
+const CARD_H = 92;       // alto colapsado de cada incidencia (como Maternidad)
+const DESC_LINES = 2;    // líneas visibles antes de expandir
+
 type DatosGestacion = { alimentados: number; noAlimentados: number };
 type Incidencia = {
   id: string | number;
@@ -40,6 +52,16 @@ type Incidencia = {
 
 export const GestationScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
+  const { width, height } = useWindowDimensions();
+
+  // breakpoints (igual que Maternidad)
+  const isMd = width >= 768;
+  const isLg = width >= 1024;
+  const pagePX = isLg ? 48 : isMd ? 24 : 16;
+  const incHeight = !isMd
+    ? Math.round(Math.max(260, Math.min(420, height * 0.38)))
+    : undefined;
+  const gridCol = (isLg ? '32%' : isMd ? '48%' : '100%') as any;
 
   const gestacion: DatosGestacion = { alimentados: 135, noAlimentados: 115 };
   const total = gestacion.alimentados + gestacion.noAlimentados;
@@ -51,6 +73,14 @@ export const GestationScreen = () => {
     { id: 3, area: 'Gestación', corral: '10', descripcion: 'Fallo de báscula.' },
     { id: 4, area: 'Gestación', corral: '04', descripcion: 'Bebedero con caudal bajo.' },
     { id: 5, area: 'Gestación', corral: '12', descripcion: 'Puerta sin cierre.' },
+    { id: 6, area: 'Gestación', corral: '13', descripcion: 'Puerta sin cierre.' },
+    { id: 7, area: 'Gestación', corral: '14', descripcion: 'Puerta sin cierre.' },
+    { id: 8, area: 'Gestación', corral: '15', descripcion: 'Puerta sin cierre.' },
+    { id: 9, area: 'Gestación', corral: '16', descripcion: 'Puerta sin cierre.' },
+    { id: 10, area: 'Gestación', corral: '17', descripcion: 'Puerta sin cierre.' },
+    { id: 11, area: 'Gestación', corral: '18', descripcion: 'Puerta sin cierre.' },
+    { id: 12, area: 'Gestación', corral: '19', descripcion: 'Puerta sin cierre.' },
+
   ];
 
   const DANGER = '#DC2626';
@@ -58,7 +88,7 @@ export const GestationScreen = () => {
   const noAl = gestacion.noAlimentados;
   const noAlColor = noAl === 0 ? OK : DANGER;
 
-  // Donut responsivo, igual que Maternidad
+  // Donut responsivo (como Maternidad)
   const [donutSize, setDonutSize] = React.useState(132);
   const computeDonutSize = (rowWidth: number) => {
     const leftPct = LEFT_FLEX / (LEFT_FLEX + RIGHT_FLEX);
@@ -76,16 +106,26 @@ export const GestationScreen = () => {
     const Comp: any = onPress ? Pressable : View;
     return (
       <>
-        {divider ? <View className="h-px" style={{ backgroundColor: CARD_BORDER }} /> : null}
+        {divider ? <View style={{ height: 1, backgroundColor: CARD_BORDER }} /> : null}
         <Comp
           onPress={onPress}
           android_ripple={onPress ? { color: '#e5e7eb' } : undefined}
-          style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}
+          style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }}
         >
-          <Text style={{ flex: 1, color: labelColor ?? '#475569', marginRight: 8, flexShrink: 1, minWidth: 0 }}>
+          <Text
+            style={{
+              flex: 1, color: labelColor ?? '#475569', marginRight: 8,
+              flexShrink: 1, minWidth: 0, fontSize: 15,
+            }}
+          >
             {label}
           </Text>
-          <Text style={{ width: VALUE_W, textAlign: 'right', color: valueColor ?? '#0F172A', fontWeight: strong ? '800' : '600' }}>
+          <Text
+            style={{
+              width: VALUE_W, textAlign: 'right', color: valueColor ?? '#0F172A',
+              fontWeight: strong ? '800' : '600', fontSize: 16,
+            }}
+          >
             {value}
           </Text>
           <View style={{ width: CHEVRON_W, alignItems: 'flex-end', marginLeft: 4 }}>
@@ -96,90 +136,171 @@ export const GestationScreen = () => {
     );
   };
 
-  const LinkRow = ({ icon = 'grid-outline', label, onPress, divider = true }: {
-    icon?: string; label: string; onPress: () => void; divider?: boolean;
-  }) => (
-    <>
-      {divider ? <View className="h-px" style={{ backgroundColor: CARD_BORDER }} /> : null}
-      <Pressable onPress={onPress} android_ripple={{ color: '#e5e7eb' }} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}>
-        <Ionicons name={icon as any} size={16} color={BRAND} />
-        <Text style={{ marginLeft: 8, color: BRAND, fontWeight: '700', flex: 1 }}>{label}</Text>
-        <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
-      </Pressable>
-    </>
-  );
-
   const SectionTitle = ({ icon, text, count }: { icon: string; text: string; count?: number }) => (
-    <View className="flex-row items-center justify-between mb-3 px-5">
-      <View className="flex-row items-center">
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <Ionicons name={icon as any} size={18} color="#0f172a" />
-        <Text className="ml-2 text-slate-900 text-[18px] font-extrabold">{text}</Text>
+        <Text
+          style={{
+            marginLeft: 8, color: '#0f172a', fontWeight: '800',
+            fontSize: isLg ? 22 : isMd ? 20 : 18,
+          }}
+        >
+          {text}
+        </Text>
       </View>
       {typeof count === 'number' && (
-        <View className="px-2 py-0.5 rounded-full bg-slate-200/70">
-          <Text className="text-xs text-slate-700">{count}</Text>
+        <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(226,232,240,0.7)' }}>
+          <Text style={{ fontSize: 12, color: '#334155' }}>{count}</Text>
         </View>
       )}
     </View>
   );
 
-  const renderIncidencia = ({ item }: { item: Incidencia }) => (
-    <Pressable
-      onPress={() => { }}
-      android_ripple={{ color: INCIDENT_RIPPLE }}
-      className="rounded-2xl border"
-      style={{ backgroundColor: INCIDENT_ITEM_BG, borderColor: INCIDENT_ITEM_BORDER, paddingVertical: 12, paddingHorizontal: 14, ...SHADOW }}
-    >
-      <View className="flex-row items-center">
-        <Text className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: INCIDENT_PILL_BG, color: INCIDENT_PILL_TEXT }}>
-          {item.area}
+  // Incidencias expandibles (como Maternidad)
+  const [expandedIds, setExpandedIds] = React.useState<Set<Incidencia['id']>>(new Set());
+  const toggleExpanded = (id: Incidencia['id']) =>
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const renderIncidencia = ({ item }: { item: Incidencia }) => {
+    const isExpanded = expandedIds.has(item.id);
+    return (
+      <Pressable
+        onPress={() => toggleExpanded(item.id)}
+        android_ripple={{ color: INCIDENT_RIPPLE }}
+        style={[
+          {
+            borderRadius: 16,
+            padding: 16,
+            borderWidth: 1,
+            backgroundColor: INCIDENT_ITEM_BG,
+            borderColor: INCIDENT_ITEM_BORDER,
+            height: isExpanded ? undefined : CARD_H,
+            minHeight: CARD_H,
+          },
+          SHADOW as any,
+        ]}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text
+            style={{
+              paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
+              fontSize: 12, fontWeight: '600',
+              backgroundColor: INCIDENT_PILL_BG, color: INCIDENT_PILL_TEXT,
+            }}
+          >
+            {item.area}
+          </Text>
+          <Text
+            style={{
+              marginLeft: 8, paddingHorizontal: 8, paddingVertical: 2,
+              borderRadius: 999, backgroundColor: '#F1F5F9',
+              color: '#475569', fontSize: 12,
+            }}
+          >
+            Corral {item.corral}
+          </Text>
+          <View style={{ flex: 1 }} />
+          <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#7c3aed" />
+        </View>
+
+        <Text
+          style={{ marginTop: 8, color: '#0f172a', lineHeight: 18 }}
+          numberOfLines={isExpanded ? undefined : DESC_LINES}
+          ellipsizeMode="tail"
+        >
+          {item.descripcion}
         </Text>
-        <Text className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">Corral {item.corral}</Text>
-      </View>
-      <Text className="mt-2 text-slate-900">{item.descripcion}</Text>
-    </Pressable>
-  );
+      </Pressable>
+    );
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: SURFACE_BG }}>
-      <View style={{ flex: 1 }}>
-        {/* Donut + métricas */}
-        <View className="px-5 mt-4 mb-6">
-          <View className="rounded-2xl border p-5 overflow-hidden" style={{ backgroundColor: CARD_BG, borderColor: CARD_BORDER, ...SHADOW }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }} onLayout={(e) => setDonutSize(computeDonutSize(e.nativeEvent.layout.width))}>
-              <View style={{ flex: LEFT_FLEX }} className="items-center pr-2">
-                <DonutChart
-                  size={donutSize}
-                  strokeWidth={donutSize >= 128 ? 22 : donutSize >= 118 ? 20 : 18}
-                  label="Gestación"
-                  segmentA={gestacion.alimentados}
-                  segmentB={gestacion.noAlimentados}
-                  colorA="#22C55E"
-                  colorB="#EF4444"
-                  lineCap="butt"
-                  gapDegrees={0}
-                  centerPercent={pct}
-                />
-              </View>
-              <View className="w-px self-stretch mx-3" style={{ backgroundColor: CARD_BORDER }} />
-              <View style={{ flex: RIGHT_FLEX }} className="pr-1">
-                <Row label="Alimentados" value={gestacion.alimentados} />
-                <Row label="No Alimentados" value={noAl} divider action onPress={() => navigation.navigate('GES-NOFEED')}
-                  labelColor={noAlColor} valueColor={noAlColor} />
-                <Row
-                  label="Totales animales"
-                  value={total}
-                  strong
-                  divider
-                  action
-                  onPress={() => navigation.navigate('GES-TODOS')}
-                />
-              </View>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: pagePX,
+          paddingTop: 16,
+          paddingBottom: 24,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* === BLOQUE 1: Donut + métricas con cabecera morada (igual a Maternidad) === */}
+        <View
+          style={{
+            borderRadius: 18,
+            backgroundColor: CARD_BG,
+            ...SHADOW,
+            marginBottom: 24,
+            overflow: 'hidden',
+          }}
+          onLayout={(e) => setDonutSize(computeDonutSize(e.nativeEvent.layout.width))}
+        >
+          {/* header */}
+          <View
+            style={{
+              backgroundColor: BRAND,
+              paddingVertical: 12,
+              paddingHorizontal: 18,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Text style={{ fontWeight: '700', color: '#fff', fontSize: 17 }}>Gestación</Text>
+            <Ionicons name="analytics-outline" size={20} color="#fff" />
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+            {/* donut izquierda */}
+            <View style={{ flex: LEFT_FLEX, alignItems: 'center', paddingRight: 8 }}>
+              <DonutChart
+                size={donutSize}
+                strokeWidth={donutSize >= 128 ? 22 : donutSize >= 118 ? 20 : 18}
+                label=""
+                segmentA={gestacion.alimentados}
+                segmentB={gestacion.noAlimentados}
+                colorA="#22C55E"
+                colorB="#EF4444"
+                lineCap="butt"
+                centerPercent={pct}
+              />
+            </View>
+
+            {/* separador */}
+            <View style={{ width: 1, backgroundColor: CARD_BORDER, alignSelf: 'stretch', marginHorizontal: 12 }} />
+
+            {/* métricas */}
+            <View style={{ flex: RIGHT_FLEX, paddingRight: 4 }}>
+              <Row label="Alimentados" value={gestacion.alimentados} />
+              <Row
+                label="No Alimentados"
+                value={noAl}
+                divider
+                action
+                onPress={() => navigation.navigate('GES-NOFEED')}
+                labelColor={noAlColor}
+                valueColor={noAlColor}
+              />
+              <Row
+                label="Totales animales"
+                value={total}
+                strong
+                divider
+                action
+                onPress={() => navigation.navigate('GES-TODOS')}
+              />
             </View>
           </View>
         </View>
-        {/* —— Ver corrales (suelto entre bloque 1 y bloque 2) —— */}
-        <View className="px-5 mb-4">
+
+        {/* —— Ver corrales (se mantiene aquí) —— */}
+        <View style={{ marginBottom: 16 }}>
           <Pressable
             onPress={() => navigation.navigate('GES-CORRALPC' as never)}
             android_ripple={{ color: '#e5e7eb' }}
@@ -203,56 +324,67 @@ export const GestationScreen = () => {
           </Pressable>
         </View>
 
-
-        {/* Incidencias ocupa el resto */}
+        {/* === BLOQUE 2: Incidencias (igual que Maternidad) === */}
         <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasGestacion.length} />
 
-        <View className="px-5" style={{ flex: 1 }}>
+        {!isMd ? (
           <View
-            className="rounded-2xl overflow-hidden"
-            style={{ backgroundColor: '#FFFFFF', paddingVertical: 8, paddingHorizontal: 8, ...SHADOW, flex: 1, marginBottom: 14 }}
+            style={{
+              borderWidth: 1,
+              borderColor: CARD_BORDER,
+              backgroundColor: INCIDENT_BLOCK_BG,
+              borderRadius: 16,
+              ...SHADOW,
+              maxHeight: incHeight,
+              marginBottom: 16,
+            }}
           >
             <FlatList
               data={incidenciasGestacion}
               keyExtractor={(item) => String(item.id)}
               renderItem={renderIncidencia}
               ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+              contentContainerStyle={{ padding: 12 }}
               showsVerticalScrollIndicator
-              style={{ flex: 1 }}
-              contentContainerStyle={{ paddingVertical: 2, paddingBottom: 4, flexGrow: 1 }}
+              nestedScrollEnabled
+              extraData={expandedIds}
             />
           </View>
-        </View>
-
-        {/* Botones */}
-        <View className="px-5" style={{ paddingBottom: 8 }}>
-          <View style={{ flexDirection: 'row', gap: 12, paddingTop: 6 }}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('GES-CORRAL-LOOKUP' as never)}
-              activeOpacity={0.9}
-              style={{
-                flex: 1, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
-                backgroundColor: BRAND, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 6,
-                shadowOffset: { width: 0, height: 3 }, elevation: 2
-              }}
-            >
-              <Text className="text-white font-semibold">Buscar Corral</Text>
-            </TouchableOpacity>
-
-            {/* <TouchableOpacity
-              onPress={() => navigation.navigate('GES-CORRALPC' as never)}
-              activeOpacity={0.9}
-              style={{
-                flex: 1, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
-                backgroundColor: BRAND, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 6,
-                shadowOffset: { width: 0, height: 3 }, elevation: 2
-              }}
-            >
-              <Text className="text-white font-semibold">Operaciones</Text>
-            </TouchableOpacity> */}
+        ) : (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, columnGap: 8, marginBottom: 16 }}>
+            {incidenciasGestacion.map((it) => (
+              <View key={String(it.id)} style={{ flexBasis: gridCol, maxWidth: gridCol }}>
+                {renderIncidencia({ item: it })}
+              </View>
+            ))}
           </View>
-        </View>
-      </View>
+        )}
+
+        {/* CTA inferior (estilo Maternidad) */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('GES-CORRAL-LOOKUP' as never)}
+          activeOpacity={0.85}
+          style={{
+            marginTop: 8,
+            borderRadius: 12,
+            paddingHorizontal: 20,
+            paddingVertical: isMd ? 10 : 12,
+            backgroundColor: BRAND,
+            shadowColor: '#000',
+            shadowOpacity: 0.18,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 3,
+            alignSelf: isMd ? 'center' : 'stretch',
+            width: isMd ? '100%' : undefined,
+            maxWidth: isMd ? 580 : undefined,
+          }}
+        >
+          <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
+            Buscar corral
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 };
