@@ -1,27 +1,71 @@
 /* eslint-disable prettier/prettier */
 import React, { useMemo, useRef, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, Dimensions, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    ScrollView,
+} from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 type Animal = { crotal: string; corral: string; total: number; consumida: number; };
 
-const BRAND = '#3F0BAE';
 const CARD_BORDER = '#E2E8F0';
+const BG = '#F8FAFC';
+
+// Paleta igual que Maternidad
+const PALETTE = {
+    cobaltWave: {
+        bg: '#1E40AF',     // azul base
+        accent: '#3B82F6', // azul acento
+        text: '#EAF2FF',   // texto sobre azul
+    },
+} as const;
+
+const t = PALETTE.cobaltWave;
+const MAX_W = 850;
+const PAGE_PX = 24;
+
+// helpers
 const pct = (v: number, t: number) => (t > 0 ? Math.round((v / t) * 100) : 0);
 
+// barra con % centrado (igual que Maternidad)
 const ProgressPill = ({ value, total }: { value: number; total: number }) => {
     const percent = pct(value, total);
     const BAR_H = 24;
     return (
         <View style={{ marginTop: 8 }}>
-            <Text className="text-slate-500 mb-1">
+            <Text style={{ color: '#64748B', marginBottom: 4 }}>
                 {value.toLocaleString('es-ES')} / {total.toLocaleString('es-ES')}
             </Text>
-            <View style={{ height: BAR_H, borderRadius: BAR_H / 2, backgroundColor: '#E5E7EB', overflow: 'hidden', position: 'relative' }}>
-                <View style={{ width: `${Math.min(100, Math.max(0, percent))}%`, height: '100%', backgroundColor: '#22C55E', borderRadius: BAR_H / 2 }} />
-                <View pointerEvents="none" style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' }}>
+            <View
+                style={{
+                    height: BAR_H,
+                    borderRadius: BAR_H / 2,
+                    backgroundColor: '#E5E7EB',
+                    overflow: 'hidden',
+                    position: 'relative',
+                }}
+            >
+                <View
+                    style={{
+                        width: `${Math.min(100, Math.max(0, percent))}%`,
+                        height: '100%',
+                        backgroundColor: '#22C55E',
+                        borderRadius: BAR_H / 2,
+                    }}
+                />
+                <View
+                    pointerEvents="none"
+                    style={{
+                        ...StyleSheet.absoluteFillObject,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
                     <Text style={{ color: '#1F2937', fontWeight: '700' }}>{percent}%</Text>
                 </View>
             </View>
@@ -32,7 +76,7 @@ const ProgressPill = ({ value, total }: { value: number; total: number }) => {
 export default function TodosAnimalesGestacion() {
     const navigation = useNavigation<NavigationProp<any>>();
 
-    // Mock
+    // Mock (igual estructura)
     const data: Animal[] = [
         { crotal: '123456789012345', corral: '01', total: 2837, consumida: 2000 },
         { crotal: '987654321098765', corral: '02', total: 1500, consumida: 1500 },
@@ -46,7 +90,7 @@ export default function TodosAnimalesGestacion() {
         { crotal: '666555444333222', corral: '11', total: 2400, consumida: 600 },
     ];
 
-    // Orden (opcional; igual que tu versión)
+    // Orden (mantenemos por si luego añades chip)
     type SortKey = 'none' | 'pct' | 'crotal' | 'corral';
     type SortDir = 'asc' | 'desc';
     const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'none', dir: 'asc' });
@@ -66,10 +110,15 @@ export default function TodosAnimalesGestacion() {
                 crotal: item.crotal,
                 corral: item.corral,
                 consumo: { objetivo: item.total, actual: item.consumida },
-                subEstado: '—', curva: '—', correccion: '—',
-                fechas: { entrada: '—', parto: '—' }, nave: '—',
+                subEstado: 'GESTACIÓN',
+                curva: '—',
+                correccion: '—',
+                fechas: { entrada: '—', parto: '—' },
+                nave: '—',
             },
-            deviceError: false, diasSinAlimentar: false, statusMessage: '',
+            deviceError: false,
+            diasSinAlimentar: false,
+            statusMessage: '',
         };
 
         navigation.navigate('GET-ANIMAL-DETAIL', {
@@ -81,47 +130,124 @@ export default function TodosAnimalesGestacion() {
         });
     };
 
-
+    // Item con header azul (igual que Maternidad)
     const Item = ({ item }: { item: Animal }) => (
         <TouchableOpacity activeOpacity={0.85} onPress={() => openAnimal(item)}>
-            <View className="rounded-2xl p-4 bg-white border border-slate-200 mb-3" style={{ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 }}>
-                <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center">
-                        <Ionicons name="pricetag-outline" size={18} color="#0f172a" />
-                        <Text className="ml-2 text-slate-900 font-semibold">{item.crotal}</Text>
-                    </View>
-                    <View className="px-3 py-1 rounded-full bg-slate-100">
-                        <Text className="text-slate-700 font-medium">Corral {item.corral}</Text>
+            <View
+                style={{
+                    width: '100%',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: CARD_BORDER,
+                    marginBottom: 16,
+                    overflow: 'hidden', // importante para redondear el header
+                    shadowColor: '#000',
+                    shadowOpacity: 0.05,
+                    shadowRadius: 6,
+                    shadowOffset: { width: 0, height: 2 },
+                    elevation: 1,
+                }}
+            >
+                {/* HEADER AZUL (cobaltWave) */}
+                <View
+                    style={{
+                        backgroundColor: t.bg,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderBottomWidth: 1,
+                        borderBottomColor: 'rgba(0,0,0,0.06)',
+                    }}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        {/* Chip Crotal */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 10,
+                                paddingVertical: 6,
+                                borderRadius: 999,
+                                backgroundColor: 'rgba(255,255,255,0.14)',
+                                borderWidth: 1,
+                                borderColor: 'rgba(255,255,255,0.40)',
+                            }}
+                        >
+                            <Ionicons name="pricetag-outline" size={14} color={t.text} />
+                            <Text style={{ marginLeft: 6, color: t.text, fontWeight: '700' }}>
+                                Crotal {item.crotal}
+                            </Text>
+                        </View>
+
+                        {/* Chip Corral */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 10,
+                                paddingVertical: 6,
+                                borderRadius: 999,
+                                backgroundColor: 'rgba(255,255,255,0.14)',
+                                borderWidth: 1,
+                                borderColor: 'rgba(255,255,255,0.40)',
+                            }}
+                        >
+                            <Ionicons name="home-outline" size={14} color={t.text} />
+                            <Text style={{ marginLeft: 6, color: t.text, fontWeight: '700' }}>
+                                Corral {item.corral}
+                            </Text>
+                        </View>
                     </View>
                 </View>
 
-                <View className="mt-3 rounded-xl border p-3" style={{ backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }}>
-                    <Text className="text-slate-600">Consumo</Text>
-                    <ProgressPill value={item.consumida} total={item.total} />
+                {/* CUERPO */}
+                <View style={{ padding: 16 }}>
+                    <View
+                        style={{
+                            backgroundColor: '#F8FAFC',
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#E2E8F0',
+                            padding: 12,
+                        }}
+                    >
+                        <Text style={{ color: '#475569', marginBottom: 4 }}>Consumo</Text>
+                        <ProgressPill value={item.consumida} total={item.total} />
+                    </View>
                 </View>
             </View>
         </TouchableOpacity>
     );
 
     return (
-        <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-            <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Ionicons name="list-outline" size={18} color="#0f172a" />
-                    <Text style={{ marginLeft: 6, color: '#0f172a', fontWeight: '900', fontSize: 18 }}>
-                        Todos los animales · Gestación
-                    </Text>
+        <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: BG }}>
+            {/* Header centrado igual que Maternidad */}
+            <View style={{ alignItems: 'center', paddingHorizontal: PAGE_PX, paddingTop: 18, paddingBottom: 12 }}>
+                <View style={{ width: '100%', maxWidth: MAX_W, alignItems: 'center', marginBottom: 14 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Ionicons name="list-outline" size={24} color="#0f172a" />
+                        <Text style={{ marginLeft: 8, fontWeight: '800', fontSize: 18, color: '#0f172a', textAlign: 'center' }}>
+                            Todos los animales · Gestación
+                        </Text>
+                    </View>
                 </View>
             </View>
 
-            <FlatList
-                className="px-5 pt-2"
-                data={dataSorted}
-                keyExtractor={(it) => it.crotal}
-                renderItem={Item}
-                contentContainerStyle={{ paddingBottom: 16 }}
+            {/* Scroll + columna centrada */}
+            <ScrollView
+                contentContainerStyle={{
+                    paddingHorizontal: 24,
+                    paddingBottom: 60,
+                    alignItems: 'center',
+                }}
                 showsVerticalScrollIndicator={false}
-            />
+            >
+                <View style={{ width: '100%', maxWidth: MAX_W }}>
+                    {dataSorted.map((item) => (
+                        <Item key={item.crotal} item={item} />
+                    ))}
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }

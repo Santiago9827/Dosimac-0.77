@@ -62,6 +62,11 @@ export const GestationScreen = () => {
     ? Math.round(Math.max(260, Math.min(420, height * 0.38)))
     : undefined;
   const gridCol = (isLg ? '32%' : isMd ? '48%' : '100%') as any;
+  const innerWidth = width - pagePX * 2;
+  const corralesW = React.useMemo(
+    () => Math.min(580, Math.max(360, Math.round(innerWidth * 0.84))),
+    [innerWidth]
+  );
 
   const gestacion: DatosGestacion = { alimentados: 135, noAlimentados: 115 };
   const total = gestacion.alimentados + gestacion.noAlimentados;
@@ -299,30 +304,38 @@ export const GestationScreen = () => {
           </View>
         </View>
 
-        {/* —— Ver corrales (se mantiene aquí) —— */}
-        <View style={{ marginBottom: 16 }}>
-          <Pressable
+
+
+        <View style={{ marginBottom: 12 }}>
+          <TouchableOpacity
             onPress={() => navigation.navigate('GES-CORRALPC' as never)}
-            android_ripple={{ color: '#e5e7eb' }}
+            activeOpacity={0.85}
             style={{
-              backgroundColor: CARD_BG,
-              borderColor: CARD_BORDER,
-              borderWidth: 1,
-              borderRadius: 16,
-              paddingVertical: 12,
-              paddingHorizontal: 14,
-              flexDirection: 'row',
-              alignItems: 'center',
-              ...SHADOW,
+              borderRadius: 12,
+              paddingHorizontal: 20,
+              paddingVertical: isMd ? 10 : 12,
+              backgroundColor: BRAND,
+              shadowColor: '#000',
+              shadowOpacity: 0.18,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 3,
+              alignSelf: isMd ? 'center' : 'stretch',
+              width: isMd ? '100%' : undefined,
+              maxWidth: isMd ? 580 : undefined,
             }}
           >
-            <Ionicons name="grid-outline" size={18} color={BRAND} />
-            <Text style={{ marginLeft: 8, color: BRAND, fontWeight: '800', flex: 1 }}>
-              Ver corrales
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-          </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="grid-outline" size={18} color="#fff" />
+              <Text style={{ marginLeft: 8, color: '#fff', fontWeight: '600', textAlign: 'center' }}>
+                Ver corrales
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
+
+
+
 
         {/* === BLOQUE 2: Incidencias (igual que Maternidad) === */}
         <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasGestacion.length} />
@@ -379,10 +392,12 @@ export const GestationScreen = () => {
             width: isMd ? '100%' : undefined,
             maxWidth: isMd ? 580 : undefined,
           }}
-        >
-          <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
-            Buscar corral
-          </Text>
+        > <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="search-outline" size={18} color="#fff" />
+            <Text style={{ marginLeft: 8, color: '#fff', fontWeight: '600', textAlign: 'center' }}>
+              Buscar corral
+            </Text>
+          </View>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

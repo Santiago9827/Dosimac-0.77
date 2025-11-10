@@ -26,6 +26,7 @@ const BRAND = '#3F0BAE';
 const CARD_BORDER = '#E2E8F0';
 const BG = '#F8FAFC';
 
+
 const pct = (v: number, t: number) => (t > 0 ? Math.round((v / t) * 100) : 0);
 
 const ProgressPill = ({ value, total }: { value: number; total: number }) => {
@@ -71,6 +72,18 @@ const ProgressPill = ({ value, total }: { value: number; total: number }) => {
 export default function TodosAnimalesMaternidad() {
     const navigation = useNavigation<NavigationProp<any>>();
     const { width } = useWindowDimensions();
+    const PALETTE = {
+        cobaltWave: {
+            bg: '#1E40AF',       // azul base
+            accent: '#3B82F6',   // azul acento
+            text: '#EAF2FF',     // texto sobre azul
+        },
+    } as const;
+    const MAX_W = 850;
+    const PAGE_PX = 24
+
+    const t = PALETTE.cobaltWave;
+
 
     const data: Animal[] = [
         { crotal: '123456789012345', corral: '01', total: 2837, consumida: 2000 },
@@ -120,8 +133,8 @@ export default function TodosAnimalesMaternidad() {
                     borderRadius: 20,
                     borderWidth: 1,
                     borderColor: CARD_BORDER,
-                    padding: 16,
                     marginBottom: 16,
+                    overflow: 'hidden', // importante para redondear el header azul
                     shadowColor: '#000',
                     shadowOpacity: 0.05,
                     shadowRadius: 6,
@@ -129,53 +142,88 @@ export default function TodosAnimalesMaternidad() {
                     elevation: 1,
                 }}
             >
-                {/* Crotal + Corral */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Ionicons name="pricetag-outline" size={18} color="#0f172a" />
-                        <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '600' }}>{item.crotal}</Text>
-                    </View>
-                    <View style={{ backgroundColor: '#F1F5F9', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
-                        <Text style={{ color: '#475569', fontWeight: '500' }}>Corral {item.corral}</Text>
+                {/* HEADER AZUL (cobaltWave) */}
+                <View
+                    style={{
+                        backgroundColor: t.bg,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderBottomWidth: 1,
+                        borderBottomColor: 'rgba(0,0,0,0.06)',
+                    }}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        {/* Chip Crotal */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 10,
+                                paddingVertical: 6,
+                                borderRadius: 999,
+                                backgroundColor: 'rgba(255,255,255,0.14)',
+                                borderWidth: 1,
+                                borderColor: 'rgba(255,255,255,0.40)',
+                            }}
+                        >
+                            <Ionicons name="pricetag-outline" size={14} color={t.text} />
+                            <Text style={{ marginLeft: 6, color: t.text, fontWeight: '700' }}>
+                                Crotal {item.crotal}
+                            </Text>
+                        </View>
+
+                        {/* Chip Corral */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 10,
+                                paddingVertical: 6,
+                                borderRadius: 999,
+                                backgroundColor: 'rgba(255,255,255,0.14)',
+                                borderWidth: 1,
+                                borderColor: 'rgba(255,255,255,0.40)',
+                            }}
+                        >
+                            <Ionicons name="home-outline" size={14} color={t.text} />
+                            <Text style={{ marginLeft: 6, color: t.text, fontWeight: '700' }}>
+                                Corral {item.corral}
+                            </Text>
+                        </View>
                     </View>
                 </View>
 
-                {/* Consumo */}
-                <View
-                    style={{
-                        marginTop: 12,
-                        backgroundColor: '#F8FAFC',
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: '#E2E8F0',
-                        padding: 12,
-                    }}
-                >
-                    <Text style={{ color: '#475569', marginBottom: 4 }}>Consumo</Text>
-                    <ProgressPill value={item.consumida} total={item.total} />
+                {/* CUERPO */}
+                <View style={{ padding: 16 }}>
+                    <View
+                        style={{
+                            backgroundColor: '#F8FAFC',
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#E2E8F0',
+                            padding: 12,
+                        }}
+                    >
+                        <Text style={{ color: '#475569', marginBottom: 4 }}>Consumo</Text>
+                        <ProgressPill value={item.consumida} total={item.total} />
+                    </View>
                 </View>
             </View>
         </TouchableOpacity>
     );
 
+
     return (
         <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: BG }}>
             {/* Header */}
-            <View
-                style={{
-                    paddingHorizontal: 20,
-                    paddingTop: 10,
-                    paddingBottom: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Ionicons name="list-outline" size={20} color="#0f172a" />
-                    <Text style={{ marginLeft: 8, fontWeight: '800', fontSize: 18, color: '#0f172a' }}>
-                        Todos los animales · Maternidad
-                    </Text>
+            <View style={{ alignItems: 'center', paddingHorizontal: PAGE_PX, paddingTop: 18, paddingBottom: 12 }}>
+                <View style={{ width: '100%', maxWidth: MAX_W, alignItems: 'center', marginBottom: 14 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Ionicons name="list-outline" size={24} color="#0f172a" />
+                        <Text style={{ marginLeft: 8, fontWeight: '800', fontSize: 18, color: '#0f172a', textAlign: 'center' }}>
+                            Todos los animales · Maternidad
+                        </Text>
+                    </View>
                 </View>
             </View>
 

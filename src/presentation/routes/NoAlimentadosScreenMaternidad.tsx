@@ -15,6 +15,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 
+
 type Animal = {
     crotal: string;
     corral: string;
@@ -26,6 +27,85 @@ type Animal = {
 const BRAND = '#3F0BAE';
 const CARD_BORDER = '#E2E8F0';
 const BG = '#F1F5F9';
+const MAX_W = 850;
+const PAGE_PX = 24;
+const FILTER_W = 48;
+const GAP_Y = 12;
+const PALETTE = {
+
+    mint: {
+        bg: '#10B981',
+        accent: '#34D399',
+        text: '#F0FDF4',
+        pillBg: 'rgba(255,255,255,0.18)',
+        pillBorder: 'rgba(255,255,255,0.48)',
+    },
+    limePop: {
+        bg: '#22C55E',
+        accent: '#84CC16',
+        text: '#F7FEE7',
+        pillBg: 'rgba(255,255,255,0.18)',
+        pillBorder: 'rgba(255,255,255,0.48)',
+    },
+    tealCandy: {
+        bg: '#06B6D4',
+        accent: '#22D3EE',
+        text: '#ECFEFF',
+        pillBg: 'rgba(255,255,255,0.16)',
+        pillBorder: 'rgba(255,255,255,0.45)',
+    },
+    oceanBlue: {
+        bg: '#2563EB',
+        accent: '#60A5FA',
+        text: '#F5F9FF',
+        pillBg: 'rgba(255,255,255,0.18)',
+        pillBorder: 'rgba(255,255,255,0.46)',
+    },
+    royalBlue: {
+        bg: '#4a71e0',
+        accent: '#93C5FD',
+        text: '#F8FAFF',
+        pillBg: 'rgba(255,255,255,0.18)',
+        pillBorder: 'rgba(255,255,255,0.48)',
+    },
+    indigoGlow: {
+        bg: '#4F46E5',
+        accent: '#A5B4FC',
+        text: '#EEF2FF',
+        pillBg: 'rgba(255,255,255,0.16)',
+        pillBorder: 'rgba(255,255,255,0.44)',
+    },
+    skyBreeze: {
+        bg: '#0EA5E9',
+        accent: '#38BDF8',
+        text: '#F0F9FF',
+        pillBg: 'rgba(255,255,255,0.16)',
+        pillBorder: 'rgba(255,255,255,0.42)',
+    },
+    cobaltWave: {
+        bg: '#1E40AF',
+        accent: '#3B82F6',
+        text: '#EAF2FF',
+        pillBg: 'rgba(255,255,255,0.14)',
+        pillBorder: 'rgba(255,255,255,0.40)',
+    },
+    midnightBlue: {
+        bg: '#0F172A',
+        accent: '#1E3A8A',
+        text: '#E2E8F0',
+        pillBg: 'rgba(255,255,255,0.12)',
+        pillBorder: 'rgba(255,255,255,0.32)',
+    },
+} as const;
+
+// Usa uno así:
+const t = PALETTE.cobaltWave; // o oceanBlue / skyBreeze / royalBlue / cobaltWave / midnightBlue
+
+
+
+
+
+
 
 const pct = (v: number, t: number) => (t > 0 ? Math.round((v / t) * 100) : 0);
 
@@ -122,7 +202,6 @@ export default function NoAlimentadosScreenMaternidad() {
         });
         return copy;
     }, [data, sort]);
-
     const Item = ({ item }: { item: Animal }) => (
         <TouchableOpacity
             activeOpacity={0.85}
@@ -140,179 +219,206 @@ export default function NoAlimentadosScreenMaternidad() {
                     borderRadius: 20,
                     borderWidth: 1,
                     borderColor: CARD_BORDER,
-                    padding: 16,
                     marginBottom: 16,
                     shadowColor: '#000',
                     shadowOpacity: 0.05,
                     shadowRadius: 6,
                     shadowOffset: { width: 0, height: 2 },
                     elevation: 1,
+                    overflow: 'hidden',
                 }}
             >
-                {/* Crotal + Corral */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Ionicons name="pricetag-outline" size={18} color="#0f172a" />
-                        <Text style={{ marginLeft: 8, color: '#0f172a', fontWeight: '600' }}>{item.crotal}</Text>
+                {/* HEADER: color sólido + chip */}
+                <View
+                    style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 10,
+                        backgroundColor: t.bg,
+                        borderTopLeftRadius: 20,
+                        borderTopRightRadius: 20,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                    }}
+                >
+                    {/* Crotal (izquierda) */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        <Ionicons name="pricetag-outline" size={16} color={t.text} />
+                        <Text style={{ marginLeft: 8, color: t.text, fontWeight: '800' }}>
+                            Crotal {item.crotal}
+                        </Text>
                     </View>
-                    <View style={{ backgroundColor: '#F1F5F9', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
-                        <Text style={{ color: '#475569', fontWeight: '500' }}>Corral {item.corral}</Text>
+
+                    {/* Chip Corral (derecha) */}
+                    <View
+                        style={{
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            borderRadius: 999,
+                            backgroundColor: t.pillBg,
+                            borderWidth: 1,
+                            borderColor: t.pillBorder,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <Ionicons name="home-outline" size={14} color={t.text} />
+                        <Text style={{ marginLeft: 6, color: t.text, fontWeight: '700' }}>
+                            Corral {item.corral}
+                        </Text>
                     </View>
                 </View>
 
-                {/* Consumo + Días */}
-                <View
-                    style={{
-                        marginTop: 12,
-                        backgroundColor: '#F8FAFC',
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: '#E2E8F0',
-                        padding: 12,
-                    }}
-                >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                        <Text style={{ color: '#475569', flex: 1 }}>Consumo</Text>
-                        {typeof item.diasSinAlimentar === 'number' && (() => {
-                            const { bg, fg } = dayPillColors(item.diasSinAlimentar);
-                            return (
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        paddingHorizontal: 10,
-                                        paddingVertical: 6,
-                                        borderRadius: 999,
-                                        backgroundColor: bg,
-                                    }}
-                                >
-                                    <Ionicons name="time-outline" size={14} color={fg} />
-                                    <Text style={{ marginLeft: 6, color: fg, fontWeight: '700' }}>
-                                        {item.diasSinAlimentar} {item.diasSinAlimentar === 1 ? 'día' : 'días'}
-                                    </Text>
-                                </View>
-                            );
-                        })()}
-                    </View>
+                {/* franja de acento debajo del header (sin gradiente) */}
+                <View style={{ height: 3, backgroundColor: t.accent }} />
 
-                    <ProgressPill value={item.consumida} total={item.total} />
+                {/* BODY */}
+                <View style={{ padding: 16 }}>
+                    <View
+                        style={{
+                            backgroundColor: '#F8FAFC',
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#E2E8F0',
+                            padding: 12,
+                        }}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                            <Text style={{ color: '#475569', flex: 1 }}>Consumo</Text>
+
+                            {typeof item.diasSinAlimentar === 'number' && (() => {
+                                const { bg, fg } = dayPillColors(item.diasSinAlimentar ?? 0);
+                                return (
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            paddingHorizontal: 10,
+                                            paddingVertical: 6,
+                                            borderRadius: 999,
+                                            backgroundColor: bg,
+                                        }}
+                                    >
+                                        <Ionicons name="time-outline" size={14} color={fg} />
+                                        <Text style={{ marginLeft: 6, color: fg, fontWeight: '700' }}>
+                                            {item.diasSinAlimentar} {item.diasSinAlimentar === 1 ? 'día' : 'días'}
+                                        </Text>
+                                    </View>
+                                );
+                            })()}
+                        </View>
+
+                        <ProgressPill value={item.consumida} total={item.total} />
+                    </View>
                 </View>
             </View>
         </TouchableOpacity>
     );
 
+
+
     return (
         <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: BG }}>
-            {/* Header */}
-            <View
-                style={{
-                    paddingHorizontal: 20,
-                    paddingTop: 10,
-                    paddingBottom: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Ionicons name="alert-circle-outline" size={20} color="#0f172a" />
-                    <Text style={{ marginLeft: 8, fontWeight: '800', fontSize: 18, color: '#0f172a' }}>
-                        No alimentados · Maternidad
-                    </Text>
-                </View>
-
-                <TouchableOpacity
-                    ref={btnRef as any}
-                    onLayout={() => btnRef.current?.measureInWindow((x, y, w, h) => setBtnPos({ x, y, w, h }))}
-                    onPress={() =>
-                        btnRef.current?.measureInWindow((x, y, w, h) => {
-                            setBtnPos({ x, y, w, h });
-                            setMenuOpen(true);
-                        })
-                    }
+            {/* Header centrado en columna de cards con botón a la derecha */}
+            <View style={{ alignItems: 'center', paddingHorizontal: PAGE_PX, paddingTop: 10, paddingBottom: GAP_Y }}>
+                <View
                     style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 10,
-                        backgroundColor: 'white',
+                        width: '100%',
+                        maxWidth: MAX_W,
+                        position: 'relative',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        borderWidth: 1,
-                        borderColor: CARD_BORDER,
+                        paddingRight: FILTER_W,
+                        minHeight: 36,
                     }}
                 >
-                    <Ionicons name="funnel-outline" size={18} color="#0f172a" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Filtro de orden visible */}
-            {/* Filtro de orden visible */}
-            <View
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'flex-start',
-                    paddingHorizontal: 20,
-                    marginBottom: 10,
-                    gap: 10,
-                }}
-            >
-                {/* Botón de orden */}
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() =>
-                        setSort((prev) => ({
-                            ...prev,
-                            dir: prev.dir === 'asc' ? 'desc' : 'asc',
-                        }))
-                    }
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: '#EDE9FE',
-                        paddingHorizontal: 18,
-                        paddingVertical: 10,
-                        borderRadius: 999,
-                        gap: 8,
-                        shadowColor: '#000',
-                        shadowOpacity: 0.05,
-                        shadowRadius: 4,
-                    }}
-                >
-                    <Ionicons
-                        name={sort.key === 'dias' ? 'time-outline' : 'home-outline'}
-                        size={18}
-                        color={BRAND}
-                    />
-                    <Text style={{ color: BRAND, fontWeight: '700', fontSize: 14 }}>
-                        Orden: {sort.key === 'dias' ? 'Días sin alimentar' : 'Corral'}
-                    </Text>
-                    <Ionicons
-                        name={sort.dir === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'}
-                        size={18}
-                        color={BRAND}
-                    />
-                </TouchableOpacity>
-
-                {/* Botón X fuera del chip */}
-                {sort.key !== 'dias' && (
+                    {/* Botón de filtro anclado a la derecha */}
                     <TouchableOpacity
-                        onPress={() => setSort({ key: 'dias', dir: 'desc' })}
+                        ref={btnRef as any}
+                        onLayout={() => btnRef.current?.measureInWindow((x, y, w, h) => setBtnPos({ x, y, w, h }))}
+                        onPress={() => btnRef.current?.measureInWindow((x, y, w, h) => { setBtnPos({ x, y, w, h }); setMenuOpen(true); })}
                         style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 999,
-                            backgroundColor: '#F4F4F5',
+                            position: 'absolute',
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            width: 36,
+                            height: 36,
+                            borderRadius: 10,
+                            backgroundColor: 'white',
                             alignItems: 'center',
                             justifyContent: 'center',
                             borderWidth: 1,
-                            borderColor: '#E5E7EB',
+                            borderColor: CARD_BORDER,
+                        }}
+                        activeOpacity={0.85}
+                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                        <Ionicons name="funnel-outline" size={18} color="#0f172a" />
+                    </TouchableOpacity>
+
+                    {/* Título centrado (con icono) */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Ionicons name="alert-circle-outline" size={20} color="#0f172a" />
+                        <Text style={{ marginLeft: 8, fontWeight: '800', fontSize: 18, color: '#0f172a', textAlign: 'center' }}>
+                            No alimentados · Maternidad
+                        </Text>
+                    </View>
+                </View>
+            </View>
+
+
+            {/* Filtro de orden visible centrado */}
+            <View style={{ paddingHorizontal: 20, marginBottom: 15, }}>
+                <View
+                    style={{
+                        width: '100%',
+                        maxWidth: MAX_W,
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',  // centra el chip
+                        gap: 10,
+                        paddingRight: FILTER_W,
+                        // transform: [{ translateX: -30 }]
+
+                    }}
+                >
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => setSort((prev) => ({ ...prev, dir: prev.dir === 'asc' ? 'desc' : 'asc' }))}
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#EDE9FE',
+                            paddingHorizontal: 18,
+                            paddingVertical: 10,
+                            borderRadius: 999,
+                            gap: 8,
+                            shadowColor: '#000',
+                            shadowOpacity: 0.05,
+                            shadowRadius: 4,
                         }}
                     >
-                        <Ionicons name="close" size={18} color="#6B7280" />
+                        <Ionicons name={sort.key === 'dias' ? 'time-outline' : 'home-outline'} size={18} color={BRAND} />
+                        <Text style={{ color: BRAND, fontWeight: '700', fontSize: 14 }}>
+                            Orden: {sort.key === 'dias' ? 'Días sin alimentar' : 'Corral'}
+                        </Text>
+                        <Ionicons name={sort.dir === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'} size={18} color={BRAND} />
                     </TouchableOpacity>
-                )}
+
+                    {sort.key !== 'dias' && (
+                        <TouchableOpacity
+                            onPress={() => setSort({ key: 'dias', dir: 'desc' })}
+                            style={{
+                                width: 32, height: 32, borderRadius: 999, backgroundColor: '#F4F4F5',
+                                alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5E7EB',
+                            }}
+                        >
+                            <Ionicons name="close" size={18} color="#6B7280" />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
+
 
 
 
@@ -321,13 +427,13 @@ export default function NoAlimentadosScreenMaternidad() {
                 contentContainerStyle={{
                     paddingHorizontal: 24,
                     paddingBottom: 60,
-                    alignItems: 'center', // 👈 centrado visual
+                    alignItems: 'center',
                 }}
             >
                 <View
                     style={{
                         width: '100%',
-                        maxWidth: 850, // 👈 tamaño ideal para que no se vea estrecho ni enorme
+                        maxWidth: 850,
                     }}
                 >
                     {dataSorted.map((item) => (

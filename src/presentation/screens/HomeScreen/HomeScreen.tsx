@@ -493,9 +493,12 @@ export const HomeScreen = () => {
               : { alignSelf: 'stretch' },
           ]}
         >
-          <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
-            Tareas Programadas
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="calendar" size={18} color="#fff" />
+            <Text style={{ marginLeft: 8, color: '#fff', fontWeight: '600', textAlign: 'center' }}>
+              Tareas Programadas
+            </Text>
+          </View>
         </TouchableOpacity>
       </ScrollView>
     </View>

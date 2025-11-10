@@ -472,9 +472,12 @@ export default function MaternidadScreen() {
                         maxWidth: isMd ? 580 : undefined,
                     }}
                 >
-                    <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
-                        Buscar corral
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="search-outline" size={18} color="#fff" />
+                        <Text style={{ marginLeft: 8, color: '#fff', fontWeight: '600', textAlign: 'center' }}>
+                            Buscar corral
+                        </Text>
+                    </View>
                 </TouchableOpacity>
 
 
