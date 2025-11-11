@@ -1,14 +1,7 @@
 // screens/Gestation/GestationScreen.tsx
 import React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  FlatList,
-  TouchableOpacity,
-  ScrollView,
-  useWindowDimensions,
-} from 'react-native';
+import { View, Text, Pressable, FlatList, TouchableOpacity, ScrollView, useWindowDimensions, Platform } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DonutChart } from '../../components/shared/DonutChart';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
@@ -39,8 +32,15 @@ const RIGHT_FLEX = 68;
 const VALUE_W = 80;
 const CHEVRON_W = 18;
 
-const CARD_H = 92;       // alto colapsado de cada incidencia (como Maternidad)
-const DESC_LINES = 2;    // líneas visibles antes de expandir
+// const CARD_H = 92;       
+const DESC_LINES = 2;
+const LINE_H = 18;
+const CHIP_H = 22;
+const PAD_V = 16;
+const GAP = 8;
+const CARD_H = PAD_V + CHIP_H + GAP + (LINE_H * DESC_LINES) + PAD_V; // ≈100
+const MAX_INCIDENCIAS_WEB = 12;
+const isWeb = Platform.OS === 'web';
 
 type DatosGestacion = { alimentados: number; noAlimentados: number };
 type Incidencia = {
@@ -75,7 +75,7 @@ export const GestationScreen = () => {
   const incidenciasGestacion: Incidencia[] = [
     { id: 1, area: 'Gestación', corral: '03', descripcion: 'Comedero bloqueado.' },
     { id: 2, area: 'Gestación', corral: '07', descripcion: 'Sensor de paso intermitente.' },
-    { id: 3, area: 'Gestación', corral: '10', descripcion: 'Fallo de báscula.' },
+    { id: 3, area: 'Gestación', corral: '10', descripcion: 'Fallo de báscula Fallo de báscula Fallo de báscula Fallo de báscula Fallo de báscula Fallo de báscula Fallo de báscula Fallo de báscula Fallo de báscula Fallo de báscula Fallo de báscula Fallo de báscula' },
     { id: 4, area: 'Gestación', corral: '04', descripcion: 'Bebedero con caudal bajo.' },
     { id: 5, area: 'Gestación', corral: '12', descripcion: 'Puerta sin cierre.' },
     { id: 6, area: 'Gestación', corral: '13', descripcion: 'Puerta sin cierre.' },
@@ -173,6 +173,18 @@ export const GestationScreen = () => {
 
   const renderIncidencia = ({ item }: { item: Incidencia }) => {
     const isExpanded = expandedIds.has(item.id);
+
+    // clamp multi-línea solo en Web cuando está colapsado
+    const clampWeb =
+      !isExpanded && Platform.OS === 'web'
+        ? ({
+          display: '-webkit-box',
+          WebkitLineClamp: DESC_LINES,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        } as any)
+        : null;
+
     return (
       <Pressable
         onPress={() => toggleExpanded(item.id)}
@@ -191,22 +203,16 @@ export const GestationScreen = () => {
         ]}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text
-            style={{
-              paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
-              fontSize: 12, fontWeight: '600',
-              backgroundColor: INCIDENT_PILL_BG, color: INCIDENT_PILL_TEXT,
-            }}
-          >
+          <Text style={{
+            paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
+            fontSize: 12, fontWeight: '600', backgroundColor: INCIDENT_PILL_BG, color: INCIDENT_PILL_TEXT,
+          }}>
             {item.area}
           </Text>
-          <Text
-            style={{
-              marginLeft: 8, paddingHorizontal: 8, paddingVertical: 2,
-              borderRadius: 999, backgroundColor: '#F1F5F9',
-              color: '#475569', fontSize: 12,
-            }}
-          >
+          <Text style={{
+            marginLeft: 8, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
+            backgroundColor: '#F1F5F9', color: '#475569', fontSize: 12,
+          }}>
             Corral {item.corral}
           </Text>
           <View style={{ flex: 1 }} />
@@ -214,7 +220,11 @@ export const GestationScreen = () => {
         </View>
 
         <Text
-          style={{ marginTop: 8, color: '#0f172a', lineHeight: 18 }}
+          style={[
+            { marginTop: 8, color: '#0f172a', lineHeight: 18, minWidth: 0 },
+            clampWeb,
+            Platform.OS === 'web' ? ({ wordBreak: 'break-word' } as any) : null,
+          ]}
           numberOfLines={isExpanded ? undefined : DESC_LINES}
           ellipsizeMode="tail"
         >
@@ -223,6 +233,7 @@ export const GestationScreen = () => {
       </Pressable>
     );
   };
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: SURFACE_BG }}>
@@ -340,18 +351,16 @@ export const GestationScreen = () => {
         {/* === BLOQUE 2: Incidencias (igual que Maternidad) === */}
         <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasGestacion.length} />
 
+        {/* Aviso “hay más” solo Web */}
+        {isWeb && isMd && incidenciasGestacion.length > MAX_INCIDENCIAS_WEB && (
+          <Text style={{ marginBottom: 8, color: '#64748B', fontSize: 12 }}>
+            {MAX_INCIDENCIAS_WEB} de {incidenciasGestacion.length}.
+          </Text>
+        )}
+
         {!isMd ? (
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: CARD_BORDER,
-              backgroundColor: INCIDENT_BLOCK_BG,
-              borderRadius: 16,
-              ...SHADOW,
-              maxHeight: incHeight,
-              marginBottom: 16,
-            }}
-          >
+          // móvil: FlatList (igual)
+          <View style={{ borderWidth: 1, borderColor: CARD_BORDER, backgroundColor: INCIDENT_BLOCK_BG, borderRadius: 16, ...SHADOW, maxHeight: incHeight, marginBottom: 16 }}>
             <FlatList
               data={incidenciasGestacion}
               keyExtractor={(item) => String(item.id)}
@@ -364,14 +373,29 @@ export const GestationScreen = () => {
             />
           </View>
         ) : (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, columnGap: 8, marginBottom: 16 }}>
-            {incidenciasGestacion.map((it) => (
-              <View key={String(it.id)} style={{ flexBasis: gridCol, maxWidth: gridCol }}>
-                {renderIncidencia({ item: it })}
+          // escritorio/tablet: reparto por columnas 0,1,2,0,1,2...
+          (() => {
+            const src = isWeb ? incidenciasGestacion.slice(0, MAX_INCIDENCIAS_WEB) : incidenciasGestacion;
+            const numCols = isLg ? 3 : 2;
+            const cols: Incidencia[][] = Array.from({ length: numCols }, () => []);
+            src.forEach((it, i) => cols[i % numCols].push(it));
+
+            return (
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', ...(Platform.OS === 'web' ? { gap: 8 } : {}), marginBottom: 16 }}>
+                {cols.map((col, ci) => (
+                  <View key={`col-${ci}`} style={{ flex: 1 }}>
+                    {col.map((it, idx) => (
+                      <View key={String(it.id)} style={idx > 0 ? { marginTop: 8 } : undefined}>
+                        {renderIncidencia({ item: it })}
+                      </View>
+                    ))}
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
+            );
+          })()
         )}
+
 
         {/* CTA inferior (estilo Maternidad) */}
         <TouchableOpacity

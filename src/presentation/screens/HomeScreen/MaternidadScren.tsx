@@ -44,8 +44,16 @@ const LEFT_FLEX = 35;
 const RIGHT_FLEX = 68;
 const VALUE_W = 80;
 const CHEVRON_W = 18;
-const CARD_H = 92;
+// const CARD_H = 92;
 const DESC_LINES = 2;
+const LINE_H = 18;
+const CHIP_H = 22;
+const PAD_V = 16;
+const GAP = 8;
+const CARD_H = PAD_V + CHIP_H + GAP + (LINE_H * DESC_LINES) + PAD_V; // ≈100px
+const MAX_INCIDENCIAS_WEB = 12;
+const isWeb = Platform.OS === 'web';
+
 
 type DatosMaternidad = { alimentados: number; noAlimentados: number };
 type Incidencia = {
@@ -114,7 +122,7 @@ export default function MaternidadScreen() {
 
     const incidenciasMaternidad: Incidencia[] = [
         { id: 1, area: 'Maternidad', corral: '02', descripcion: 'Bebedero con caudal bajo.' },
-        { id: 2, area: 'Maternidad', corral: '05', descripcion: 'Puerta sin cierre.' },
+        { id: 2, area: 'Maternidad', corral: '05', descripcion: 'Puerta sin cierre Sensor de humedad fuera de rango Sensor de humedad fuera de rango Sensor de humedad fuera de rango Sensor de humedad fuera de rango Sensor de humedad fuera de rango Sensor de humedad fuera de rango Sensor de humedad fuera de rango Sensor de humedad fuera de rango Sensor de humedad fuera de rango ' },
         { id: 3, area: 'Maternidad', corral: '07', descripcion: 'Sensor de paso intermitente.' },
         { id: 4, area: 'Maternidad', corral: '15', descripcion: 'Fallo de báscula.' },
         { id: 5, area: 'Maternidad', corral: '03', descripcion: 'Comedero bloqueado.' },
@@ -124,7 +132,7 @@ export default function MaternidadScreen() {
         { id: 9, area: 'Maternidad', corral: '2011', descripcion: 'Fallo de ventilación.' },
         { id: 10, area: 'Maternidad', corral: '2012', descripcion: 'Alarma de movimiento inusual.' },
         { id: 11, area: 'Maternidad', corral: '2013', descripcion: 'Fallo en el sistema de alimentación.' },
-        { id: 12, area: 'Maternidad', corral: '2014', descripcion: 'Sensor de humedad fuera de rango.' },
+        { id: 12, area: 'Maternidad', corral: '2014', descripcion: 'Sensor de humedad fuera de rango Sensor de humedad fuera de rango Sensor de humedad fuera de rango ' },
         // { id: 13, area: 'Maternidad', corral: '2015', descripcion: 'Problema eléctrico detectado.' },
         // { id: 14, area: 'Maternidad', corral: '2016', descripcion: 'Alarma de intrusión activada.' },
         // { id: 15, area: 'Maternidad', corral: '2017', descripcion: 'Fallo en el sistema de calefacción.' },
@@ -245,6 +253,18 @@ export default function MaternidadScreen() {
 
     const renderIncidencia = ({ item }: { item: Incidencia }) => {
         const isExpanded = expandedIds.has(item.id);
+
+        // 👇 clamp para web cuando está colapsado
+        const clampWeb =
+            !isExpanded && Platform.OS === 'web'
+                ? ({
+                    display: '-webkit-box',
+                    WebkitLineClamp: DESC_LINES,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                } as any)
+                : null;
+
         return (
             <Pressable
                 onPress={() => toggleExpanded(item.id)}
@@ -292,13 +312,17 @@ export default function MaternidadScreen() {
                     <View style={{ flex: 1 }} />
                     <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#7c3aed" />
                 </View>
-
                 <Text
-                    style={{
-                        marginTop: 8,
-                        color: '#0f172a',
-                        lineHeight: 18,
-                    }}
+                    style={[
+                        {
+                            marginTop: 8,
+                            color: '#0f172a',
+                            lineHeight: 18,
+                            minWidth: 0,
+                        },
+                        clampWeb,
+                        Platform.OS === 'web' ? ({ wordBreak: 'break-word' } as any) : null,
+                    ]}
                     numberOfLines={isExpanded ? undefined : DESC_LINES}
                     ellipsizeMode="tail"
                 >
@@ -307,6 +331,7 @@ export default function MaternidadScreen() {
             </Pressable>
         );
     };
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: SURFACE_BG }}>
@@ -420,6 +445,13 @@ export default function MaternidadScreen() {
                 {/* === BLOQUE 2: Incidencias (sin tocar) === */}
                 <SectionTitle icon="alert-circle-outline" text="Incidencias" count={incidenciasMaternidad.length} />
 
+                {/* Aviso “hay más” igual que Home */}
+                {isWeb && isMd && incidenciasMaternidad.length > MAX_INCIDENCIAS_WEB && (
+                    <Text style={{ marginBottom: 8, color: '#64748B', fontSize: 12 }}>
+                        {MAX_INCIDENCIAS_WEB} de {incidenciasMaternidad.length}.
+                    </Text>
+                )}
+
                 {!isMd ? (
                     <View
                         style={{
@@ -444,14 +476,39 @@ export default function MaternidadScreen() {
                         />
                     </View>
                 ) : (
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, columnGap: 8, marginBottom: 16 }}>
-                        {incidenciasMaternidad.map((it) => (
-                            <View key={String(it.id)} style={{ flexBasis: gridCol, maxWidth: gridCol }}>
-                                {renderIncidencia({ item: it })}
+                    // escritorio/tablet: columnas (0,1,2,0,1,2...)
+                    (() => {
+                        const src = isWeb
+                            ? incidenciasMaternidad.slice(0, MAX_INCIDENCIAS_WEB)
+                            : incidenciasMaternidad;
+                        const numCols = isLg ? 3 : 2;
+
+                        const cols: Incidencia[][] = Array.from({ length: numCols }, () => []);
+                        src.forEach((it, i) => cols[i % numCols].push(it));
+
+                        return (
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'flex-start',
+                                    ...(Platform.OS === 'web' ? { gap: 8 } : {}),
+                                    marginBottom: 16,
+                                }}
+                            >
+                                {cols.map((col, ci) => (
+                                    <View key={`col-${ci}`} style={{ flex: 1 }}>
+                                        {col.map((it, idx) => (
+                                            <View key={String(it.id)} style={idx > 0 ? { marginTop: 8 } : undefined}>
+                                                {renderIncidencia({ item: it })}
+                                            </View>
+                                        ))}
+                                    </View>
+                                ))}
                             </View>
-                        ))}
-                    </View>
+                        );
+                    })()
                 )}
+
                 {/* === CTA inferior === */}
                 <TouchableOpacity
                     onPress={() => navigation.navigate('MAT-CORRAL' as never)}

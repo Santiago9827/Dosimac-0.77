@@ -51,10 +51,15 @@ const SHADOW: ViewStyle = {
 };
 
 // === Altura uniforme (colapsado) y nº de líneas ===
-const CARD_H = 92;      // alto colapsado uniforme
-const DESC_LINES = 2;   // líneas visibles en colapsado
+// const CARD_H = 92;      
+const DESC_LINES = 2;
+const LINE_H = 18;
+const CHIP_H = 22;
+const PAD_V = 16;
+const GAP = 8;
+const MAX_INCIDENCIAS_WEB = 12;
+const CARD_H = PAD_V + CHIP_H + GAP + (LINE_H * DESC_LINES) + PAD_V; // ≈ 100
 
-const MAX_INCIDENCIAS_WEB = 12; // ★
 
 export const HomeScreen = () => {
   const { t } = useTranslation(['common']);
@@ -64,7 +69,7 @@ export const HomeScreen = () => {
   const { width, height } = useWindowDimensions();
   const isMd = width >= 768;
   const isLg = width >= 1024;
-  const isWeb = Platform.OS === 'web'; // ★
+  const isWeb = Platform.OS === 'web';
   const pagePX = isLg ? 48 : isMd ? 24 : 16;
   const incHeight = !isMd
     ? Math.round(Math.max(260, Math.min(420, height * 0.38)))
@@ -83,6 +88,15 @@ export const HomeScreen = () => {
   const statsWidth = isLg ? 240 : 210;
   const statsTopOffset = isLg ? 16 : isMd ? 12 : 10;
   const stackGap = isMd ? 32 : 16;
+
+  const DESC_LINES = 2;
+  const LINE_H = 18;
+  const CHIP_H = 22;
+  const PAD_V = 16;
+  const GAP = 8;
+  const CARD_H = PAD_V + CHIP_H + GAP + (LINE_H * DESC_LINES) + PAD_V; // ≈100px
+  const MAX_INCIDENCIAS_WEB = 12;
+
 
 
   const StatRowCompact = ({ label, value }: { label: string; value: number }) => (
@@ -279,6 +293,33 @@ export const HomeScreen = () => {
   // —— Card de incidencia con expand/collapse —— 
   const renderIncidenciaCard = (item: Incidencia) => {
     const isExpanded = expandedIds.has(item.id);
+    // dentro de renderIncidenciaCard
+    const clampWeb =
+      !isExpanded && Platform.OS === 'web'
+        ? ({
+          display: '-webkit-box',
+          WebkitLineClamp: DESC_LINES,     // nº de líneas visibles
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        } as any)
+        : null;
+
+    <Text
+      style={[
+        {
+          marginTop: 8,
+          color: '#0f172a',
+          minWidth: 0,
+          lineHeight: 18,
+        },
+        clampWeb, // 👈 aplica sólo en web cuando está colapsado
+      ]}
+      numberOfLines={isExpanded ? undefined : DESC_LINES}
+      ellipsizeMode="tail"
+    >
+      {item.descripcion}
+    </Text>
+
     return (
       <Pressable
         key={String(item.id)}
@@ -429,6 +470,7 @@ export const HomeScreen = () => {
         )}
 
         {!isMd ? (
+          // ===== MÓVIL: lista con FlatList =====
           <View
             style={{
               borderWidth: 1,
@@ -452,24 +494,39 @@ export const HomeScreen = () => {
             />
           </View>
         ) : (
-          // ===== TABLET/ESCRITORIO: grid responsivo =====
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'space-between',
-              rowGap: 8,
-              columnGap: 8,
-              marginBottom: 16,
-            }}
-          >
-            {(isWeb ? incidencias.slice(0, MAX_INCIDENCIAS_WEB) : incidencias).map((it) => (
-              <View key={String(it.id)} style={{ flexBasis: gridCol, maxWidth: gridCol }}>
-                {renderIncidenciaCard(it)}
+          // ===== TABLET/ESCRITORIO: Masonry por columnas =====
+          (() => {
+            const src = isWeb ? incidencias.slice(0, MAX_INCIDENCIAS_WEB) : incidencias;
+            const numCols = isLg ? 3 : 2;
+
+            // Reparto simple 0,1,2,0,1,2...
+            const cols: Incidencia[][] = Array.from({ length: numCols }, () => []);
+            src.forEach((it, i) => cols[i % numCols].push(it));
+
+            return (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  ...(Platform.OS === 'web' ? { gap: 8 } : {}), // 'gap' seguro en web
+                  marginBottom: 16,
+                }}
+              >
+                {cols.map((col, ci) => (
+                  <View key={`col-${ci}`} style={{ flex: 1 }}>
+                    {col.map((it, idx) => (
+                      <View key={String(it.id)} style={idx > 0 ? { marginTop: 8 } : undefined}>
+                        {renderIncidenciaCard(it)}
+                      </View>
+                    ))}
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
+            );
+          })()
         )}
+
+
 
         {/* CTA inferior */}
         <TouchableOpacity

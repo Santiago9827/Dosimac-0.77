@@ -219,7 +219,7 @@ export default function TodosAnimalesMaternidad() {
             <View style={{ alignItems: 'center', paddingHorizontal: PAGE_PX, paddingTop: 18, paddingBottom: 12 }}>
                 <View style={{ width: '100%', maxWidth: MAX_W, alignItems: 'center', marginBottom: 14 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Ionicons name="list-outline" size={24} color="#0f172a" />
+                        <Ionicons name="alert-circle-outline" size={24} color="#0f172a" />
                         <Text style={{ marginLeft: 8, fontWeight: '800', fontSize: 18, color: '#0f172a', textAlign: 'center' }}>
                             Todos los animales · Maternidad
                         </Text>
