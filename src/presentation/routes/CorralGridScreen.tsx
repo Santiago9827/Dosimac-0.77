@@ -47,6 +47,21 @@ const Progress = ({ percent, height = 18 }: { percent: number; height?: number }
     );
 };
 
+const EmptyState = ({ text = 'No se ha encontrado ningún corral' }) => (
+    <View style={{
+        paddingHorizontal: 20,
+        paddingVertical: 24,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }}>
+        <Ionicons name="search-outline" size={28} color="#94A3B8" />
+        <Text style={{ marginTop: 8, color: '#64748B', fontSize: 16, textAlign: 'center' }}>
+            {text}
+        </Text>
+    </View>
+);
+
+
 export default function CorralGridScreen() {
     const navigation = useNavigation<NavigationProp<any>>();
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -254,43 +269,35 @@ export default function CorralGridScreen() {
     );
 
     // ======== TABLA ========
-    // ======== TABLA ========
     const SEP = '#E2E8F0';
     const SEP_W = 1; // mismo ancho que VSep
     const isWeb = Platform.OS === 'web';
     const { width: winW } = useWindowDimensions();
     const MOBILE_BREAKPOINT = 480;            // ← puedes ajustar
     const isNarrow = !isWeb || winW <= MOBILE_BREAKPOINT;
-
-
-
-    // mismo padding lateral que arriba (20)
     const PAGE_PX = 20;
-
-    // límite de ancho “bonito” en escritorio y centrado
-    const MAX_TABLE_W = 1350;
+    const MAX_TABLE_W = 1850;
     const tableMaxW = Math.min(winW - PAGE_PX * 2, MAX_TABLE_W);
-
-    // tamaños: en web ensanchamos % alimentado + un pelín la fila
     const SCALE = isWeb && !isNarrow ? 1.10 : 1.12;
     const W_LEFT = isWeb ? 120 : Math.round(100 * SCALE);
     const W_COL = isWeb ? 110 : Math.round(100 * SCALE);
     const W_CE = isWeb ? 56 : Math.round(44 * SCALE);
-
-
-    // barra de % más larga en web; si cabe, rellenamos el resto
-    // const W_PCT_BASE = isWeb ? 400 : Math.round(160 * SCALE);
     const W_PCT_BASE = (isWeb && !isNarrow) ? 400 : 140;   // ← móvil/estrecho: 140px (prueba 120–160)
 
     // reserva aproximada que ocupan separadores y paddings
-    const PADDING_OVERHEAD = isWeb ? 80 : 60;
-    const W_PCT =
-        isWeb
-            ? Math.max(
-                W_PCT_BASE,
-                tableMaxW - (W_LEFT + 2 * W_COL + W_CE + PADDING_OVERHEAD)
-            )
-            : W_PCT_BASE;
+    // const PADDING_OVERHEAD = isWeb ? 80 : 60;
+    // const W_PCT =
+    //     isWeb
+    //         ? Math.max(
+    //             W_PCT_BASE,
+    //             tableMaxW - (W_LEFT + 2 * W_COL + W_CE + PADDING_OVERHEAD)
+    //         )
+    //         : W_PCT_BASE;
+
+    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+    const PCT_MIN_MOBILE = 120;
+    const PCT_MAX_MOBILE = 240; // ajusta si quieres más ancho en móvil
+
 
     const ROW_H = isWeb ? 60 : Math.round(48 * SCALE);
     const HEAD_H = isWeb ? 64 : Math.round(50 * SCALE);
@@ -329,42 +336,218 @@ export default function CorralGridScreen() {
             <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: color }} />
         </View>
     );
-
+    const MIN_PCT_MOBILE = 140; // usa un único nombre para evitar duplicados
+    const bandMinW = 2 * W_COL + MIN_PCT_MOBILE + W_CE + 4 * SEP_W;
 
     const TableView = ({ data, onRowPress }: { data: Row[]; onRowPress: (corral: string) => void }) => {
         const headerRightRef = useRef<ScrollView>(null);
         const bodyRightRef = useRef<ScrollView>(null);
-        const [pctW, setPctW] = useState(W_PCT_BASE); // ancho REAL de la columna %
 
-        const onBodyHScroll = (e: any) => {
+        // WEB / ancho
+        const [pctW, setPctW] = useState(W_PCT_BASE);
+        const bandW = useMemo(() => 2 * W_COL + pctW + W_CE + 4 * SEP_W, [pctW]);
+
+        const syncHeader = (e: any) => {
             headerRightRef.current?.scrollTo({ x: e.nativeEvent.contentOffset.x, animated: false });
         };
 
-        // Ancho exacto de la "banda" derecha (Animales | No alim. | % alimentado | CE) + separadores
-        const bandW = useMemo(() => 2 * W_COL + pctW + W_CE + 4 * SEP_W, [pctW]);
+        if (isNarrow) {
+            const MAX_VISIBLE_ROWS_MOBILE = 8;
+            const useShrink = data.length <= MAX_VISIBLE_ROWS_MOBILE;
 
+            return (
+                <View
+                    style={{
+                        marginTop: 12,
+                        marginBottom: 20,
+                        borderRadius: 16,
+                        backgroundColor: 'white',
+                        borderWidth: 1,
+                        borderColor: '#E2E8F0',
+                        overflow: 'hidden',
+                        alignSelf: 'stretch',
+                        ...(useShrink ? {} : { flex: 1 }),
+                    }}
+                >
+                    {/* HEADER */}
+                    <View style={{ flexDirection: 'row', backgroundColor: '#F1F5F9', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
+                        <HeaderCell w={W_LEFT} center>Corral</HeaderCell>
+                        <VSep />
+                        <ScrollView
+                            ref={headerRightRef}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            bounces={false}
+                            overScrollMode="never"
+                            contentContainerStyle={{ minWidth: bandMinW }}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <HeaderCell w={W_COL} center>Animales</HeaderCell>
+                                <VSep />
+                                <HeaderCell w={W_COL} center>No alim.</HeaderCell>
+                                <VSep />
+                                <HeaderCell w={MIN_PCT_MOBILE} center>% alimentado</HeaderCell>
+                                <VSep />
+                                <HeaderCell w={W_CE} center>CE</HeaderCell>
+                            </View>
+                        </ScrollView>
+                    </View>
+
+                    {/* BODY */}
+                    {useShrink ? (
+                        // 1–8 filas: se encoge sin scroll vertical
+                        <View style={{ paddingBottom: 6 }}>
+                            <View style={{ flexDirection: 'row' }}>
+                                {/* izquierda fija */}
+                                <View style={{ width: W_LEFT }}>
+                                    {data.map((r, idx) => (
+                                        <TouchableOpacity
+                                            key={`L-${r.corral}`} activeOpacity={0.8} onPress={() => onRowPress(r.corral)}
+                                            style={{
+                                                height: ROW_H, flexDirection: 'row', alignItems: 'center',
+                                                paddingHorizontal: PADX, backgroundColor: idx % 2 ? '#FFFFFF' : '#FCFDFE',
+                                                borderBottomWidth: idx === data.length - 1 ? 0 : 1, borderBottomColor: '#E2E8F0',
+                                            }}
+                                        >
+                                            <Ionicons name="home-outline" size={Math.round(16 * SCALE)} color="#0f172a" />
+                                            <Text style={{ marginLeft: 6, color: '#0f172a', fontWeight: '600', fontSize: ROW_FS }} numberOfLines={1}>
+                                                {r.corral}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+
+                                <VSep />
+
+                                {/* derecha con H-scroll */}
+                                <ScrollView
+                                    ref={bodyRightRef}
+                                    horizontal
+                                    onScroll={syncHeader}
+                                    scrollEventThrottle={16}
+                                    showsHorizontalScrollIndicator
+                                    bounces={false}
+                                    overScrollMode="never"
+                                    contentContainerStyle={{ minWidth: bandMinW }}
+                                >
+                                    <View style={{ width: '100%' }}>
+                                        {data.map((r, idx) => (
+                                            <TouchableOpacity
+                                                key={`R-${r.corral}`} activeOpacity={0.8} onPress={() => onRowPress(r.corral)}
+                                                style={{
+                                                    height: ROW_H, flexDirection: 'row', alignItems: 'center',
+                                                    backgroundColor: idx % 2 ? '#FFFFFF' : '#FCFDFE',
+                                                    borderBottomWidth: idx === data.length - 1 ? 0 : 1, borderBottomColor: '#E2E8F0',
+                                                    paddingRight: 8,
+                                                }}
+                                            >
+                                                <CellText w={W_COL} center strong>{r.animales}</CellText>
+                                                <VSep />
+                                                <CellText w={W_COL} center>{r.noAlimentados}</CellText>
+                                                <VSep />
+                                                <View style={{ minWidth: MIN_PCT_MOBILE, flex: 1, paddingHorizontal: 8 }}>
+                                                    <Progress percent={r.pct} height={PROG_H} />
+                                                </View>
+                                                <VSep />
+                                                <View style={{ width: W_CE, alignItems: 'center' }}>
+                                                    <CEDot color={r.ceColor} />
+                                                </View>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </ScrollView>
+                            </View>
+                        </View>
+                    ) : (
+                        // MUCHAS filas → **un solo ScrollView vertical** envolviendo izquierda + derecha
+                        <View style={{ flex: 1, paddingBottom: 6 }}>
+                            <ScrollView
+                                style={{ flex: 1 }}
+                                showsVerticalScrollIndicator
+                                bounces={false}
+                                overScrollMode="never"
+                                nestedScrollEnabled
+                            >
+                                <View style={{ flexDirection: 'row' }}>
+                                    {/* izquierda fija (sin su propio scroll) */}
+                                    <View style={{ width: W_LEFT }}>
+                                        {data.map((r, idx) => (
+                                            <TouchableOpacity
+                                                key={`L-${r.corral}`} activeOpacity={0.8} onPress={() => onRowPress(r.corral)}
+                                                style={{
+                                                    height: ROW_H, flexDirection: 'row', alignItems: 'center',
+                                                    paddingHorizontal: PADX, backgroundColor: idx % 2 ? '#FFFFFF' : '#FCFDFE',
+                                                    borderBottomWidth: idx === data.length - 1 ? 0 : 1, borderBottomColor: '#E2E8F0',
+                                                }}
+                                            >
+                                                <Ionicons name="home-outline" size={Math.round(16 * SCALE)} color="#0f172a" />
+                                                <Text style={{ marginLeft: 6, color: '#0f172a', fontWeight: '600', fontSize: ROW_FS }} numberOfLines={1}>
+                                                    {r.corral}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+
+                                    <VSep />
+
+                                    {/* derecha: H-scroll (sin scroll vertical propio) */}
+                                    <ScrollView
+                                        ref={bodyRightRef}
+                                        horizontal
+                                        onScroll={syncHeader}
+                                        scrollEventThrottle={16}
+                                        showsHorizontalScrollIndicator
+                                        bounces={false}
+                                        overScrollMode="never"
+                                        contentContainerStyle={{ minWidth: bandMinW }}
+                                    >
+                                        <View style={{ width: '100%' }}>
+                                            {data.map((r, idx) => (
+                                                <TouchableOpacity
+                                                    key={`R-${r.corral}`} activeOpacity={0.8} onPress={() => onRowPress(r.corral)}
+                                                    style={{
+                                                        height: ROW_H, flexDirection: 'row', alignItems: 'center',
+                                                        backgroundColor: idx % 2 ? '#FFFFFF' : '#FCFDFE',
+                                                        borderBottomWidth: idx === data.length - 1 ? 0 : 1, borderBottomColor: '#E2E8F0',
+                                                        paddingRight: 8,
+                                                    }}
+                                                >
+                                                    <CellText w={W_COL} center strong>{r.animales}</CellText>
+                                                    <VSep />
+                                                    <CellText w={W_COL} center>{r.noAlimentados}</CellText>
+                                                    <VSep />
+                                                    <View style={{ minWidth: MIN_PCT_MOBILE, flex: 1, paddingHorizontal: 8 }}>
+                                                        <Progress percent={r.pct} height={PROG_H} />
+                                                    </View>
+                                                    <VSep />
+                                                    <View style={{ width: W_CE, alignItems: 'center' }}>
+                                                        <CEDot color={r.ceColor} />
+                                                    </View>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    </ScrollView>
+                                </View>
+                            </ScrollView>
+                        </View>
+                    )}
+                </View>
+            );
+        }
+
+
+        // ---------- WEB / ANCHO (igual que tenías) ----------
         return (
             <View
                 onLayout={(e) => {
-                    if (isWeb && !isNarrow) {
-                        const total = e.nativeEvent.layout.width;
-                        const calc = Math.max(
-                            W_PCT_BASE,
-                            Math.round(total - (W_LEFT + 2 * W_COL + W_CE + 4 * SEP_W))
-                        );
-                        if (calc !== pctW) setPctW(calc);
-                    } else {
-                        // móvil (nativo) o web estrecho: ancho fijo y corto
-                        if (pctW !== W_PCT_BASE) setPctW(W_PCT_BASE);
-                    }
+                    const total = e.nativeEvent.layout.width;
+                    const calc = Math.max(W_PCT_BASE, Math.round(total - (W_LEFT + 2 * W_COL + W_CE + 4 * SEP_W)));
+                    if (calc !== pctW) setPctW(calc);
                 }}
-
-
                 style={{
                     alignSelf: 'center',
                     width: isWeb ? '100%' : undefined,
                     maxWidth: isWeb ? tableMaxW : undefined,
-                    marginHorizontal: isWeb ? 0 : 0,
                     marginTop: 12,
                     marginBottom: 20,
                     borderRadius: 16,
@@ -372,14 +555,12 @@ export default function CorralGridScreen() {
                     borderWidth: 1,
                     borderColor: '#E2E8F0',
                     overflow: 'hidden',
-                    ...(isNarrow ? { flex: 1, alignSelf: 'stretch', width: '100%' } : null), // ⟵ clave
                 }}
             >
                 {/* HEADER */}
                 <View style={{ flexDirection: 'row', backgroundColor: '#F1F5F9', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
                     <HeaderCell w={W_LEFT} center>Corral</HeaderCell>
                     <VSep />
-
                     <ScrollView
                         ref={headerRightRef}
                         horizontal
@@ -387,14 +568,14 @@ export default function CorralGridScreen() {
                         showsHorizontalScrollIndicator={false}
                         bounces={false}
                         overScrollMode="never"
-                        contentContainerStyle={{ width: bandW }}   // ⟵ mismo ancho que el body
+                        contentContainerStyle={{ width: bandW }}
                     >
                         <View style={{ flexDirection: 'row' }}>
                             <HeaderCell w={W_COL} center>Animales</HeaderCell>
                             <VSep />
                             <HeaderCell w={W_COL} center>No alim.</HeaderCell>
                             <VSep />
-                            <HeaderCell w={pctW} center>% alimentado</HeaderCell> {/* ⟵ ancho fijo */}
+                            <HeaderCell w={pctW} center>% alimentado</HeaderCell>
                             <VSep />
                             <HeaderCell w={W_CE} center>CE</HeaderCell>
                         </View>
@@ -402,22 +583,9 @@ export default function CorralGridScreen() {
                 </View>
 
                 {/* BODY */}
-                <View style={isNarrow ? { flex: 1 } : { maxHeight: TABLE_BODY_MAX_H }}>
-                    {data.length === 0 && (
-                        <View style={{ padding: 20, alignItems: 'center' }}>
-                            <Text style={{ color: '#64748B' }}>No se han encontrado corrales</Text>
-                        </View>
-                    )}
-
-                    <ScrollView
-                        showsVerticalScrollIndicator={false}
-                        bounces={false}
-                        overScrollMode="never"
-                        style={isNarrow ? { flex: 1 } : undefined}
-                        nestedScrollEnabled
-                    >
+                <View style={{ maxHeight: TABLE_BODY_MAX_H }}>
+                    <ScrollView showsVerticalScrollIndicator={false} bounces={false} overScrollMode="never">
                         <View style={{ flexDirection: 'row' }}>
-                            {/* Columna izquierda fija */}
                             <View style={{ width: W_LEFT }}>
                                 {data.map((r, idx) => (
                                     <TouchableOpacity
@@ -436,7 +604,7 @@ export default function CorralGridScreen() {
                                     >
                                         <Ionicons name="home-outline" size={Math.round(16 * SCALE)} color="#0f172a" />
                                         <Text style={{ marginLeft: 6, color: '#0f172a', fontWeight: '600', fontSize: ROW_FS }} numberOfLines={1}>
-                                            {`${r.corral}`}
+                                            {r.corral}
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
@@ -444,17 +612,16 @@ export default function CorralGridScreen() {
 
                             <VSep />
 
-                            {/* Derecha: banda horizontal con TODAS las filas */}
                             <ScrollView
                                 ref={bodyRightRef}
                                 horizontal
-                                onScroll={onBodyHScroll}
+                                onScroll={syncHeader}
                                 scrollEventThrottle={16}
                                 showsHorizontalScrollIndicator={false}
                                 bounces={false}
                                 overScrollMode="never"
                             >
-                                <View style={{ width: bandW }}> {/* ⟵ mismo ancho que el header */}
+                                <View style={{ width: bandW }}>
                                     {data.map((r, idx) => (
                                         <TouchableOpacity
                                             key={`R-${r.corral}`}
@@ -467,19 +634,16 @@ export default function CorralGridScreen() {
                                                 backgroundColor: idx % 2 ? '#FFFFFF' : '#FCFDFE',
                                                 borderBottomWidth: idx === data.length - 1 ? 0 : 1,
                                                 borderBottomColor: '#E2E8F0',
-                                                width: bandW, // ⟵ fija el ancho de cada fila
+                                                width: bandW,
                                             }}
                                         >
                                             <CellText w={W_COL} center strong>{r.animales}</CellText>
                                             <VSep />
                                             <CellText w={W_COL} center>{r.noAlimentados}</CellText>
                                             <VSep />
-
-                                            {/* % alimentado con ANCHO FIJO = pctW */}
                                             <View style={{ width: pctW, paddingHorizontal: 8 }}>
                                                 <Progress percent={r.pct} height={PROG_H} />
                                             </View>
-
                                             <VSep />
                                             <View style={{ width: W_CE, alignItems: 'center' }}>
                                                 <CEDot color={r.ceColor} />
@@ -496,6 +660,8 @@ export default function CorralGridScreen() {
     };
 
 
+
+
     return (
         <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
             {/* Título + toggle + buscador */}
@@ -503,7 +669,6 @@ export default function CorralGridScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={{ color: '#0f172a', fontSize: 22, fontWeight: '900' }}>Resumen por corral</Text>
 
-                    {/* Botón de cambio sin navegar */}
                     <TouchableOpacity
                         onPress={toggleView}
                         activeOpacity={0.85}
@@ -557,12 +722,14 @@ export default function CorralGridScreen() {
                         </TouchableOpacity>
                     )}
                 </View>
-
             </View>
 
             {/* Contenido según modo */}
+            {/* Contenido según modo */}
             <View style={{ flex: 1 }}>
-                {viewMode === 'grid' ? (
+                {filtered.length === 0 ? (
+                    <EmptyState />
+                ) : viewMode === 'grid' ? (
                     <FlatList
                         data={filtered}
                         keyExtractor={(it) => it.corral}
@@ -577,7 +744,8 @@ export default function CorralGridScreen() {
                     </View>
                 )}
             </View>
-        </View>
-    )
-}
 
+        </View>
+    );
+
+}
