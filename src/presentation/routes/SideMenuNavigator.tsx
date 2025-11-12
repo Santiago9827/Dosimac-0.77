@@ -4,7 +4,7 @@
 import React from 'react';
 import { DrawerContentComponentProps, DrawerContentScrollView, DrawerItem, DrawerItemList, createDrawerNavigator } from '@react-navigation/drawer';
 import { globalColors } from '../theme/theme';
-import { Text, View } from 'react-native';
+import { Text, View, Platform, Dimensions, useWindowDimensions } from 'react-native';
 import { BottomTabNavigator } from './BottomTabNavigator';
 import { IonIcon } from '../components/shared/IonIcon';
 import { Divider } from 'react-native-paper';
@@ -35,6 +35,9 @@ import { AWRFlowStackNavigator } from './AWRFlowStackNavigator';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
+const WEB_DRAWER_W = Math.min(480, Math.round(Dimensions.get('window').width * 0.65));
+
+
 
 
 /** Stack que contiene los Tabs + TareasProgramadas */
@@ -63,6 +66,19 @@ function TabsStack() {
 
 export const SideMenuNavigator = () => {
   const { t } = useTranslation();
+  const { width: winW } = useWindowDimensions();
+
+  const EDGE_GUTTER = 10;         // margen mínimo visible al borde
+  const MOBILE_MIN = 320;       // opcional: sube el mínimo
+  const MOBILE_MAX = 540;       // opcional: sube el máximo
+
+  const drawerW =
+    Platform.OS === 'web'
+      ? Math.min(560, Math.round(winW * 0.68))                 // web: un poco más ancho
+      : Math.round(Math.max(MOBILE_MIN, Math.min(MOBILE_MAX,   // móvil: casi a pantalla completa
+        winW - EDGE_GUTTER)));
+
+
 
   return (
     <Drawer.Navigator
@@ -70,25 +86,28 @@ export const SideMenuNavigator = () => {
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
-
         drawerType: 'front',
         overlayColor: 'rgba(0,0,0,0.25)',
         drawerStatusBarAnimation: 'fade',
         drawerHideStatusBarOnOpen: false,
 
-        // opcional: tamaño y estilo del panel
-        drawerStyle: { width: '78%', backgroundColor: '#fff' },
-
-        // gestos (opcional)
-        // swipeEnabled: true,
-        // swipeEdgeWidth: 35,
+        drawerStyle: {
+          width: drawerW,
+          backgroundColor: '#fff',
+          ...(Platform.OS === 'web' && {
+            borderTopRightRadius: 16,
+            borderBottomRightRadius: 16,
+          }),
+        },
 
         drawerActiveBackgroundColor: globalColors.primary,
         drawerActiveTintColor: 'white',
         drawerInactiveTintColor: globalColors.primary,
-        drawerLabelStyle: { flexShrink: 1 },
-        drawerItemStyle: { borderRadius: 100, paddingHorizontal: 20 },
+        drawerLabelStyle: { flexShrink: 1, marginRight: 4 },
+        drawerItemStyle: { borderRadius: 100, paddingHorizontal: 0 },
       }}
+
+
     >
       {/* 👉 Ahora los Tabs van envueltos en TabsStack (que incluye TareasProgramadas) */}
       <Drawer.Screen

@@ -395,7 +395,6 @@ export default function CorralGridScreen() {
 
                     {/* BODY */}
                     {useShrink ? (
-                        // 1–8 filas: se encoge sin scroll vertical
                         <View style={{ paddingBottom: 6 }}>
                             <View style={{ flexDirection: 'row' }}>
                                 {/* izquierda fija */}
@@ -459,7 +458,6 @@ export default function CorralGridScreen() {
                             </View>
                         </View>
                     ) : (
-                        // MUCHAS filas → **un solo ScrollView vertical** envolviendo izquierda + derecha
                         <View style={{ flex: 1, paddingBottom: 6 }}>
                             <ScrollView
                                 style={{ flex: 1 }}
@@ -469,7 +467,6 @@ export default function CorralGridScreen() {
                                 nestedScrollEnabled
                             >
                                 <View style={{ flexDirection: 'row' }}>
-                                    {/* izquierda fija (sin su propio scroll) */}
                                     <View style={{ width: W_LEFT }}>
                                         {data.map((r, idx) => (
                                             <TouchableOpacity
@@ -536,7 +533,7 @@ export default function CorralGridScreen() {
         }
 
 
-        // ---------- WEB / ANCHO (igual que tenías) ----------
+        // ---------- WEB / ANCHO ----------
         return (
             <View
                 onLayout={(e) => {
@@ -724,7 +721,6 @@ export default function CorralGridScreen() {
                 </View>
             </View>
 
-            {/* Contenido según modo */}
             {/* Contenido según modo */}
             <View style={{ flex: 1 }}>
                 {filtered.length === 0 ? (
