@@ -1,7 +1,8 @@
+package com.gptrnbluetoothv2
+
 import android.content.res.Configuration
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
-package com.gptrnbluetoothv2
 
 import android.app.Application
 import com.facebook.react.PackageList

@@ -100,7 +100,7 @@ export const HomeScreen = () => {
 
 
   const StatRowCompact = ({ label, value }: { label: string; value: number }) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, alignSelf: 'stretch' }}>
 
       <Text
         style={{
@@ -248,7 +248,7 @@ export const HomeScreen = () => {
         <View
           style={{
             flexDirection: isMd ? 'row' : 'column',
-            alignItems: isMd ? 'flex-start' : 'center',
+            alignItems: isMd ? 'flex-start' : 'stretch',
             gap: stackGap,
           }}
         >
@@ -260,6 +260,7 @@ export const HomeScreen = () => {
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              alignSelf: isMd ? "auto" : "center"
             }}
           >
 
@@ -278,7 +279,7 @@ export const HomeScreen = () => {
           </View>
 
           {/* Stats */}
-          <View style={[{ flexGrow: 1 }, isMd ? { width: statsWidth, paddingTop: statsTopOffset } : { marginTop: statsTopOffset }]}>
+          <View style={[{ flexGrow: 1 }, isMd ? { width: statsWidth, paddingTop: statsTopOffset } : { marginTop: statsTopOffset, alignSelf: 'stretch', width: "100%" }]}>
             <StatRowCompact label="Alimentados" value={alimentados} />
             <StatRowCompact label="No Alimentados" value={noAlimentados} />
             <View style={{ height: 1, marginVertical: 10, backgroundColor: CARD_BORDER }} />

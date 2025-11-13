@@ -654,7 +654,7 @@ export const MatCorralDetail = () => {
    const sub = (animalState.subEstado || '').toUpperCase();
 
    const [isDeviceError] = useState<boolean>(!!deviceError);
-   const [hasDiasSinAlimentar] = useState<boolean>(!!diasSinAlimentar);
+   const hasDiasSinAlimentar = !!diasSinAlimentar;
 
    const [dlgLactancia, setDlgLactancia] = useState(false);
    const [dlgNextStep, setDlgNextStep] = useState(false);
@@ -1214,14 +1214,15 @@ export const MatCorralDetail = () => {
 
                      {/* banda dias sin alimentar */}
                      {hasDiasSinAlimentar && (
-                        <>
-                           <View style={{ height: 20 }} />  {/* separador explícito */}
+                        <View>
+                           <View style={{ height: 20 }} />
                            <View style={styles.errorBand}>
                               <Text style={styles.errorText}>2 días sin alimentar</Text>
                            </View>
                            <View style={{ height: 2 }} />
-                        </>
+                        </View>
                      )}
+
 
 
                      {/* GRID de info */}
