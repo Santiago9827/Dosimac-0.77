@@ -14,7 +14,7 @@ export const IonIcon = ({ name, size = 25, color = 'black' }: Props) => {
 
    return (
       <Icon
-         name={name}
+         name={name as any}
          size={size}
          color={color}
 

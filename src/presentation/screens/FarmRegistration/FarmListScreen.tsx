@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native-gesture-handler';
 import { FarmScreen } from './FarmScreen';
 import { farmFacility } from '../../../sharedTypes/farmInterface';
-import { GetFarmsList } from '../../../FarmDB/farmsDB.native';
+import { GetFarmsList } from '../../../FarmDB/farmsDB';
 import { farmStore } from '../../../stores/store';
 import { vglobal } from '../../../sharedTypes/globlaVars';
 
@@ -35,7 +35,7 @@ export const FarmListScreen = ({ navigation, route }) => {
 
   // const navigation = useNavigation();
   const { t } = useTranslation();
-  const [value, setValue] = useState('1');
+  const [value, setValue] = useState('');
   const [farms, setFarms] = useState<farmFacility[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,12 +56,42 @@ export const FarmListScreen = ({ navigation, route }) => {
 
   // const navigator=useNavigation();
 
-  const fetchFarms = async () => {
-    const farmsList = await GetFarmsList();
-    setFarms(farmsList);
-    UseSetFarmsAmount(farmsList.length);
-    setLoading(false);
-  };
+  const fetchFarms = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      // si exportas esto en tu DB nativa:
+      // await InicialiceFarmDataTable();
+
+      const list = await GetFarmsList();   // puede lanzar error si hay SQL mal
+      setFarms(list ?? []);
+      UseSetFarmsAmount(list?.length ?? 0);
+    } catch (e) {
+      console.log('GetFarmsList ERR', e);
+      setFarms([]);                        // fuerza vacío
+    } finally {
+      setLoading(false);                   // SIEMPRE baja el loading
+    }
+  }, [UseSetFarmsAmount]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchFarms();
+      return () => { };
+    }, [fetchFarms, farmDataChange])
+  );
+
+  // 2) Sincronizar la selección con el store y con la lista cargada
+  useEffect(() => {
+    const selectedId = sfarm?.id;
+    if (selectedId && farms.some(f => f.id === selectedId)) {
+      setValue(String(selectedId));        // respeta lo elegido antes
+    } else if (farms.length > 0) {
+      setValue(String(farms[0].id));       // si no hay selección, cae al primero
+      UseSetNewFarm(farms[0].id);
+    } else {
+      setValue('');
+    }
+  }, [sfarm?.id, farms, UseSetNewFarm]);
 
 
 
@@ -89,44 +119,44 @@ export const FarmListScreen = ({ navigation, route }) => {
 
   }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchFarms();
-      if (farms.length === 1) {
-        UseSetNewFarm(farms[0].id);
-        setValue('1');
-      }
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     fetchFarms();
+  //     if (farms.length === 1) {
+  //       UseSetNewFarm(farms[0].id);
+  //       setValue('1');
+  //     }
 
-      if (vglobal.coinciden)
-        console.log('setFirstElment true')
-      else
-        console.log('setFirstElment false')
+  //     if (vglobal.coinciden)
+  //       console.log('setFirstElment true')
+  //     else
+  //       console.log('setFirstElment false')
 
-      if (vglobal.coinciden) {
-        vglobal.coinciden = false;
-        if ((farms.length > 0)) {
-          UseSetNewFarm(farms[0].id);
-          console.log(farms[0].id)
-          setValue(farms[0].id.toString());
-          UseSetFirstElement(false);
-        }
-      }
-      if (farms.length === 0) {
-        // resetFarm();
+  //     if (vglobal.coinciden) {
+  //       vglobal.coinciden = false;
+  //       if ((farms.length > 0)) {
+  //         UseSetNewFarm(farms[0].id);
+  //         console.log(farms[0].id)
+  //         setValue(farms[0].id.toString());
+  //         UseSetFirstElement(false);
+  //       }
+  //     }
+  //     if (farms.length === 0) {
+  //       // resetFarm();
 
-      }
-      // if (farmDataChange)
-      // farmsList
-      //Alert.alert('Screen was focused');
-      // Do something when the screen is focused
-      console.log('screen was focused');
-      return () => {
-        // Alert.alert('Screen was unfocused');
-        // Do something when the screen is unfocused
-        // Useful for cleanup functions
-      };
-    }, [])
-  );
+  //     }
+  //     // if (farmDataChange)
+  //     // farmsList
+  //     //Alert.alert('Screen was focused');
+  //     // Do something when the screen is focused
+  //     console.log('screen was focused');
+  //     return () => {
+  //       // Alert.alert('Screen was unfocused');
+  //       // Do something when the screen is unfocused
+  //       // Useful for cleanup functions
+  //     };
+  //   }, [])
+  // );
 
   const handleRender = (item: farmFacility) => {
     return (
@@ -224,25 +254,23 @@ export const FarmListScreen = ({ navigation, route }) => {
 
 
       <RadioButton.Group
-        onValueChange={newValue => {
-          setValue(newValue);
-          // UseSetFarmId(Number(newValue));
-          UseSetNewFarm(Number(newValue));
-          console.log('new value!!!: ', newValue);
-        }
-        }
         value={value}
+        onValueChange={nv => { setValue(nv); UseSetNewFarm(Number(nv)); }}
       >
-        {farms.length > 0 ? (
+        {loading ? null : farms.length === 0 ? (
+          renderEmptyList()
+        ) : (
           <View>
-            {farms.map((item) =>
-              <View key={item.id}>{handleRender2(item)}
+            {farms.map(item => (
+              <View key={item.id}>
+                {handleRender2(item)}
                 <Divider style={{ height: 8, backgroundColor: 'lightgray' }} />
-              </View>)}
+              </View>
+            ))}
           </View>
-        ) : (<>{!loading && (<>{renderEmptyList()}</>)}</>)}
-
+        )}
       </RadioButton.Group>
+
     </ScrollView>
   );
 };

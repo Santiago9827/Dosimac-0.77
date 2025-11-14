@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Appbar, Button, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { GetFarmDataById, InsertFarmData, UpdateFarmData, deleteFarmById } from '../../../FarmDB/farmsDB.native';
+import { GetFarmDataById, InicialiceFarmDataTable, InsertFarmData, UpdateFarmData, deleteFarmById } from '../../../FarmDB/farmsDB';
 import { farmFacility } from '../../../sharedTypes/farmInterface';
 import { vglobal } from '../../../sharedTypes/globlaVars';
 import { farmStore } from '../../../stores/store';
@@ -102,24 +102,30 @@ export const FarmScreen = ({ navigation, route }) => {
     }, [])
   );
 
-  const submitData = () => {
-    fillFarmData2();
+  const submitData = async () => {
+    try {
+      const farm: farmFacility = {
+        id: route.params.id, name, location, province,
+        ssid, wifiPassword, userName, password, serverIp,
+      };
 
-    if (route.params.isNewFarm) {
-      InsertFarmData(farmData2);
-    } else {
-      UpdateFarmData(farmData2);
-    }
-    UsesetFarmDataChange();
+      await InicialiceFarmDataTable();    // por si acaso, solo crea si no existe
 
-    if (route.params.id === 0) {
-      if (!sfarm) {
-        UseSetNewFarm(1);
+      if (route.params.isNewFarm) {
+        const newId = await InsertFarmData(farm); // 👈 await
+        console.log('inserted id', newId);
+      } else {
+        await UpdateFarmData(farm);              // 👈 await
       }
-    } else if (route.params.id === sfarm.id) {
-      UseSetNewFarm(route.params.id);
+
+      UsesetFarmDataChange();
+      navigation.goBack();
+    } catch (e) {
+      console.log('submit ERR', e);
+      Alert.alert('Error', 'No se pudo guardar la instalación');
     }
   };
+
 
   const deleteFarm = async () => {
     vglobal.coinciden = false;
@@ -237,7 +243,9 @@ export const FarmScreen = ({ navigation, route }) => {
               style={styles.boton}
               onPress={() => {
                 submitData();
-                navigation.goBack();
+                // navigation.goBack();
+                navigation.replace('FarmListScreen');  // sustituye la pantalla actual por la lista
+
               }}
             >
               <Text style={styles.texto}>{t('common:Guardar')}</Text>

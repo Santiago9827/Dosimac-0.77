@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { farmFacility } from '../sharedTypes/farmInterface';
-import { GetFarmDataById } from '../FarmDB/farmsDB.native';
+import { GetFarmDataById } from '../FarmDB/farmsDB';
 import { AsyncLocalStorage } from 'async_hooks';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -48,7 +48,7 @@ export const farmStore = create<appInfo & farmActions>()(
          UseSetFarmsAmount: (amount) => set(() => ({ farmsAmount: amount })),
 
       }), {
-         name: "farm-store2",
+      name: "farm-store2",
       storage: createJSONStorage(() => AsyncStorage)
    })
 

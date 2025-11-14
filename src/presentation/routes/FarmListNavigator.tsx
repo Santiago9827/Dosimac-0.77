@@ -4,44 +4,46 @@
 import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import React, { useEffect } from 'react';
-import { FarmListScreen } from '../screens/FarmRegistration/FarmListScreen';
+// import { FarmListScreen } from '../screens/FarmRegistration/FarmListScreen';
 import { FarmScreen } from '../screens/FarmRegistration/FarmScreen';
+import { FarmListScreen } from '../screens/FarmRegistration/FarmListScreen';
+
 
 const FarmListStack = createStackNavigator();
 
 
-export const FarmListNavigator = ()=> {
-   
+export const FarmListNavigator = () => {
+
    const navigator = useNavigation();
-   
 
-   useEffect(()=>{
+
+   useEffect(() => {
       navigator.setOptions({
-        headerShown: false,      
-        
-      });
-  
-    }, [navigator] );
-       
-  return (
-   <FarmListStack.Navigator
-      
-      screenOptions={
-         {
          headerShown: false,
-         headerStyle:{
-            elevation:5,
-         },
 
-      }}
-   >
+      });
 
-      <FarmListStack.Screen name="Farm list" component={FarmListScreen} />
-      
-      <FarmListStack.Screen name="Farm detalils" component={FarmScreen} />
+   }, [navigator]);
+
+   return (
+      <FarmListStack.Navigator
+
+         screenOptions={
+            {
+               headerShown: false,
+               headerStyle: {
+                  elevation: 5,
+               },
+
+            }}
+      >
+
+         <FarmListStack.Screen name="Farm list" component={FarmListScreen} />
+
+         <FarmListStack.Screen name="Farm detalils" component={FarmScreen} />
 
 
-   </FarmListStack.Navigator>
-    
-  );
+      </FarmListStack.Navigator>
+
+   );
 };

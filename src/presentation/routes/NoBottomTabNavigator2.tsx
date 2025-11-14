@@ -11,7 +11,7 @@ import { HomeDebugScreen } from '../screens/Debug/HomeDebugScreen/HomeDebugScree
 import { IonIcon } from '../components/shared/IonIcon';
 import { DebugNavigator } from './DebugNavigator';
 import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
-import { GestationScreen } from '../screens/Gestation/Gestation';
+import GestationScreen from '../screens/Gestation/Gestation';
 import { MaternityScreen } from '../screens/Maternity/Maternity';
 import { MaternityStackNavigator } from './Mat-StackNavigator';
 
