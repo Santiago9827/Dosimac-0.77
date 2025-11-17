@@ -11,9 +11,12 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView, // nativo de RN
+  SafeAreaView,
+  useWindowDimensions,
+  StyleProp,
+  ViewStyle
 } from 'react-native';
-import { Appbar, Button, TextInput } from 'react-native-paper';
+import { Appbar, Portal, Dialog, Button, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { GetFarmDataById, InicialiceFarmDataTable, InsertFarmData, UpdateFarmData, deleteFarmById } from '../../../FarmDB/farmsDB';
 import { farmFacility } from '../../../sharedTypes/farmInterface';
@@ -33,6 +36,20 @@ export const FarmScreen = ({ navigation, route }) => {
   const [userName, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [serverIp, setServerIp] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const [infoOpen, setInfoOpen] = useState(false);
+  const dialogStyle: StyleProp<ViewStyle> = isWeb
+    ? {
+      width: Math.min(560, width - 48),
+      marginHorizontal: 24,
+      alignSelf: 'center' as const,
+    }
+    : undefined;
+
+
 
   const sfarm = farmStore((state) => state.farm);
   const sfarmId = farmStore((state) => state.farmId);
@@ -129,16 +146,23 @@ export const FarmScreen = ({ navigation, route }) => {
 
   const deleteFarm = async () => {
     vglobal.coinciden = false;
+
     if (route.params.isNewFarm) {
-      Alert.alert(t('common:NoSePuedeBorrarGranja'));
-    } else {
-      await deleteFarmById(route.params.id);
-      if (route.params.id === route.params.SetectedValue) {
-        UseresetFarm();
+      if (Platform.OS === 'web') {
+        setInfoOpen(true);                    // 👉 Dialog en web
+      } else {
+        Alert.alert(t('BorrarGranja'), t('common:NoSePuedeBorrarGranja')); // 👉 Alert nativo
       }
-      navigation.goBack();
+      return;
     }
+
+    await deleteFarmById(route.params.id);
+    if (route.params.id === route.params.SetectedValue) {
+      UseresetFarm();
+    }
+    navigation.goBack(); // o navigation.replace('FarmListScreen')
   };
+
 
   // ====== SCROLL & KEYBOARD ======
   const scrollRef = useRef<ScrollView>(null);
@@ -149,22 +173,61 @@ export const FarmScreen = ({ navigation, route }) => {
       <Appbar.Header elevated>
         <Appbar.BackAction onPress={navigation.goBack} />
         <Appbar.Content title={t('common:DetallesInstalacion')} />
-        {/* <Appbar.Action icon="done" onPress={() => {}} /> */}
+
         <Appbar.Action
+          // opcional: para evitar "?" en web, usa Ionicons
+          // icon={({ size, color }) => <Ionicons name="trash-outline" size={size} color={color} />}
           icon="delete"
           onPress={() => {
-            Alert.alert(
-              t('BorrarGranja'),
-              t('Deseaborrarlagranja'),
-              [
-                { text: t('Cancelar'), style: 'cancel' },
-                { text: 'OK', style: 'destructive', onPress: () => deleteFarm() },
-              ],
-              { cancelable: true }
-            );
+            if (Platform.OS === 'web') {
+              setConfirmOpen(true);                    // 👉 abre Dialog en web
+            } else {
+              Alert.alert(                             // 👉 Alert nativo
+                t('BorrarGranja'),
+                t('Deseaborrarlagranja'),
+                [
+                  { text: t('Cancelar'), style: 'cancel' },
+                  { text: 'OK', style: 'destructive', onPress: () => deleteFarm() },
+                ],
+                { cancelable: true }
+              );
+            }
           }}
         />
       </Appbar.Header>
+      {/* Dialog de confirmación para web */}
+      <Portal>
+        <Dialog
+          visible={confirmOpen}
+          onDismiss={() => setConfirmOpen(false)}
+          style={dialogStyle}        // 👈 aquí
+        >
+          <Dialog.Title>{t('BorrarGranja')}</Dialog.Title>
+          <Dialog.Content>
+            <Text>{t('Deseaborrarlagranja')}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setConfirmOpen(false)}>{t('Cancelar')}</Button>
+            <Button onPress={() => { setConfirmOpen(false); deleteFarm(); }}>OK</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* Dialog de info "no se puede borrar" para web */}
+      <Portal>
+        <Dialog visible={infoOpen} onDismiss={() => setInfoOpen(false)} style={dialogStyle}>
+          <Dialog.Title>{t('BorrarGranja')}</Dialog.Title>
+          <Dialog.Content>
+            <Text>{t('common:NoSePuedeBorrarGranja')}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setInfoOpen(false)}>{t('Cancelar')}</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+
+
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
