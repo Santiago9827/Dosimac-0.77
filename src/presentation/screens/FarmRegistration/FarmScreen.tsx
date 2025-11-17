@@ -25,7 +25,10 @@ import { farmStore } from '../../../stores/store';
 // import { useTogglePasswordVisibility } from '../../hooks/useTogglePasswordVisibility';
 
 import Icon from '@expo/vector-icons/Ionicons';
+
 import { IonIcon } from '../../components/shared/IonIcon';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 
 export const FarmScreen = ({ navigation, route }) => {
   const [name, setName] = useState('');
@@ -126,13 +129,13 @@ export const FarmScreen = ({ navigation, route }) => {
         ssid, wifiPassword, userName, password, serverIp,
       };
 
-      await InicialiceFarmDataTable();    // por si acaso, solo crea si no existe
+      await InicialiceFarmDataTable();
 
       if (route.params.isNewFarm) {
-        const newId = await InsertFarmData(farm); // 👈 await
+        const newId = await InsertFarmData(farm);
         console.log('inserted id', newId);
       } else {
-        await UpdateFarmData(farm);              // 👈 await
+        await UpdateFarmData(farm);
       }
 
       UsesetFarmDataChange();
@@ -149,9 +152,9 @@ export const FarmScreen = ({ navigation, route }) => {
 
     if (route.params.isNewFarm) {
       if (Platform.OS === 'web') {
-        setInfoOpen(true);                    // 👉 Dialog en web
+        setInfoOpen(true);
       } else {
-        Alert.alert(t('BorrarGranja'), t('common:NoSePuedeBorrarGranja')); // 👉 Alert nativo
+        Alert.alert(t('BorrarGranja'), t('common:NoSePuedeBorrarGranja'));
       }
       return;
     }
@@ -177,12 +180,13 @@ export const FarmScreen = ({ navigation, route }) => {
         <Appbar.Action
           // opcional: para evitar "?" en web, usa Ionicons
           // icon={({ size, color }) => <Ionicons name="trash-outline" size={size} color={color} />}
-          icon="delete"
-          onPress={() => {
+          icon={({ size, color }) => (
+            <Ionicons name="trash-outline" size={size} color={color} />
+          )} onPress={() => {
             if (Platform.OS === 'web') {
-              setConfirmOpen(true);                    // 👉 abre Dialog en web
+              setConfirmOpen(true);
             } else {
-              Alert.alert(                             // 👉 Alert nativo
+              Alert.alert(
                 t('BorrarGranja'),
                 t('Deseaborrarlagranja'),
                 [
@@ -200,7 +204,7 @@ export const FarmScreen = ({ navigation, route }) => {
         <Dialog
           visible={confirmOpen}
           onDismiss={() => setConfirmOpen(false)}
-          style={dialogStyle}        // 👈 aquí
+          style={dialogStyle}
         >
           <Dialog.Title>{t('BorrarGranja')}</Dialog.Title>
           <Dialog.Content>

@@ -13,6 +13,8 @@ import { farmFacility } from '../../../sharedTypes/farmInterface';
 import { GetFarmsList } from '../../../FarmDB/farmsDB';
 import { farmStore } from '../../../stores/store';
 import { vglobal } from '../../../sharedTypes/globlaVars';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 
 
 
@@ -80,13 +82,12 @@ export const FarmListScreen = ({ navigation, route }) => {
     }, [fetchFarms, farmDataChange])
   );
 
-  // 2) Sincronizar la selección con el store y con la lista cargada
   useEffect(() => {
     const selectedId = sfarm?.id;
     if (selectedId && farms.some(f => f.id === selectedId)) {
-      setValue(String(selectedId));        // respeta lo elegido antes
+      setValue(String(selectedId));
     } else if (farms.length > 0) {
-      setValue(String(farms[0].id));       // si no hay selección, cae al primero
+      setValue(String(farms[0].id));
       UseSetNewFarm(farms[0].id);
     } else {
       setValue('');
@@ -196,28 +197,24 @@ export const FarmListScreen = ({ navigation, route }) => {
   const handleRender2 = (item: farmFacility) => {
     return (
 
+
       <List.Item
         style={{ paddingHorizontal: 10 }}
         titleStyle={{ fontSize: 16, fontWeight: '600', textAlign: 'left', color: '#0a0a0a' }}
         descriptionStyle={{ fontSize: 16, fontWeight: '100', textAlign: 'left', color: '#940909', paddingTop: 5 }}
         title={item.name.toUpperCase()}
         description={`${item.location}    ${item.province}`}
-        // left={props => <List.Icon {...props} icon="folder" />}
-        left={props => <List.Icon {...props} icon="house" style={{}} />}
-        // right={() => <Switch disabled style={styles.centered} />}
-        right={() =>
-
-          <RadioButton value={item.id.toString()} />
-        }
-
-
-        // onPress={() =>  alert(item.name+'      id: '+item.id.toString()) }
-
-        onPress={() => navigation.navigate("Farm detalils", { id: item.id, isNewFarm: false, SetectedValue: Number(value) })}
-
-
-
-
+        left={props => (
+          <View style={[props.style, { width: 40, alignItems: 'center', justifyContent: 'center' }]}>
+            <Ionicons
+              name="home-outline"
+              size={24}
+              color={props.color ?? '#6b7280'}
+            />
+          </View>
+        )}
+        right={() => <RadioButton value={item.id.toString()} />}
+        onPress={() => navigation.navigate('Farm detalils', { id: item.id, isNewFarm: false, SetectedValue: Number(value) })}
       />
     );
   };
