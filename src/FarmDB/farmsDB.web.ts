@@ -1,92 +1,140 @@
 // src/FarmDB/farmsDB.web.ts
+import localforage from 'localforage';
 import type { farmFacility } from '../sharedTypes/farmInterface';
 
-type StorageLike = {
-    getItem(key: string): string | null;
-    setItem(key: string, value: string): void;
-    removeItem(key: string): void;
-    clear(): void;
-};
+// Creamos una instancia separada para "farms"
+const lf = localforage.createInstance({
+    name: 'cti-db',
+    storeName: 'farms',   // nombre de la "tabla"
+    description: 'Farms list for web (IndexedDB via localForage)',
+});
 
-const storage: StorageLike = (() => {
-    try {
-        const ls = (typeof globalThis !== 'undefined' && (globalThis as any).localStorage) as StorageLike | undefined;
-        if (ls && typeof ls.getItem === 'function') return ls;
-    } catch { }
-    // Fallback en memoria (no persiste entre recargas fuera del navegador)
-    const mem: Record<string, string> = {};
-    return {
-        getItem: (k) => (k in mem ? mem[k] : null),
-        setItem: (k, v) => { mem[k] = v; },
-        removeItem: (k) => { delete mem[k]; },
-        clear: () => { for (const k of Object.keys(mem)) delete mem[k]; },
-    };
-})();
+// Clave única donde guardaremos un array con todas las farms.
+// Si prefieres 1 registro por farm, también se puede, pero esto
+// replica tu diseño actual (lista completa).
+const KEY = 'farms_array';
 
-const KEY = 'farms';
-
-function read(): farmFacility[] {
-    try {
-        const raw = storage.getItem(KEY);
-        return raw ? (JSON.parse(raw) as farmFacility[]) : [];
-    } catch {
-        return [];
-    }
+async function read(): Promise<farmFacility[]> {
+    const arr = (await lf.getItem<farmFacility[]>(KEY)) ?? [];
+    // Orden estable por id asc
+    return arr.slice().sort((a, b) => Number(a.id ?? 0) - Number(b.id ?? 0));
 }
-function write(list: farmFacility[]) {
-    storage.setItem(KEY, JSON.stringify(list));
+
+async function write(list: farmFacility[]) {
+    await lf.setItem(KEY, list);
 }
+
 function nextId(list: farmFacility[]) {
     return list.reduce((m, x) => Math.max(m, Number(x.id ?? 0)), 0) + 1;
 }
 
-// ===== API compatible con tu código =====
+// Reparar datos antiguos con id=0 o duplicados (una sola vez por arranque)
+async function repairIdsOnce() {
+    const list = await read();
+    if (!list.length) return;
+
+    let changed = false;
+    let max = list.reduce((m, x) => Math.max(m, Number(x.id || 0)), 0);
+    const used = new Set<number>();
+
+    for (const x of list) {
+        const n = Number(x.id);
+        if (!Number.isFinite(n) || n <= 0 || used.has(n)) {
+            max += 1;
+            (x as any).id = max;
+            used.add(max);
+            changed = true;
+        } else {
+            used.add(n);
+        }
+    }
+    if (changed) await write(list);
+}
+
+// ── API compatible con tu código actual ───────────────────────────────────────
 export async function InicialiceFarmDataTable() {
-    if (storage.getItem(KEY) == null) write([]);
+    // Garantiza que existe la clave; si no, arranca vacía
+    const has = await lf.getItem(KEY);
+    if (has == null) await write([]);
+    await repairIdsOnce();
 }
+
 export async function CreateFarmDataTable() {
-    write([]);
+    await write([]);
 }
+
 export async function InsertFarmData(farm: farmFacility) {
-    const list = read();
-    const id = farm.id ?? nextId(list);
+    const list = await read();
+    const n = Number((farm as any).id);
+    const id = Number.isFinite(n) && n > 0 ? n : nextId(list);
     const rec: farmFacility = { ...farm, id };
     list.push(rec);
-    write(list);
+    await write(list);
     return id;
 }
+
 export async function UpdateFarmData(farm: farmFacility) {
-    const list = read();
+    const list = await read();
     if (farm.id == null) throw new Error('UpdateFarmData: falta id');
-    const idx = list.findIndex(x => Number(x.id) === Number(farm.id));
+
+    const idx = list.findIndex((x) => Number(x.id) === Number(farm.id));
     if (idx === -1) throw new Error(`UpdateFarmData: no existe id ${farm.id}`);
-    list[idx] = { ...list[idx], ...farm };
-    write(list);
+
+    list[idx] = { ...list[idx], ...farm, id: Number(farm.id) };
+    await write(list);
     return list[idx];
 }
+
 export async function DeleteFarmData(farm: farmFacility) {
     if (farm.id == null) return;
     await deleteFarmById(farm.id);
 }
+
 export async function deleteFarmById(id: number) {
-    const list = read();
-    write(list.filter(x => Number(x.id) !== Number(id)));
+    const list = await read();
+    const next = list.filter((x) => Number(x.id) !== Number(id));
+    await write(next);
 }
+
 export async function GetFarmsList(): Promise<farmFacility[]> {
-    return read().sort((a, b) => Number(a.id ?? 0) - Number(b.id ?? 0));
+    return read();
 }
+
 export async function GetFarmDataById(id: number): Promise<farmFacility> {
-    const item = read().find(x => Number(x.id) === Number(id));
+    const item = (await read()).find((x) => Number(x.id) === Number(id));
     if (!item) throw new Error(`GetFarmDataById: no existe id ${id}`);
     return item;
 }
-export async function GetFarmDataByName(name: string): Promise<farmFacility | undefined> {
-    return read().find(x => (x.name || '').toLowerCase() === name.toLowerCase());
+
+export async function GetFarmDataByName(name: string) {
+    const lower = (name || '').toLowerCase();
+    return (await read()).find((x) => (x.name || '').toLowerCase() === lower);
 }
+
 export async function seedDbFarmList() {
-    if (read().length) return;
-    write([
-        { id: 1, name: 'Granja Santomera', location: 'Santomera', province: 'Murcia', userName: 'Alfonso', password: '123456', ssid: 'miwifi1', wifiPassword: '123456', serverIp: '192.168.1.1' },
-        { id: 2, name: 'Granja Aljofrin', location: 'Aljofrin', province: 'Toledo', userName: 'roberto', password: '123456', ssid: 'miwifi2', wifiPassword: '123456', serverIp: '192.168.1.2' },
+    if ((await read()).length) return;
+    await write([
+        {
+            id: 1,
+            name: 'Granja Santomera',
+            location: 'Santomera',
+            province: 'Murcia',
+            userName: 'Alfonso',
+            password: '123456',
+            ssid: 'miwifi1',
+            wifiPassword: '123456',
+            serverIp: '192.168.1.1',
+        },
+        {
+            id: 2,
+            name: 'Granja Aljofrin',
+            location: 'Aljofrin',
+            province: 'Toledo',
+            userName: 'Roberto',
+            password: '123456',
+            ssid: 'miwifi2',
+            wifiPassword: '123456',
+            serverIp: '192.168.1.2',
+        },
     ]);
 }

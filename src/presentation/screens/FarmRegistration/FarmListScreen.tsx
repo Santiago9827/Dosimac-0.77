@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native-gesture-handler';
 import { FarmScreen } from './FarmScreen';
 import { farmFacility } from '../../../sharedTypes/farmInterface';
-import { GetFarmsList } from '../../../FarmDB/farmsDB';
+import { GetFarmsList, InicialiceFarmDataTable } from '../../../FarmDB/farmsDB';
 import { farmStore } from '../../../stores/store';
 import { vglobal } from '../../../sharedTypes/globlaVars';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -61,8 +61,7 @@ export const FarmListScreen = ({ navigation, route }) => {
   const fetchFarms = React.useCallback(async () => {
     setLoading(true);
     try {
-      // si exportas esto en tu DB nativa:
-      // await InicialiceFarmDataTable();
+      await InicialiceFarmDataTable();
 
       const list = await GetFarmsList();   // puede lanzar error si hay SQL mal
       setFarms(list ?? []);

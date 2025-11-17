@@ -314,7 +314,7 @@ export const FarmScreen = ({ navigation, route }) => {
               onPress={() => {
                 submitData();
                 // navigation.goBack();
-                navigation.replace('FarmListScreen');  // sustituye la pantalla actual por la lista
+                navigation.replace("Farm list");
 
               }}
             >
