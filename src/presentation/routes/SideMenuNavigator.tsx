@@ -40,6 +40,7 @@ const WEB_DRAWER_W = Math.min(480, Math.round(Dimensions.get('window').width * 0
 
 
 
+
 /** Stack que contiene los Tabs + TareasProgramadas */
 function TabsStack() {
   return (
@@ -67,17 +68,19 @@ function TabsStack() {
 export const SideMenuNavigator = () => {
   const { t } = useTranslation();
   const { width: winW } = useWindowDimensions();
+  const isTablet = winW >= 768;
 
   const EDGE_GUTTER = 10;         // margen mínimo visible al borde
   const MOBILE_MIN = 320;       // opcional: sube el mínimo
   const MOBILE_MAX = 540;       // opcional: sube el máximo
 
+
   const drawerW =
     Platform.OS === 'web'
-      ? Math.min(560, Math.round(winW * 0.68))                 // web: un poco más ancho
-      : Math.round(Math.max(MOBILE_MIN, Math.min(MOBILE_MAX,   // móvil: casi a pantalla completa
-        winW - EDGE_GUTTER)));
-
+      ? Math.min(560, Math.round(winW * 0.68)) // web: 60% (máx. 560)
+      : isTablet
+        ? Math.min(420, Math.round(winW * 0.45)) // tablet: 45% (máx. 420)
+        : Math.min(360, Math.round(winW * 0.72)); // móvil: 72% (máx. 360)
 
 
   return (

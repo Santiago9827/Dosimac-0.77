@@ -1,4 +1,9 @@
 {
-  "name": "gptrnbluetooth",
-  "slug": "DOSIMAC"
+  "expo": {
+    "name": "gptrnbluetooth",
+    "slug": "DOSIMAC",
+    "android": {
+      "softwareKeyboardLayoutMode": "resize"
+    }
+  }
 }

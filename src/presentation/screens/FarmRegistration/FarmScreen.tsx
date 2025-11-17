@@ -28,6 +28,7 @@ import Icon from '@expo/vector-icons/Ionicons';
 
 import { IonIcon } from '../../components/shared/IonIcon';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 export const FarmScreen = ({ navigation, route }) => {
@@ -40,6 +41,8 @@ export const FarmScreen = ({ navigation, route }) => {
   const [password, setPassword] = useState('');
   const [serverIp, setServerIp] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const insets = useSafeAreaInsets();
+
 
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
@@ -247,7 +250,7 @@ export const FarmScreen = ({ navigation, route }) => {
           overScrollMode="always"
           showsVerticalScrollIndicator
           contentInsetAdjustmentBehavior="always"
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 140 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 260 }}
         >
           <View style={{ marginTop: 20, gap: 10, marginHorizontal: 10, paddingHorizontal: 10 }}>
             <TextInput label={t("NombreGranja")} mode="outlined" placeholder="Nombre de la granja" value={name} onChangeText={setName} />
