@@ -1,9 +1,34 @@
+// {
+//   "compilerOptions": {
+//     "jsx": "react",
+//     "strict": false, // 🔧 Desactiva modo estricto completo
+//     "noImplicitAny": false, // 🔧 Permite variables sin tipo
+//     "strictNullChecks": false // 🔧 Permite null/undefined sin marcar error
+//   },
+//   "extends": "@react-native/typescript-config/tsconfig.json"
+// }
 {
+  "extends": "@react-native/typescript-config/tsconfig.json",
   "compilerOptions": {
-    "jsx": "react",
-    "strict": false, // 🔧 Desactiva modo estricto completo
-    "noImplicitAny": false, // 🔧 Permite variables sin tipo
-    "strictNullChecks": false // 🔧 Permite null/undefined sin marcar error
-  },
-  "extends": "@react-native/typescript-config/tsconfig.json"
+    // RN suele ir mejor con react-native; si usas el nuevo transform, puedes usar "react-jsx"
+    "jsx": "react-native",
+    // ► añade los tipos del DOM para que exista `navigator` en Web
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    // ► carga tipos explícitos (sin clobber a RN)
+    "types": [
+      "react",
+      "react-native",
+      "web-bluetooth"
+    ],
+    // calidad de vida
+    "skipLibCheck": true,
+    // si quieres mantener estos flags relajados, ok:
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false
+  }
 }
