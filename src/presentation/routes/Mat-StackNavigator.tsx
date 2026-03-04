@@ -75,6 +75,7 @@ export const MaternityStackNavigator = () => {
 
       });
 
+
    }, [navigator]);
 
    return (
