@@ -2,9 +2,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Appbar, TextInput } from "react-native-paper";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
@@ -95,6 +95,8 @@ export const LectorGestacionScreen = () => {
     const iniciarLectura = useAwrConn((s) => s.startReading);
     const detenerLectura = useAwrConn((s) => s.stopReading);
     const limpiarCrotalLeido = useAwrConn((s) => s.clearLastTag);
+    const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
+    const [confirmar, setConfirmar] = useState(true);
 
     // UI state
     const [corralInput, setCorralInput] = useState("");
@@ -102,6 +104,13 @@ export const LectorGestacionScreen = () => {
 
     const [registrosEnviados, setRegistrosEnviados] = useState<RegistroEnviado[]>([]);
     const [estaEnviando, setEstaEnviando] = useState(false);
+
+    const route = useRoute<any>();
+
+    const modoParam = route.params?.modo ?? "entrada";
+    const corralParam = route.params?.corral ?? "";
+    const detectarParam = route.params?.detectarDesconocidos ?? true;
+    const confirmarParam = route.params?.confirmar ?? true;
 
     // paginación (mismo comportamiento)
     const TAM_PAGINA = 10;
@@ -120,19 +129,42 @@ export const LectorGestacionScreen = () => {
         if (pagina > maxPagina) setPagina(maxPagina);
     }, [registrosEnviados.length, pagina]);
 
+    const formatModo = (m: string) => {
+        switch (m) {
+            case "entrada": return "Entrada";
+            case "salida": return "Salida";
+            case "lectura": return "Lectura";
+            case "busqueda": return "Búsqueda";
+            default: return "Entrada";
+        }
+    };
+
     // al entrar/salir (igual que tu versión)
     useFocusEffect(
         React.useCallback(() => {
             let mounted = true;
 
-            setCorralInput("");
+            // Reset tabla + crotal, OK
             setRegistrosEnviados([]);
             limpiarCrotalLeido();
-            setTipoMovimiento("entrada");
+            setDetectarDesconocidos(detectarParam);
+            setConfirmar(confirmarParam);
+
+            // ✅ Aplicar lo que viene de Configuración
+            const mov: TipoMovimiento =
+                modoParam === "salida" ? "salida" : "entrada"; // fallback seguro
+
+            setTipoMovimiento(mov);
+
+            // ✅ Solo tiene sentido corral en entrada (si tú lo quieres así)
+            setCorralInput(mov === "entrada" ? String(corralParam) : "");
+
+            // (Opcional) Si vas a usar estos toggles luego (confirmar / desconocidos):
+            // setDetectarDesconocidos(detectarParam);
+            // setConfirmar(confirmarParam);
 
             (async () => {
                 if (!idLector) return;
-
                 try {
                     await iniciarLectura();
                 } catch {
@@ -144,7 +176,16 @@ export const LectorGestacionScreen = () => {
                 mounted = false;
                 detenerLectura?.().catch(() => { });
             };
-        }, [idLector, iniciarLectura, detenerLectura, limpiarCrotalLeido])
+        }, [
+            idLector,
+            iniciarLectura,
+            detenerLectura,
+            limpiarCrotalLeido,
+            modoParam,
+            corralParam,
+            detectarParam,
+            confirmarParam,
+        ])
     );
 
     const volverACtiFeed = () => {
@@ -227,7 +268,7 @@ export const LectorGestacionScreen = () => {
 
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 14 }}>
                 {/* Tabs Entrada/Salida */}
-                <View
+                {/* <View
                     style={{
                         backgroundColor: CARD,
                         borderRadius: 14,
@@ -271,9 +312,10 @@ export const LectorGestacionScreen = () => {
                             Salida
                         </Text>
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
-                {/* Corral (fijo) */}
+
+                {/* Resumen (igual que maternidad) */}
                 <View
                     style={{
                         backgroundColor: CARD,
@@ -281,34 +323,60 @@ export const LectorGestacionScreen = () => {
                         overflow: "hidden",
                         borderWidth: 1,
                         borderColor: BORDER,
-                        shadowColor: "#000",
-                        shadowOpacity: 0.06,
-                        shadowRadius: 10,
-                        shadowOffset: { width: 0, height: 4 },
-                        elevation: 2,
                     }}
                 >
-                    <View style={{ backgroundColor: SOFT, padding: 14, borderBottomWidth: 1, borderBottomColor: SOFT_BORDER }}>
-                        <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>Corral</Text>
-                        <Text style={{ color: "#4B5563", marginTop: 4 }}>
-                            Escriba el corral en el que desea introducir al animal.
+                    <View
+                        style={{
+                            backgroundColor: SOFT,
+                            padding: 14,
+                            borderBottomWidth: 1,
+                            borderBottomColor: SOFT_BORDER,
+                        }}
+                    >
+                        <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>Resumen</Text>
+                        <Text style={{ color: MUTED, marginTop: 4 }}>
+                            Parámetros elegidos en Configuración
                         </Text>
                     </View>
 
-                    <View style={{ padding: 14 }}>
-                        <TextInput
-                            mode="outlined"
-                            label="Corral"
-                            value={corralInput}
-                            onChangeText={(txt) => setCorralInput(soloDigitos(txt))}
-                            keyboardType="number-pad"
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            left={<TextInput.Icon icon="pencil" color={BRAND} />}
-                            outlineColor={BORDER}
-                            activeOutlineColor={BRAND}
-                            placeholder="Ej: 8"
-                        />
+                    <View style={{ padding: 14, gap: 10 }}>
+                        <Text style={{ color: MUTED, fontWeight: "800" }}>
+                            Modo:{" "}
+                            <Text style={{ color: TEXT }}>
+                                {tipoMovimiento === "entrada" ? "Entrada" : "Salida"}
+                            </Text>
+                        </Text>
+
+                        <Text style={{ color: MUTED, fontWeight: "800" }}>
+                            Corral: <Text style={{ color: TEXT }}>{corralInput || "—"}</Text>
+                        </Text>
+
+                        <Text style={{ color: MUTED, fontWeight: "800" }}>
+                            Detectar desconocidos:{" "}
+                            <Text style={{ color: TEXT }}>{detectarDesconocidos ? "Sí" : "No"}</Text>
+                        </Text>
+
+                        <Text style={{ color: MUTED, fontWeight: "800" }}>
+                            Confirmar: <Text style={{ color: TEXT }}>{confirmar ? "Sí" : "No"}</Text>
+                        </Text>
+
+                        {/* Botón para volver a configuración */}
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate("ConfiguracionGestacion")}
+                            activeOpacity={0.9}
+                            style={{
+                                marginTop: 6,
+                                height: 42,
+                                borderRadius: 12,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "#E5E7EB",
+                            }}
+                        >
+                            <Text style={{ color: TEXT, fontWeight: "900" }}>
+                                Cambiar configuración
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 

@@ -31,6 +31,8 @@ import { useAuthStore } from '../../stores/authStore';
 import { LectorMaternidadScreen } from "../screens/lector/LectorMaternidadScreen";
 import { LectorGestacionScreen } from "../screens/lector/LectorGestacionScreen";
 import { ConfiguracionIPScreen } from "../screens/ip/ConfiguracionIPScreen";
+import { ConfiguracionLecturaMaternidadScreen } from "./ConfiguracionLecturaMaternidadScreen";
+import { ConfiguracionGestacionScreen } from './ConfiguracionLecturaGestacionScreen';
 
 
 
@@ -166,6 +168,11 @@ export const PrivateDrawerNavigator = () => {
         }}
       />
       <Drawer.Screen
+        name="ConfiguracionLectura"
+        component={ConfiguracionLecturaMaternidadScreen}
+        options={{ drawerItemStyle: { height: 0 }, drawerLabel: () => null }}
+      />
+      <Drawer.Screen
         name="LectorMaternidad"
         component={LectorMaternidadScreen}
         options={{ drawerItemStyle: { height: 0 }, drawerLabel: () => null }}
@@ -174,6 +181,11 @@ export const PrivateDrawerNavigator = () => {
       <Drawer.Screen
         name="LectorGestacion"
         component={LectorGestacionScreen}
+        options={{ drawerItemStyle: { height: 0 }, drawerLabel: () => null }}
+      />
+      <Drawer.Screen
+        name="ConfiguracionGestacion"
+        component={ConfiguracionGestacionScreen}
         options={{ drawerItemStyle: { height: 0 }, drawerLabel: () => null }}
       />
 
@@ -448,7 +460,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         icon={() => <IonIcon name="barcode-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}
-        onPress={() => go("LectorMaternidad")}
+        onPress={() => go("ConfiguracionLectura")}
       />
 
       <DrawerItem
@@ -456,7 +468,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         icon={() => <IonIcon name="barcode-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}
-        onPress={() => go("LectorGestacion")}
+        onPress={() => go("ConfiguracionGestacion")}
       />
 
 

@@ -2,9 +2,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Appbar, TextInput } from "react-native-paper";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
+import { useRoute, RouteProp, useFocusEffect, useNavigation } from "@react-navigation/native";
+
+type LectorMaternidadParams = {
+    modo?: "entrada" | "salida" | "lectura" | "busqueda";
+    corral?: string;
+    detectarDesconocidos?: boolean;
+    confirmar?: boolean;
+};
 
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
@@ -120,6 +127,12 @@ export const LectorMaternidadScreen = () => {
     const [registrosEnviados, setRegistrosEnviados] = useState<RegistroEnviado[]>([]);
     const [estaEnviando, setEstaEnviando] = useState(false);
 
+    const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
+    const [confirmar, setConfirmar] = useState(true);
+
+    const route = useRoute<RouteProp<Record<string, LectorMaternidadParams>, string>>();
+    const params = route.params ?? {};
+
     // paginación
     const TAM_PAGINA = 3;
     const [pagina, setPagina] = useState(0);
@@ -142,27 +155,39 @@ export const LectorMaternidadScreen = () => {
         React.useCallback(() => {
             let mounted = true;
 
-            setCorralInput("");
+            const modoInicial: TipoMovimiento =
+                params.modo === "salida" ? "salida" : "entrada";
+
+            setTipoMovimiento(modoInicial);
+
+            // corral viene de config (si no viene, queda vacío)
+            setCorralInput(params.corral ? soloDigitos(String(params.corral)) : "");
+
+            setDetectarDesconocidos(params.detectarDesconocidos ?? true);
+            setConfirmar(params.confirmar ?? true);
+
             setRegistrosEnviados([]);
             limpiarCrotalLeido();
-            setTipoMovimiento("entrada");
 
             (async () => {
-                if (!idLector) return; // mismo comportamiento: si no hay lector, no lee
-
-                try {
-                    await iniciarLectura();
-                } catch {
-                    // si falla, no hacemos nada aquí (igual que tu versión si no lo mostrabas)
-                    if (!mounted) return;
-                }
+                if (!idLector) return;
+                try { await iniciarLectura(); } catch { }
             })();
 
             return () => {
                 mounted = false;
                 detenerLectura?.().catch(() => { });
             };
-        }, [idLector, iniciarLectura, detenerLectura, limpiarCrotalLeido])
+        }, [
+            params?.modo,
+            params?.corral,
+            params?.detectarDesconocidos,
+            params?.confirmar,
+            idLector,
+            iniciarLectura,
+            detenerLectura,
+            limpiarCrotalLeido,
+        ])
     );
 
     const volverACtiFeed = () => {
@@ -241,7 +266,7 @@ export const LectorMaternidadScreen = () => {
 
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 14 }}>
                 {/* Tabs */}
-                <View
+                {/* <View
                     style={{
                         backgroundColor: "#F9FAFB",
                         borderRadius: 12,
@@ -285,7 +310,7 @@ export const LectorMaternidadScreen = () => {
                             Salida
                         </Text>
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
                 {/* Corral */}
                 <View
@@ -298,27 +323,46 @@ export const LectorMaternidadScreen = () => {
                     }}
                 >
                     <View style={{ backgroundColor: SOFT, padding: 14, borderBottomWidth: 1, borderBottomColor: SOFT_BORDER }}>
-                        <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>Corral</Text>
-                        <Text style={{ color: "#4B5563", marginTop: 4 }}>
-                            Escriba el corral en el que desea introducir al animal.
+                        <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>Resumen</Text>
+                        <Text style={{ color: MUTED, marginTop: 4 }}>
+                            Parámetros elegidos en Configuración
                         </Text>
                     </View>
 
-                    <View style={{ padding: 14 }}>
-                        <TextInput
-                            mode="outlined"
-                            label="Corral"
-                            value={corralInput}
-                            onChangeText={(txt) => setCorralInput(soloDigitos(txt))}
-                            keyboardType="number-pad"
-                            left={<TextInput.Icon icon="pencil" color={BRAND} />}
-                            outlineColor={BORDER}
-                            activeOutlineColor={BRAND}
-                            placeholder="Ej: 8"
-                        />
+                    <View style={{ padding: 14, gap: 10 }}>
+                        <Text style={{ color: MUTED, fontWeight: "800" }}>
+                            Modo: <Text style={{ color: TEXT }}>{tipoMovimiento === "entrada" ? "Entrada" : "Salida"}</Text>
+                        </Text>
+
+                        <Text style={{ color: MUTED, fontWeight: "800" }}>
+                            Corral: <Text style={{ color: TEXT }}>{corralInput || "—"}</Text>
+                        </Text>
+
+                        <Text style={{ color: MUTED, fontWeight: "800" }}>
+                            Detectar desconocidos: <Text style={{ color: TEXT }}>{detectarDesconocidos ? "Sí" : "No"}</Text>
+                        </Text>
+
+                        <Text style={{ color: MUTED, fontWeight: "800" }}>
+                            Confirmar: <Text style={{ color: TEXT }}>{confirmar ? "Sí" : "No"}</Text>
+                        </Text>
+
+                        {/* opcional para volver a la config */}
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate("ConfiguracionLectura")}
+                            activeOpacity={0.9}
+                            style={{
+                                marginTop: 6,
+                                height: 42,
+                                borderRadius: 12,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "#E5E7EB",
+                            }}
+                        >
+                            <Text style={{ color: TEXT, fontWeight: "900" }}>Cambiar configuración</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
-
                 {/* Crotal leído */}
                 <View style={{ backgroundColor: CARD, borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: BORDER }}>
                     <View style={{ backgroundColor: "#F8FAFF", padding: 14, borderBottomWidth: 1, borderBottomColor: "#E0E7FF" }}>
