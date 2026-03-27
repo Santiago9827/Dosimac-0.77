@@ -7,6 +7,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { vgDoRegistration } from '../../../sharedTypes/gvarsDosimacRegistration';
 import { farmStore } from '../../../stores/store';
 import { globals } from '../../../sharedTypes/globlaVars';
+import { useAuthStore } from '../../../stores/authStore';
 
 export type RootStackParamList = {
    'DR-STARTSCAN': { operacion: number };
@@ -18,11 +19,25 @@ export default function Drnewupdate() {
    const navigation = useNavigation<any>();
    const theme = useTheme();
    const [visible, setVisible] = React.useState(true);
+   const token = useAuthStore((s) => s.token);
 
    const sfarm = farmStore((state) => state.farm);
 
    const inicializeVars = () => {
       vgDoRegistration.operationType = 0;
+   };
+   const goToHome = () => {
+      const parent = navigation.getParent?.();
+
+      if (token) {
+         // ✅ Sesión iniciada -> Drawer privado -> Inicio = Tabs
+         if (parent?.navigate) parent.navigate('Tabs');
+         else navigation.navigate('Tabs');
+      } else {
+         // ✅ Sin sesión -> Drawer público -> Home pública
+         if (parent?.navigate) parent.navigate('PublicHome');
+         else navigation.navigate('PublicHome');
+      }
    };
 
    const goNextScreen = (value: number) => {
@@ -44,13 +59,18 @@ export default function Drnewupdate() {
 
    const dohideDialog = () => {
       setVisible(false);
-      navigation.goBack();
+      goToHome();
    };
 
    return (
       <SafeAreaView style={styles.safe}>
          <Appbar.Header elevated>
-            <Appbar.BackAction onPress={navigation.goBack} />
+            {/* <Appbar.BackAction onPress={navigation.goBack} /> */}
+            <Appbar.BackAction onPress={() => {
+               if (!sfarm) goToHome();
+               else navigation.goBack();
+            }}
+            />
             <Appbar.Content title={t('common:DosimacRegistration')} />
          </Appbar.Header>
 

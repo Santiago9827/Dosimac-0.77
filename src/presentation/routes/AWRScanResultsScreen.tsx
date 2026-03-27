@@ -181,7 +181,7 @@ export const AWRScanResultsScreen = ({ navigation }) => {
             await connect(device.id);
             await startReading();
 
-            // ✅ Mostrar diálogo de éxito (único botón Aceptar)
+            //  Mostrar diálogo de éxito (único botón Aceptar)
             try { ble.stopScanning(); } catch { }
             setConnectedLabel(label);
             setSuccessVisible(true);
@@ -207,7 +207,7 @@ export const AWRScanResultsScreen = ({ navigation }) => {
         }
     };
 
-    // ✅ Handler único para ir a Home (Tabs)
+    //  Handler único para ir a Home (Tabs)
     const handleSuccessAccept = () => {
         setSuccessVisible(false);
         try { ble.stopScanning(); } catch { }
@@ -288,10 +288,9 @@ export const AWRScanResultsScreen = ({ navigation }) => {
                 )
             )}
 
-            {/* ✅ Dialog de éxito: solo botón Aceptar */}
+            {/* Dialog de éxito: solo botón Aceptar */}
             <Portal>
                 <Dialog visible={successVisible} dismissable={false}>
-                    <Dialog.Icon icon="check-circle" color="green" size={60} />
                     <Dialog.Title style={{ color: 'green' }}>Conectado</Dialog.Title>
                     <Dialog.Content>
                         <Text variant="bodyLarge">

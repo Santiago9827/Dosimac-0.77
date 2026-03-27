@@ -27,6 +27,10 @@ import NoAlimentadosScreenMaternidad from './NoAlimentadosScreenMaternidad';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AnimalSearchNavigator } from './AnimalSearchNavigator';
 import { AWRFlowStackNavigator } from './AWRFlowStackNavigator';
+import { useAuthStore } from '../../stores/authStore';
+import { LectorMaternidadScreen } from "../screens/lector/LectorMaternidadScreen";
+import { LectorGestacionScreen } from "../screens/lector/LectorGestacionScreen";
+import { ConfiguracionIPScreen } from "../screens/ip/ConfiguracionIPScreen";
 
 
 
@@ -64,15 +68,16 @@ function TabsStack() {
     </Stack.Navigator>
   );
 }
-
-export const SideMenuNavigator = () => {
+// SideMenuNavigator
+export const PrivateDrawerNavigator = () => {
   const { t } = useTranslation();
   const { width: winW } = useWindowDimensions();
   const isTablet = winW >= 768;
+  // const logout = useAuthStore((s) => s.logout);
 
-  const EDGE_GUTTER = 10;         // margen mínimo visible al borde
-  const MOBILE_MIN = 320;       // opcional: sube el mínimo
-  const MOBILE_MAX = 540;       // opcional: sube el máximo
+  // const EDGE_GUTTER = 10;         // margen mínimo visible al borde
+  // const MOBILE_MIN = 320;       // opcional: sube el mínimo
+  // const MOBILE_MAX = 540;       // opcional: sube el máximo
 
 
   const drawerW =
@@ -118,25 +123,58 @@ export const SideMenuNavigator = () => {
         component={TabsStack}
         options={{ drawerIcon: ({ color }) => <IonIcon name="home-outline" color={color} />, title: t('common:Tabs') }}
       />
+      {/* <Drawer.Screen
+        name="Logout"
+        component={TabsStack} // da igual, NO se usará porque prevenimos el press
+        options={{
+          title: "Cerrar sesión",
+          drawerIcon: ({ color }) => <IonIcon name="log-out-outline" color={color} />,
+        }}
+        listeners={({ navigation }) => ({
+          drawerItemPress: (e) => {
+            e.preventDefault();
+            navigation.closeDrawer();
+            logout();
+          },
+        })}
+      /> */}
 
       <Drawer.Screen
         name="Register"
         component={DRStackNavigator}
-        options={{ drawerIcon: ({ color }) => <IonIcon name="add-outline" color={color} />, title: t('common:DosimacRegistration') }}
+        options={{
+          drawerIcon: ({ color }) => <IonIcon name="add-outline" color={color} />, title: t('common:DosimacRegistration'), drawerItemStyle: { height: 0 },
+          drawerLabel: () => null,
+        }
+        }
       />
       <Drawer.Screen
         name="FarmList"
         component={FarmListNavigator}
-        options={{ drawerIcon: ({ color }) => <IonIcon name="document-text-outline" color={color} />, title: t('common:Lista_instalaciones') }}
+        options={{
+          drawerIcon: ({ color }) => <IonIcon name="document-text-outline" color={color} />, title: t('common:Lista_instalaciones'), drawerItemStyle: { height: 0 },
+          drawerLabel: () => null,
+        }}
       />
-
       <Drawer.Screen
         name="AWR-STARTSCAN"
         component={AWRFlowStackNavigator}
         options={{
-          drawerIcon: ({ color }) => <IonIcon name="search-outline" color={color} />,
           title: 'Dar de Alta AWR',
+          drawerItemStyle: { height: 0 },
+          drawerLabel: () => null,
         }}
+      />
+      <Drawer.Screen
+        name="LectorMaternidad"
+        component={LectorMaternidadScreen}
+        options={{ drawerItemStyle: { height: 0 }, drawerLabel: () => null }}
+      />
+
+      <Drawer.Screen
+        name="LectorGestacion"
+        component={LectorGestacionScreen}
+        options={{ drawerItemStyle: { height: 0 }, drawerLabel: () => null }}
       />
 
       {/* Ajustes (oculto en el Drawer) */}
@@ -175,8 +213,9 @@ export const SideMenuNavigator = () => {
         name="AWR-SAVED"
         component={AWRStackNavigator}
         options={{
-          drawerIcon: ({ color }) => <IonIcon name="radio-outline" color={color} />,
           title: 'AWR escaneados',
+          drawerItemStyle: { height: 0 },  // ✅ oculto
+          drawerLabel: () => null,         // ✅ oculto
         }}
       />
 
@@ -188,7 +227,11 @@ export const SideMenuNavigator = () => {
           title: 'Buscar animal',
         }}
       />
-
+      <Drawer.Screen
+        name="ConfigIP"
+        component={ConfiguracionIPScreen}
+        options={{ drawerItemStyle: { height: 0 }, drawerLabel: () => null }}
+      />
 
 
 
@@ -203,38 +246,299 @@ export const SideMenuNavigator = () => {
   );
 };
 
+// const CustomDrawerContent = (props: DrawerContentComponentProps) => {
+
+//   const { t } = useTranslation();
+//   const insets = useSafeAreaInsets();
+
+//   const focused = props.state.routeNames[props.state.index] === 'Settings';
+//   const activeBg = globalColors.primary;
+//   const activeTint = 'white';
+//   const inactiveTint = globalColors.primary;
+//   const [menu, setMenu] = React.useState<"main" | "alta">("main");
+
+//   return (
+//     <DrawerContentScrollView
+//       {...props}
+//       contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 12 }}
+//     >
+//       <DrawerItemList {...props} />
+
+//       <View style={{ marginTop: 'auto' }}>
+//         <Text
+//           style={{
+//             marginLeft: 16,
+//             marginBottom: 6,
+//             fontSize: 12,
+//             fontWeight: '600',
+//             color: '#666',
+//           }}
+//         >
+//           {t('common:softwareVersion', { defaultValue: 'softwareVersion' })} 3
+//         </Text>
+
+//         <Divider style={{ marginHorizontal: 16, marginBottom: 4 }} />
+
+//         <DrawerItem
+//           label={t('common:settings', { defaultValue: 'Ajustes' })}
+//           icon={() => (
+//             <IonIcon
+//               name="settings-outline"
+//               color={focused ? activeTint : inactiveTint}
+//             />
+//           )}
+//           labelStyle={{ color: focused ? activeTint : inactiveTint }}
+//           style={[
+//             { marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 },
+//             focused && { backgroundColor: activeBg },
+//           ]}
+//           onPress={() => {
+//             const nav = props.navigation;
+//             nav.closeDrawer();
+//             setTimeout(() => nav.navigate('Settings' as never), 120);
+//           }}
+//         />
+//       </View>
+//     </DrawerContentScrollView>
+//   );
+// };
+
+
+
+
 const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const focused = props.state.routeNames[props.state.index] === 'Settings';
+  const logout = useAuthStore((s) => s.logout);
+  const gray = "#6B7280";
+
+
+  const [menu, setMenu] = React.useState<"main" | "alta">("main");
+  const [awrOpen, setAwrOpen] = React.useState(false); const focused = props.state.routeNames[props.state.index] === "Settings";
   const activeBg = globalColors.primary;
-  const activeTint = 'white';
+  const activeTint = "white";
   const inactiveTint = globalColors.primary;
 
+  const go = (name: string) => {
+    const nav = props.navigation;
+    nav.closeDrawer();
+    setTimeout(() => nav.navigate(name as never), 120);
+  };
+
+  // Estilos helper
+  const itemStyle = (isActive: boolean) => ([
+    { marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 },
+    isActive && { backgroundColor: activeBg },
+  ]);
+
+  const labelStyle = (isActive: boolean) => ({
+    color: isActive ? activeTint : inactiveTint,
+    fontWeight: "700" as const,
+  });
+
+  //  Vista SUBMENÚ: “Alta dispositivos”
+  if (menu === "alta") {
+    return (
+      <DrawerContentScrollView
+        {...props}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 12 }}
+      >
+        {/* Botón atrás */}
+        <DrawerItem
+          label={t("common:back", { defaultValue: "Atrás" })}
+          icon={() => <IonIcon name="chevron-back-outline" color={gray} />}
+          labelStyle={{ color: gray, fontWeight: "700" }}
+          style={{ marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 }}
+          onPress={() => setMenu("main")}
+        />
+
+        <Divider style={{ marginHorizontal: 16, marginVertical: 8 }} />
+
+        {/* Alta Dosimac */}
+        <DrawerItem
+          label={t("common:DosimacRegistration", { defaultValue: "Alta Dosimac" })}
+          icon={() => <IonIcon name="add-outline" color={inactiveTint} />}
+          labelStyle={labelStyle(false)}
+          style={itemStyle(false)}
+          onPress={() => go("Register")}
+        />
+
+        {/* Instalaciones */}
+        <DrawerItem
+          label={t("common:Lista_instalaciones", { defaultValue: "Instalaciones" })}
+          icon={() => <IonIcon name="document-text-outline" color={inactiveTint} />}
+          labelStyle={labelStyle(false)}
+          style={itemStyle(false)}
+          onPress={() => go("FarmList")}
+        />
+
+        {/* Footer */}
+        <View style={{ marginTop: "auto" }}>
+          <Text style={{ marginLeft: 16, marginBottom: 6, fontSize: 12, fontWeight: "600", color: "#666" }}>
+            {t("common:softwareVersion", { defaultValue: "softwareVersion" })} 3
+          </Text>
+
+          <Divider style={{ marginHorizontal: 16, marginBottom: 4 }} />
+
+          <DrawerItem
+            label={t("common:settings", { defaultValue: "Ajustes" })}
+            icon={() => (
+              <IonIcon
+                name="settings-outline"
+                color={focused ? activeTint : inactiveTint}
+              />
+            )}
+            labelStyle={{ color: focused ? activeTint : inactiveTint }}
+            style={[
+              { marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 },
+              focused && { backgroundColor: activeBg },
+            ]}
+            onPress={() => go("Settings")}
+          />
+        </View>
+      </DrawerContentScrollView>
+    );
+  }
+
+
+  //  Vista MAIN: drawer normal
   return (
     <DrawerContentScrollView
       {...props}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 12 }}
     >
-      <DrawerItemList {...props} />
+      {/* Inicio (Tabs) */}
+      <DrawerItem
+        label={t("common:Tabs", { defaultValue: "Inicio" })}
+        icon={() => <IonIcon name="home-outline" color={gray} />}
+        labelStyle={{ color: gray, fontWeight: "700" }}
+        style={{ marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 }}
+        onPress={() => go("Tabs")}
+      />
+      <Divider style={{ marginHorizontal: 16, marginVertical: 6, height: 1, backgroundColor: "#E5E7EB" }} />
 
-      <View style={{ marginTop: 'auto' }}>
-        <Text
-          style={{
-            marginLeft: 16,
-            marginBottom: 6,
-            fontSize: 12,
-            fontWeight: '600',
-            color: '#666',
-          }}
-        >
-          {t('common:softwareVersion', { defaultValue: 'softwareVersion' })} 3
+
+      {/*  Cerrar sesión */}
+      <DrawerItem
+        label="Cerrar sesión"
+        icon={() => <IonIcon name="log-out-outline" color={inactiveTint} />}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => {
+          // dispara el mismo logout que ya tienes en Drawer.Screen Logout
+          // pero mejor hacerlo aquí directo:
+          props.navigation.closeDrawer();
+          // usa el logout del store:
+          // (IMPORTANTE: añade arriba const logout = useAuthStore((s)=>s.logout); en CustomDrawerContent)
+          logout();
+        }}
+      />
+
+      {/*  Alta dispositivos justo debajo */}
+      <DrawerItem
+        label={t("common:AltaDispositivos", { defaultValue: "Alta dispositivos" })}
+        icon={() => <IonIcon name="folder-outline" color={inactiveTint} />}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => setMenu("alta")}
+      />
+
+      <DrawerItem
+        label="Lector maternidad"
+        icon={() => <IonIcon name="barcode-outline" color={inactiveTint} />}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => go("LectorMaternidad")}
+      />
+
+      <DrawerItem
+        label="Lector gestación"
+        icon={() => <IonIcon name="barcode-outline" color={inactiveTint} />}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => go("LectorGestacion")}
+      />
+
+
+      {/* <DrawerItem
+        label="Dar de Alta AWR"
+        icon={() => <IonIcon name="search-outline" color={inactiveTint} />}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => go("AWR-STARTSCAN")}
+      />
+
+      <DrawerItem
+        label="Mantenimiento"
+        icon={() => <IonIcon name="build-outline" color={inactiveTint} />}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => go("MaintenanceAccess")}
+      /> */}
+      {/* 
+      <DrawerItem
+        label="AWR escaneados"
+        icon={() => <IonIcon name="radio-outline" color={inactiveTint} />}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => go("AWR-SAVED")}
+      /> */}
+
+      <DrawerItem
+        label="Buscar animal"
+        icon={() => <IonIcon name="search-outline" color={inactiveTint} />}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => go("AnimalSearch")}
+      />
+      <DrawerItem
+        label="Configuración IP"
+        icon={() => <IonIcon name="wifi-outline" color={inactiveTint} />}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => go("ConfigIP")}
+      />
+      <DrawerItem
+        label="AWR"
+        icon={() => (
+          <IonIcon
+            name={awrOpen ? "chevron-down-outline" : "chevron-forward-outline"}
+            color={inactiveTint}
+          />
+        )}
+        labelStyle={labelStyle(false)}
+        style={itemStyle(false)}
+        onPress={() => setAwrOpen((v) => !v)}
+      />
+      {awrOpen && (
+        <View style={{ marginLeft: 10, marginTop: 4 }}>
+          <DrawerItem
+            label="Dar de Alta AWR"
+            icon={() => <IonIcon name="search-outline" color={inactiveTint} />}
+            labelStyle={labelStyle(false)}
+            style={{ marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 }}
+            onPress={() => go("AWR-STARTSCAN")}
+          />
+
+          <DrawerItem
+            label="AWR escaneados"
+            icon={() => <IonIcon name="radio-outline" color={inactiveTint} />}
+            labelStyle={labelStyle(false)}
+            style={{ marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 }}
+            onPress={() => go("AWR-SAVED")}
+          />
+        </View>
+      )}
+      {/* Footer */}
+      <View style={{ marginTop: "auto" }}>
+        <Text style={{ marginLeft: 16, marginBottom: 6, fontSize: 12, fontWeight: "600", color: "#666" }}>
+          {t("common:softwareVersion", { defaultValue: "softwareVersion" })} 3
         </Text>
 
         <Divider style={{ marginHorizontal: 16, marginBottom: 4 }} />
 
         <DrawerItem
-          label={t('common:settings', { defaultValue: 'Ajustes' })}
+          label={t("common:settings", { defaultValue: "Ajustes" })}
           icon={() => (
             <IonIcon
               name="settings-outline"
@@ -246,11 +550,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
             { marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 },
             focused && { backgroundColor: activeBg },
           ]}
-          onPress={() => {
-            const nav = props.navigation;
-            nav.closeDrawer();
-            setTimeout(() => nav.navigate('Settings' as never), 120);
-          }}
+          onPress={() => go("Settings")}
         />
       </View>
     </DrawerContentScrollView>

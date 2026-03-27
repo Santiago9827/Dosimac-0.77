@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, useWindowDimensions } from 'react-native';
+import { View, Text, useWindowDimensions, Pressable } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
@@ -8,8 +8,11 @@ import { IonIcon } from '../components/shared/IonIcon';
 import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
 import { MaternityStackNavigator } from './Mat-StackNavigator';
 import { GestationStackNavigator } from './GestationStackNavigator';
-import { CTIFeedScreen } from '../screens/HomeScreen/CTIFeedScreen';
+import { PortalScreen } from '../screens/HomeScreen/PortalScreen';
 import { globalColors } from '../theme/theme';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { DrawerActions } from "@react-navigation/native";
+
 
 const Tab = createBottomTabNavigator();
 
@@ -69,10 +72,7 @@ export const BottomTabNavigator = () => {
     <Tab.Navigator
       sceneContainerStyle={{ backgroundColor: globalColors.background }}
       screenOptions={({ route }) => {
-        // meta por ruta (icono + label)
-        const META: Record<
-          string,
-          { icon: string; label: string }
+        const META: Record<string, { icon: string; label: string }
         > = {
           Tab1: { icon: 'home-outline', label: 'Inicio' },
           MaternidadTab: { icon: 'female-outline', label: 'Maternidad' },
@@ -119,12 +119,12 @@ export const BottomTabNavigator = () => {
         };
       }}
     >
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Tab1"
         component={HomeScreen}
         options={{ title: 'Inicio' }}
-      />
-
+      /> */}
+      {/* 
       <Tab.Screen
         name="MaternidadTab"
         component={MaternityStackNavigator}
@@ -145,12 +145,32 @@ export const BottomTabNavigator = () => {
             headerShown: false,
           };
         }}
-      />
+      /> */}
 
       <Tab.Screen
         name="Tab4"
-        component={CTIFeedScreen}
-        options={{ title: 'CTIFEED' }}
+        component={PortalScreen}
+        options={({ navigation }) => ({
+          title: "CTIFEED",
+
+          // ✅ Botón hamburguesa en el header (NO dentro del WebView)
+          headerLeft: () => (
+            <Pressable
+              onPress={() =>
+                // Si tu Drawer tiene id="RootDrawer", mejor así:
+                navigation.getParent("RootDrawer")?.dispatch(DrawerActions.toggleDrawer())
+                // Si no tienes id, usa esto:
+                // navigation.getParent()?.dispatch(DrawerActions.toggleDrawer())
+              }
+              style={{ marginLeft: 14, padding: 6 }}
+            >
+              <Ionicons name="menu-outline" size={28} color={globalColors.primary} />
+            </Pressable>
+          ),
+
+          // (opcional) si quieres separar un poco el título
+          headerTitleStyle: { fontWeight: "700" },
+        })}
       />
     </Tab.Navigator>
   );

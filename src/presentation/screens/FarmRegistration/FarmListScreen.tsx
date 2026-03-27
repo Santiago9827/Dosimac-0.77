@@ -14,6 +14,7 @@ import { GetFarmsList, InicialiceFarmDataTable } from '../../../FarmDB/farmsDB';
 import { farmStore } from '../../../stores/store';
 import { vglobal } from '../../../sharedTypes/globlaVars';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useAuthStore } from '../../../stores/authStore';
 
 
 
@@ -53,6 +54,21 @@ export const FarmListScreen = ({ navigation, route }) => {
   const UseSetFarmsAmount = farmStore((state) => state.UseSetFarmsAmount);
   const farmsAmount = farmStore((state) => state.farmsAmount);
 
+  const token = useAuthStore((s) => s.token);
+
+  const goToHome = () => {
+    const parent = navigation.getParent?.();
+
+    if (token) {
+      // ✅ sesión iniciada -> drawer privado
+      if (parent?.navigate) parent.navigate('Tabs');
+      else navigation.navigate('Tabs');
+    } else {
+      // ✅ sin sesión -> drawer público
+      if (parent?.navigate) parent.navigate('PublicHome');
+      else navigation.navigate('PublicHome');
+    }
+  };
 
 
 
@@ -233,7 +249,7 @@ export const FarmListScreen = ({ navigation, route }) => {
 
       <Appbar.Header elevated>
 
-        <Appbar.BackAction onPress={navigation.goBack} />
+        <Appbar.BackAction onPress={goToHome} />
         <Appbar.Content title={t('common:Lista_instalaciones')} />
         <Appbar.Action icon="add" onPress={() => { navigation.navigate("Farm detalils", { id: 0, isNewFarm: true, SetectedValue: 0 }) }} />
         {/* <Appbar.Action icon="add" onPress={() => {UseSetFirstElement(!setFirstElment)}} /> */}

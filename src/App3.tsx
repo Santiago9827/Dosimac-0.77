@@ -10,12 +10,13 @@ import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 
-import { SideMenuNavigator } from './presentation/routes/SideMenuNavigator';
+// import { SideMenuNavigator } from './presentation/routes/SideMenuNavigator';
 
 // import { InicialiceFarmDataTable } from './FarmDB/farmsDB';
 import { InicializeProgram } from './sharedTypes/globlaVars';
 import { RequestBluetoothPermissions } from './libraries/permissions/permissions';
 import i18n from './localization/i18n';
+import { RootNavigator } from './presentation/routes/RootNavigator';
 
 const theme = {
    ...MD3LightTheme,
@@ -70,7 +71,7 @@ export const App3 = () => {
             >
                <SafeAreaView style={{ flex: 1 }}>
                   <InicializeProgram />
-                  <SideMenuNavigator />
+                  <RootNavigator />
                </SafeAreaView>
             </PaperProvider>
          </NavigationContainer>
