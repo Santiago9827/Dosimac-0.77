@@ -5,6 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Appbar, Switch } from "react-native-paper";
+import Feather from '@expo/vector-icons/Feather';
 
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
@@ -156,6 +157,129 @@ const SwitchRowReadonly = ({
     </View>
 );
 
+const MiniResumenCard = ({
+    icon,
+    titulo,
+    valor,
+}: {
+    icon: any;
+    titulo: string;
+    valor: string;
+}) => (
+    <View
+        style={{
+            flex: 1,
+            backgroundColor: "#F8FAFF",
+            borderWidth: 1,
+            borderColor: "#E0E7FF",
+            borderRadius: 14,
+            padding: 12,
+            gap: 8,
+        }}
+    >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Ionicons name={icon} size={16} color={BRAND} />
+            <Text style={{ color: MUTED, fontWeight: "800", fontSize: 12 }}>
+                {titulo}
+            </Text>
+        </View>
+
+        <Text
+            style={{
+                color: TEXT,
+                fontWeight: "900",
+                fontSize: 16,
+            }}
+            numberOfLines={1}
+        >
+            {valor}
+        </Text>
+    </View>
+);
+
+const CajaDatoLectura = ({
+    icon,
+    usarFeather = false,
+    titulo,
+    valor,
+    fondo,
+    borde,
+    colorTitulo,
+    colorValor,
+    textoSecundario,
+}: {
+    icon?: string;
+    usarFeather?: boolean;
+    titulo: string;
+    valor: string;
+    fondo: string;
+    borde: string;
+    colorTitulo: string;
+    colorValor: string;
+    textoSecundario?: string;
+}) => (
+    <View
+        style={{
+            borderRadius: 18,
+            borderWidth: 1,
+            borderColor: borde,
+            backgroundColor: fondo,
+            paddingVertical: 18,
+            paddingHorizontal: 16,
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: 130,
+        }}
+    >
+        <View
+            style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 10,
+            }}
+        >
+            {icon ? (
+                usarFeather ? (
+                    <Feather name={icon as any} size={16} color={colorTitulo} />
+                ) : (
+                    <Ionicons name={icon as any} size={18} color={colorTitulo} />
+                )
+            ) : null}
+
+            <Text style={{ color: colorTitulo, fontWeight: "800", fontSize: 16 }}>
+                {titulo}
+            </Text>
+        </View>
+
+        <Text
+            style={{
+                color: colorValor,
+                fontSize: 30,
+                fontWeight: "900",
+                letterSpacing: 1,
+            }}
+            numberOfLines={1}
+            ellipsizeMode="middle"
+        >
+            {valor}
+        </Text>
+
+        {!!textoSecundario && (
+            <Text
+                style={{
+                    marginTop: 8,
+                    color: colorTitulo,
+                    fontSize: 13,
+                    fontWeight: "700",
+                    textAlign: "center",
+                }}
+            >
+                {textoSecundario}
+            </Text>
+        )}
+    </View>
+);
 // ---------- componente ----------
 export const LectorGestacionScreen = () => {
     const navigation = useNavigation<any>();
@@ -602,22 +726,27 @@ export const LectorGestacionScreen = () => {
                         </View>
 
                         <View style={{ padding: 14, gap: 12 }}>
-                            <InfoRow
-                                icon="swap-horizontal-outline"
-                                label="Modo"
-                                value={
-                                    tipoMovimiento === "entrada"
-                                        ? "Entrada"
-                                        : tipoMovimiento === "salida"
-                                            ? "Salida"
-                                            : "Lectura"
-                                } />
+                            <View style={{ flexDirection: "row", gap: 10 }}>
+                                <MiniResumenCard
+                                    icon="swap-horizontal-outline"
+                                    titulo="Modo"
+                                    valor={
+                                        tipoMovimiento === "entrada"
+                                            ? "Entrada"
+                                            : tipoMovimiento === "salida"
+                                                ? "Salida"
+                                                : tipoMovimiento === "lectura"
+                                                    ? "Lectura"
+                                                    : "Búsqueda"
+                                    }
+                                />
 
-                            <InfoRow
-                                icon="home-outline"
-                                label="Corral"
-                                value={corralInput || "—"}
-                            />
+                                <MiniResumenCard
+                                    icon="home-outline"
+                                    titulo="Corral"
+                                    valor={corralInput || "—"}
+                                />
+                            </View>
 
                             <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
 
@@ -678,11 +807,11 @@ export const LectorGestacionScreen = () => {
                             }}
                         >
                             <View style={{ flex: 1 }}>
-                                <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                                    Crotal leído
+                                <Text style={{ color: TEXT, fontSize: 19, fontWeight: "900" }}>
+                                    Lectura actual
                                 </Text>
                                 <Text style={{ color: MUTED, marginTop: 4 }}>
-                                    Cuando el lector detecte el crotal, se mostrará aquí.
+                                    El crotal detectado y el ID asociado aparecerán aquí.
                                 </Text>
                             </View>
 
@@ -707,84 +836,34 @@ export const LectorGestacionScreen = () => {
                                 </View>
                             )}
                         </View>
-
                         <View style={{ padding: 14, gap: 12 }}>
-                            <View
-                                style={{
-                                    borderRadius: 16,
-                                    borderWidth: 1,
-                                    borderColor: BORDER,
-                                    backgroundColor: "#F1F5F9",
-                                    paddingVertical: 18,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Text style={{ color: MUTED, fontWeight: "800" }}>
-                                    Crotal leído
-                                </Text>
+                            <CajaDatoLectura
+                                icon="barcode-outline"
+                                titulo="Crotal leído"
+                                valor={crotalLeido ? String(crotalLeido) : "—"}
+                                fondo="#F8FAFF"
+                                borde="#E2E8F0"
+                                colorTitulo="#64748B"
+                                colorValor={TEXT}
+                            />
 
-                                <Text
-                                    style={{
-                                        marginTop: 8,
-                                        color: TEXT,
-                                        fontSize: 30,
-                                        fontWeight: "900",
-                                        letterSpacing: 1,
-                                    }}
-                                >
-                                    {crotalLeido ? String(crotalLeido) : "—"}
-                                </Text>
-                            </View>
-
-                            <View
-                                style={{
-                                    borderRadius: 16,
-                                    borderWidth: 1,
-                                    borderColor: estilosCajaId.borderColor,
-                                    backgroundColor: estilosCajaId.backgroundColor,
-                                    paddingVertical: 18,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <View
-                                    style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 6,
-                                    }}
-                                >
-                                    <Text style={{ color: estilosCajaId.colorSubtexto, fontWeight: "800" }}>
-                                        ID
-                                    </Text>
-                                </View>
-
-                                <Text
-                                    style={{
-                                        marginTop: 8,
-                                        color: estilosCajaId.colorTexto,
-                                        fontSize: 30,
-                                        fontWeight: "900",
-                                        letterSpacing: 1,
-                                    }}
-                                >
-                                    {idRecibido ? String(idRecibido) : "—"}
-                                </Text>
-
-                                {estadoIdVisual === "error" && (
-                                    <Text
-                                        style={{
-                                            marginTop: 8,
-                                            color: DANGER,
-                                            fontSize: 13,
-                                            fontWeight: "800",
-                                        }}
-                                    >
-                                        Animal desconocido
-                                    </Text>
-                                )}
-                            </View>
+                            <CajaDatoLectura
+                                icon={
+                                    estadoIdVisual === "success"
+                                        ? "checkmark-circle-outline"
+                                        : estadoIdVisual === "error"
+                                            ? "alert-circle-outline"
+                                            : "hash"
+                                }
+                                usarFeather={estadoIdVisual === "neutro"}
+                                titulo="ID"
+                                valor={idRecibido ? String(idRecibido) : "—"}
+                                fondo={estilosCajaId.backgroundColor}
+                                borde={estilosCajaId.borderColor}
+                                colorTitulo={estilosCajaId.colorSubtexto}
+                                colorValor={estilosCajaId.colorTexto}
+                                textoSecundario={estadoIdVisual === "error" ? "Animal desconocido" : undefined}
+                            />
                         </View>
                     </View>
                 )}
