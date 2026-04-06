@@ -226,19 +226,19 @@ export const PrivateDrawerNavigator = () => {
         component={AWRStackNavigator}
         options={{
           title: 'AWR escaneados',
-          drawerItemStyle: { height: 0 },  // ✅ oculto
-          drawerLabel: () => null,         // ✅ oculto
+          drawerItemStyle: { height: 0 },
+          drawerLabel: () => null,
         }}
       />
 
-      <Drawer.Screen
+      {/* <Drawer.Screen
         name="AnimalSearch"
         component={AnimalSearchNavigator}
         options={{
           drawerIcon: ({ color }) => <IonIcon name="search-outline" color={color} />,
           title: 'Buscar animal',
         }}
-      />
+      /> */}
       <Drawer.Screen
         name="ConfigIP"
         component={ConfiguracionIPScreen}
@@ -496,13 +496,13 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         onPress={() => go("AWR-SAVED")}
       /> */}
 
-      <DrawerItem
+      {/* <DrawerItem
         label="Buscar animal"
         icon={() => <IonIcon name="search-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}
         onPress={() => go("AnimalSearch")}
-      />
+      /> */}
       <DrawerItem
         label="Configuración IP"
         icon={() => <IonIcon name="wifi-outline" color={inactiveTint} />}

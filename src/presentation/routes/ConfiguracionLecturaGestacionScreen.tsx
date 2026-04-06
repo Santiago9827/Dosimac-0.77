@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useMemo, useState } from "react";
-import { View } from "react-native";
+import { View, Alert } from "react-native";
 import {
     Appbar,
     Button,
@@ -14,8 +14,10 @@ import { useNavigation } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 type Modo = "entrada" | "salida" | "lectura" | "busqueda";
+const ENDPOINT_BUSQUEDA_ANIMAL =
+    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/busquedaAnimal";
 
-const BRAND = "#0F766E";        // verde azulado (similar al de tu botón)
+const BRAND = "#0F766E";
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
 const BORDER = "#E5E7EB";
@@ -83,13 +85,69 @@ export const ConfiguracionGestacionScreen = () => {
     const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
     const [confirmar, setConfirmar] = useState(true);
 
+    const [valorBusqueda, setValorBusqueda] = useState("");
+    const [buscandoAnimal, setBuscandoAnimal] = useState(false);
+
     const requiereCorral = modo === "entrada";
+    const requiereBusqueda = modo === "busqueda";
+
     const puedeContinuar = useMemo(() => {
         if (requiereCorral) return corral.trim().length > 0;
+        if (requiereBusqueda) return valorBusqueda.trim().length > 0;
         return true;
-    }, [requiereCorral, corral]);
+    }, [requiereCorral, requiereBusqueda, corral, valorBusqueda]);
 
-    const onContinuar = () => {
+    const onContinuar = async () => {
+        if (modo === "busqueda") {
+            const valor = valorBusqueda.trim();
+
+            if (!valor) {
+                Alert.alert("Falta dato", "Escribe un ID o un crotal para buscar.");
+                return;
+            }
+
+            try {
+                setBuscandoAnimal(true);
+
+                const r = await buscarAnimalEnBackend(valor);
+
+                if (!r.ok) {
+                    if (r.status === 404) {
+                        Alert.alert("No encontrado", "No existe ningún animal con ese ID o crotal.");
+                        return;
+                    }
+
+                    const detalle =
+                        (r.data && (r.data.message || r.data.error)) ||
+                        r.rawText ||
+                        `HTTP ${r.status}`;
+
+                    Alert.alert("Error en la búsqueda", String(detalle));
+                    return;
+                }
+
+                const animalEncontrado = r.data ?? null;
+
+                if (!animalEncontrado) {
+                    Alert.alert("No encontrado", "No existe ningún animal con ese ID o crotal.");
+                    return;
+                }
+
+                navigation.navigate("LectorGestacion", {
+                    modo,
+                    valorBusqueda: valor,
+                    animalEncontrado,
+                });
+
+                return;
+            } catch {
+                Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+                return;
+            } finally {
+                setBuscandoAnimal(false);
+            }
+        }
+
         navigation.navigate("LectorGestacion", {
             modo,
             corral: corral.trim(),
@@ -97,6 +155,33 @@ export const ConfiguracionGestacionScreen = () => {
             confirmar,
         });
     };
+    async function buscarAnimalEnBackend(valor: string) {
+        const res = await fetch(ENDPOINT_BUSQUEDA_ANIMAL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ valor }),
+        });
+
+        let data: any = null;
+        let rawText = "";
+
+        try {
+            rawText = await res.text();
+
+            if (rawText) {
+                try {
+                    data = JSON.parse(rawText);
+                } catch {
+                    data = rawText;
+                }
+            }
+        } catch {
+            rawText = "";
+            data = null;
+        }
+
+        return { ok: res.ok, status: res.status, data, rawText };
+    }
 
     return (
         <View style={{ flex: 1, backgroundColor: BG }}>
@@ -225,12 +310,48 @@ export const ConfiguracionGestacionScreen = () => {
                         </Card.Content>
                     </Card>
                 )}
+                {modo === "busqueda" && (
+                    <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
+                        <Card.Content>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                <Ionicons name="search-outline" size={18} color={BRAND} />
+                                <Text style={{ fontSize: 16, fontWeight: "900", color: TEXT }}>
+                                    Búsqueda de animal
+                                </Text>
+                            </View>
+
+                            <Text style={{ marginTop: 6, color: MUTED }}>
+                                Escribe un ID o un crotal para buscar el animal.
+                            </Text>
+
+                            <View style={{ height: 12 }} />
+
+                            <TextInput
+                                mode="outlined"
+                                label="ID o crotal"
+                                value={valorBusqueda}
+                                onChangeText={setValorBusqueda}
+                                placeholder="Ej: 99 o 982091072397436"
+                                keyboardType="number-pad"
+                                // left={<TextInput.Icon icon="magnify" />}
+                                outlineColor={BORDER}
+                                activeOutlineColor={BRAND}
+                            />
+
+                            {valorBusqueda.trim().length === 0 && (
+                                <Text style={{ color: "#DC2626", fontWeight: "700", marginTop: 8 }}>
+                                    Escribe un ID o un crotal para continuar.
+                                </Text>
+                            )}
+                        </Card.Content>
+                    </Card>
+                )}
                 {/* CTA abajo */}
                 <View style={{ marginTop: "auto" }}>
                     <Button
                         mode="contained"
                         onPress={onContinuar}
-                        disabled={!puedeContinuar}
+                        disabled={!puedeContinuar || buscandoAnimal}
                         style={{
                             borderRadius: 16,
                             paddingVertical: 6,
