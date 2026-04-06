@@ -18,8 +18,14 @@ const SOFT_BORDER = "#C7D2FE";
 const DANGER = "#DC2626";
 const SUCCESS = "#16A34A";
 
-const ENDPOINT_GESTATION =
+// const ENDPOINT_GESTATION =
+//     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation";
+
+const ENDPOINT_GESTATION_ENTRADA =
     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation";
+
+const ENDPOINT_GESTATION_SALIDA =
+    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation/exit";
 
 const SHADOW = {
     shadowColor: "#000",
@@ -50,8 +56,11 @@ const parseNumeroSeguro = (txt: string) => {
 
 
 
-async function postGestation(payload: { corral?: number; crotal: number }) {
-    const res = await fetch(ENDPOINT_GESTATION, {
+async function postGestation(
+    endpoint: string,
+    payload: { corral?: number; crotal: number }
+) {
+    const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -481,27 +490,31 @@ export const LectorGestacionScreen = () => {
                 ? { corral: corralNum as number, crotal: crotalNum }
                 : { crotal: crotalNum };
 
-            const r = await postGestation(payload);
+            const endpointActual = esSalida
+                ? ENDPOINT_GESTATION_SALIDA
+                : ENDPOINT_GESTATION_ENTRADA;
 
-            if (!r.ok) {
-                if (r.status === 400) {
+            const respuesta = await postGestation(endpointActual, payload);
+
+            if (!respuesta.ok) {
+                if (respuesta.status === 400) {
                     Alert.alert("No válido", "El corral y/o el crotal que has enviado no existe.");
                     return;
                 }
 
                 const detalle =
-                    (r.data && (r.data.message || r.data.error)) || r.rawText || `HTTP ${r.status}`;
+                    (respuesta.data && (respuesta.data.message || respuesta.data.error)) || respuesta.rawText || `HTTP ${respuesta.status}`;
 
                 Alert.alert("Error al enviar", String(detalle));
                 return;
             }
 
             const idBackendRaw =
-                r.data?.id ??
-                r.data?.animalId ??
-                r.data?.idAnimal ??
-                r.data?.identificador ??
-                (r.rawText ? r.rawText.replace(/^id\s*/i, "").trim() : null);
+                respuesta.data?.id ??
+                respuesta.data?.animalId ??
+                respuesta.data?.idAnimal ??
+                respuesta.data?.identificador ??
+                (respuesta.rawText ? respuesta.rawText.replace(/^id\s*/i, "").trim() : null);
 
             const idBackendTexto =
                 idBackendRaw !== null &&
@@ -1010,6 +1023,42 @@ export const LectorGestacionScreen = () => {
                                     ID
                                 </Text>
                             </View>
+                        ) : esSalida ? (
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 14,
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: BORDER,
+                                    backgroundColor: "#FFFFFF",
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        width: 72,
+                                        color: MUTED,
+                                        fontWeight: "900",
+                                        textAlign: "center",
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    ID
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        flex: 1,
+                                        color: MUTED,
+                                        fontWeight: "900",
+                                        textAlign: "right",
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    Crotal
+                                </Text>
+                            </View>
                         ) : (
                             <View
                                 style={{
@@ -1102,6 +1151,45 @@ export const LectorGestacionScreen = () => {
                                             numberOfLines={1}
                                         >
                                             {r.idBackend}
+                                        </Text>
+                                    </View>
+                                ) : esSalida ? (
+                                    <View
+                                        key={r.localId}
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 14,
+                                            borderTopWidth: 1,
+                                            borderTopColor: "#F1F5F9",
+                                            backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: 72,
+                                                color: r.idBackend === "—" ? DANGER : TEXT,
+                                                fontWeight: "700",
+                                                textAlign: "center",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {r.idBackend}
+                                        </Text>
+
+                                        <Text
+                                            style={{
+                                                flex: 1,
+                                                color: TEXT,
+                                                fontWeight: "700",
+                                                textAlign: "right",
+                                                fontSize: 15,
+                                            }}
+                                            numberOfLines={1}
+                                            ellipsizeMode="middle"
+                                        >
+                                            {r.crotal}
                                         </Text>
                                     </View>
                                 ) : (
