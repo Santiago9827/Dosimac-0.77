@@ -291,6 +291,14 @@ const CajaDatoLectura = ({
 );
 // ---------- componente ----------
 export const LectorGestacionScreen = () => {
+
+    const ANCHO_CORRAL = 60;
+    const ANCHO_ID = 56;
+    const ANCHO_CROTAL_SALIDA = 150;
+
+    const ESPACIO_CORRAL_ID_ENTRADA = 30;
+    const ESPACIO_ID_CROTAL_ENTRADA = 70;
+
     const navigation = useNavigation<any>();
 
     // AWR store
@@ -988,6 +996,7 @@ export const LectorGestacionScreen = () => {
                                 </View>
                             )}
                         </View>
+
                         {esLectura ? (
                             <View
                                 style={{
@@ -1013,7 +1022,7 @@ export const LectorGestacionScreen = () => {
 
                                 <Text
                                     style={{
-                                        width: 72,
+                                        width: ANCHO_ID,
                                         color: MUTED,
                                         fontWeight: "900",
                                         textAlign: "center",
@@ -1037,7 +1046,7 @@ export const LectorGestacionScreen = () => {
                             >
                                 <Text
                                     style={{
-                                        width: 72,
+                                        width: ANCHO_ID,
                                         color: MUTED,
                                         fontWeight: "900",
                                         textAlign: "center",
@@ -1047,17 +1056,19 @@ export const LectorGestacionScreen = () => {
                                     ID
                                 </Text>
 
-                                <Text
-                                    style={{
-                                        flex: 1,
-                                        color: MUTED,
-                                        fontWeight: "900",
-                                        textAlign: "right",
-                                    }}
-                                    numberOfLines={1}
-                                >
-                                    Crotal
-                                </Text>
+                                <View style={{ flex: 1, alignItems: "flex-end" }}>
+                                    <Text
+                                        style={{
+                                            width: ANCHO_CROTAL_SALIDA,
+                                            color: MUTED,
+                                            fontWeight: "900",
+                                            textAlign: "left",
+                                        }}
+                                        numberOfLines={1}
+                                    >
+                                        Crotal
+                                    </Text>
+                                </View>
                             </View>
                         ) : (
                             <View
@@ -1073,7 +1084,7 @@ export const LectorGestacionScreen = () => {
                             >
                                 <Text
                                     style={{
-                                        width: 68,
+                                        width: ANCHO_CORRAL,
                                         color: MUTED,
                                         fontWeight: "900",
                                     }}
@@ -1082,39 +1093,43 @@ export const LectorGestacionScreen = () => {
                                     Corral
                                 </Text>
 
+                                <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
+
                                 <Text
                                     style={{
-                                        width: 52,
+                                        width: ANCHO_ID,
                                         color: MUTED,
                                         fontWeight: "900",
                                         textAlign: "center",
-                                        transform: [{ translateX: 26 }],
                                     }}
                                     numberOfLines={1}
                                 >
                                     ID
                                 </Text>
 
-                                <Text
-                                    style={{
-                                        flex: 1,
-                                        color: MUTED,
-                                        fontWeight: "900",
-                                        textAlign: "right",
-                                        paddingRight: 26,
-                                    }}
-                                    numberOfLines={1}
-                                >
-                                    Crotal
-                                </Text>
+                                <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                    <Text
+                                        style={{
+                                            color: MUTED,
+                                            fontWeight: "900",
+                                            textAlign: "left",
+                                        }}
+                                        numberOfLines={1}
+                                    >
+                                        Crotal
+                                    </Text>
+                                </View>
                             </View>
                         )}
+
                         {registrosEnviados.length === 0 ? (
                             <View style={{ padding: 14 }}>
                                 <Text style={{ color: MUTED }}>Aún no has enviado ningún registro.</Text>
                             </View>
                         ) : (
-                            itemsPagina.map((r, idx) => (
+                            itemsPagina.map((r, idx) =>
                                 esLectura ? (
                                     <View
                                         key={r.localId}
@@ -1143,7 +1158,7 @@ export const LectorGestacionScreen = () => {
 
                                         <Text
                                             style={{
-                                                width: 72,
+                                                width: ANCHO_ID,
                                                 color: r.idBackend === "—" ? DANGER : TEXT,
                                                 fontWeight: "700",
                                                 textAlign: "center",
@@ -1168,7 +1183,7 @@ export const LectorGestacionScreen = () => {
                                     >
                                         <Text
                                             style={{
-                                                width: 72,
+                                                width: ANCHO_ID,
                                                 color: r.idBackend === "—" ? DANGER : TEXT,
                                                 fontWeight: "700",
                                                 textAlign: "center",
@@ -1178,26 +1193,28 @@ export const LectorGestacionScreen = () => {
                                             {r.idBackend}
                                         </Text>
 
-                                        <Text
-                                            style={{
-                                                flex: 1,
-                                                color: TEXT,
-                                                fontWeight: "700",
-                                                textAlign: "right",
-                                                fontSize: 15,
-                                            }}
-                                            numberOfLines={1}
-                                            ellipsizeMode="middle"
-                                        >
-                                            {r.crotal}
-                                        </Text>
+                                        <View style={{ flex: 1, alignItems: "flex-end" }}>
+                                            <Text
+                                                style={{
+                                                    width: ANCHO_CROTAL_SALIDA,
+                                                    color: TEXT,
+                                                    fontWeight: "700",
+                                                    textAlign: "left",
+                                                    fontSize: 15,
+                                                }}
+                                                numberOfLines={1}
+                                                ellipsizeMode="middle"
+                                            >
+                                                {r.crotal}
+                                            </Text>
+                                        </View>
                                     </View>
                                 ) : (
                                     <View
                                         key={r.localId}
                                         style={{
                                             flexDirection: "row",
-                                            alignItems: "center",
+                                            alignItems: "flex-start",
                                             paddingVertical: 12,
                                             paddingHorizontal: 14,
                                             borderTopWidth: 1,
@@ -1207,7 +1224,7 @@ export const LectorGestacionScreen = () => {
                                     >
                                         <Text
                                             style={{
-                                                width: 68,
+                                                width: ANCHO_CORRAL,
                                                 color: TEXT,
                                                 fontWeight: "700",
                                             }}
@@ -1216,35 +1233,38 @@ export const LectorGestacionScreen = () => {
                                             {r.corral}
                                         </Text>
 
+                                        <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
+
                                         <Text
                                             style={{
-                                                width: 52,
+                                                width: ANCHO_ID,
                                                 color: r.idBackend === "—" ? DANGER : TEXT,
                                                 fontWeight: "700",
                                                 textAlign: "center",
-                                                transform: [{ translateX: 26 }],
                                             }}
                                             numberOfLines={1}
                                         >
                                             {r.idBackend}
                                         </Text>
 
-                                        <Text
-                                            style={{
-                                                flex: 1,
-                                                color: TEXT,
-                                                fontWeight: "700",
-                                                textAlign: "right",
-                                                fontSize: 15,
-                                            }}
-                                            numberOfLines={1}
-                                            ellipsizeMode="middle"
-                                        >
-                                            {r.crotal}
-                                        </Text>
+                                        <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                        <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                            <Text
+                                                style={{
+                                                    color: TEXT,
+                                                    fontWeight: "700",
+                                                    textAlign: "left",
+                                                    fontSize: 14,
+                                                    flexShrink: 1,
+                                                }}
+                                            >
+                                                {r.crotal}
+                                            </Text>
+                                        </View>
                                     </View>
                                 )
-                            ))
+                            )
                         )}
                     </View>
                 )}
