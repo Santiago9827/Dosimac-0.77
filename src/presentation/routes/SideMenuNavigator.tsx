@@ -448,7 +448,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
       {/*  Alta dispositivos justo debajo */}
       <DrawerItem
-        label={t("common:AltaDispositivos", { defaultValue: "Alta dispositivos" })}
+        label={t("common:AltaDispositivos", { defaultValue: "Alta Dispositivos" })}
         icon={() => <IonIcon name="folder-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}
@@ -456,7 +456,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       />
 
       <DrawerItem
-        label="Lector maternidad"
+        label="Lector Maternidad"
         icon={() => <IonIcon name="barcode-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}
@@ -464,7 +464,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       />
 
       <DrawerItem
-        label="Lector gestación"
+        label="Lector Gestación"
         icon={() => <IonIcon name="barcode-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}

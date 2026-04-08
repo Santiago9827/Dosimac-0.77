@@ -25,8 +25,9 @@ const SOFT = "#EEF2FF";
 const SOFT_BORDER = "#C7D2FE";
 const DANGER = "#DC2626";
 
-const ENDPOINT_MATERNITY =
-    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity";
+const ENDPOINT_MATERNITY_ENTRADA = "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity";
+
+const ENDPOINT_MATERNITY_SALIDA = "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity/exit"
 
 const SHADOW = {
     shadowColor: "#000",
@@ -73,8 +74,11 @@ function incrementarCorral(valor: string) {
     return v;
 }
 
-async function postMaternity(payload: { corral: number; crotal: number }) {
-    const res = await fetch(ENDPOINT_MATERNITY, {
+async function postMaternity(
+    endpoint: string,
+    payload: { corral?: number; crotal: number }
+) {
+    const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -100,21 +104,22 @@ async function postMaternity(payload: { corral: number; crotal: number }) {
 
     return { ok: res.ok, status: res.status, data, rawText };
 }
-
 function upsertRegistroPorCrotal(
     prev: RegistroEnviado[],
-    corralNum: number,
+    corralNum: number | null,
     crotalNum: number,
     idBackend: string
 ) {
     const key = normalizarClave(String(crotalNum));
     const idx = prev.findIndex((x) => normalizarClave(x.crotal) === key);
 
+    const corralTexto = corralNum !== null ? String(corralNum) : "—";
+
     if (idx >= 0) {
         const copia = [...prev];
         const actualizado: RegistroEnviado = {
             ...copia[idx],
-            corral: String(corralNum),
+            corral: corralTexto,
             crotal: String(crotalNum),
             idBackend: idBackend || "—",
         };
@@ -125,7 +130,7 @@ function upsertRegistroPorCrotal(
     return [
         {
             localId: String(Date.now()),
-            corral: String(corralNum),
+            corral: corralTexto,
             idBackend: idBackend || "—",
             crotal: String(crotalNum),
         },
@@ -273,6 +278,34 @@ const CajaDatoLectura = ({
 );
 // ---------- componente ----------
 export const LectorMaternidadScreen = () => {
+
+    const ANCHO_CORRAL = 60;
+    const ANCHO_ID = 56;
+    const ANCHO_CROTAL_SALIDA = 150;
+
+    const ESPACIO_CORRAL_ID_ENTRADA = 30;
+    const ESPACIO_ID_CROTAL_ENTRADA = 70;
+
+    const ESPACIO_ID_CROTAL_SALIDA = 24;
+    const COLOR_LINEA_COLUMNA = "#E2E8F0";
+    const PADDING_TABLA_X = 14;
+
+    const LineaVerticalTabla = ({ left }: { left: number }) => (
+        <View
+            pointerEvents="none"
+            style={{
+                position: "absolute",
+                left,
+                top: 0,
+                bottom: 0,
+                width: 1,
+                backgroundColor: COLOR_LINEA_COLUMNA,
+                zIndex: 1,
+            }}
+        />
+    );
+
+
     const navigation = useNavigation<any>();
 
     const lectorConectado = useAwrConn((s) => s.isConnected);
@@ -285,6 +318,7 @@ export const LectorMaternidadScreen = () => {
     const [estadoIdVisual, setEstadoIdVisual] = useState<"neutro" | "success" | "error">("neutro");
     const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+
     const [corralInput, setCorralInput] = useState("");
     const [tipoMovimiento, setTipoMovimiento] = useState<TipoMovimiento>("entrada");
 
@@ -293,6 +327,9 @@ export const LectorMaternidadScreen = () => {
 
     const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
     const [confirmar, setConfirmar] = useState(true);
+
+    const esEntrada = tipoMovimiento === "entrada";
+    const esSalida = tipoMovimiento === "salida";
 
     const route = useRoute<RouteProp<Record<string, LectorMaternidadParams>, string>>();
     const params = route.params ?? {};
@@ -339,7 +376,11 @@ export const LectorMaternidadScreen = () => {
                 params.modo === "salida" ? "salida" : "entrada";
 
             setTipoMovimiento(modoInicial);
-            setCorralInput(params.corral ? soloDigitos(String(params.corral)) : "");
+            setCorralInput(
+                modoInicial === "entrada" && params.corral
+                    ? soloDigitos(String(params.corral))
+                    : ""
+            );
             setDetectarDesconocidos(params.detectarDesconocidos ?? true);
             setConfirmar(params.confirmar ?? true);
 
@@ -375,10 +416,12 @@ export const LectorMaternidadScreen = () => {
     };
 
     const onEnviar = async () => {
+        const requiereCorral = esEntrada;
+
         const corralTxt = corralInput.trim();
         const crotalTxt = (crotalLeido ?? "").trim();
 
-        if (!corralTxt) {
+        if (requiereCorral && !corralTxt) {
             Alert.alert("Falta corral", "Escribe el corral antes de enviar.");
             return;
         }
@@ -388,10 +431,10 @@ export const LectorMaternidadScreen = () => {
             return;
         }
 
-        const corralNum = parseNumeroSeguro(corralTxt);
+        const corralNum = requiereCorral ? parseNumeroSeguro(corralTxt) : null;
         const crotalNum = parseNumeroSeguro(crotalTxt);
 
-        if (corralNum === null) {
+        if (requiereCorral && corralNum === null) {
             Alert.alert("Corral inválido", "El corral debe ser un número (ej: 8).");
             return;
         }
@@ -404,7 +447,15 @@ export const LectorMaternidadScreen = () => {
         try {
             setEstaEnviando(true);
 
-            const r = await postMaternity({ corral: corralNum, crotal: crotalNum });
+            const endpointActual = esSalida
+                ? ENDPOINT_MATERNITY_SALIDA
+                : ENDPOINT_MATERNITY_ENTRADA;
+
+            const payload = esSalida
+                ? { crotal: crotalNum }
+                : { corral: corralNum as number, crotal: crotalNum };
+
+            const r = await postMaternity(endpointActual, payload);
 
             if (!r.ok) {
                 if (r.status === 400) {
@@ -447,7 +498,10 @@ export const LectorMaternidadScreen = () => {
                 upsertRegistroPorCrotal(prev, corralNum, crotalNum, idBackendTexto)
             );
 
-            setCorralInput((prev) => incrementarCorral(prev));
+            if (esEntrada) {
+                setCorralInput((prev) => incrementarCorral(prev));
+            }
+
             setPagina(0);
             limpiarCrotalLeido();
         } catch {
@@ -741,109 +795,231 @@ export const LectorMaternidadScreen = () => {
                         )}
                     </View>
 
-                    <View
-                        style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            paddingVertical: 10,
-                            paddingHorizontal: 14,
-                            borderBottomWidth: 1,
-                            borderBottomColor: BORDER,
-                            backgroundColor: "#FFFFFF",
-                        }}
-                    >
-                        <Text
-                            style={{
-                                width: 68,
-                                color: MUTED,
-                                fontWeight: "900",
-                            }}
-                            numberOfLines={1}
-                        >
-                            Corral
-                        </Text>
+                    <View style={{ position: "relative" }}>
+                        {esEntrada && (
+                            <>
+                                <LineaVerticalTabla
+                                    left={PADDING_TABLA_X + ANCHO_CORRAL + ESPACIO_CORRAL_ID_ENTRADA / 2}
+                                />
+                                <LineaVerticalTabla
+                                    left={
+                                        PADDING_TABLA_X +
+                                        ANCHO_CORRAL +
+                                        ESPACIO_CORRAL_ID_ENTRADA +
+                                        ANCHO_ID +
+                                        ESPACIO_ID_CROTAL_ENTRADA / 2
+                                    }
+                                />
+                            </>
+                        )}
 
-                        <Text
-                            style={{
-                                width: 52,
-                                color: MUTED,
-                                fontWeight: "900",
-                                textAlign: "center",
-                            }}
-                            numberOfLines={1}
-                        >
-                            ID
-                        </Text>
+                        {esSalida && (
+                            <LineaVerticalTabla
+                                left={PADDING_TABLA_X + ANCHO_ID + ESPACIO_ID_CROTAL_SALIDA / 2}
+                            />
+                        )}
 
-                        <Text
-                            style={{
-                                flex: 1,
-                                color: MUTED,
-                                fontWeight: "900",
-                                textAlign: "right",
-                            }}
-                            numberOfLines={1}
-                        >
-                            Crotal
-                        </Text>
-                    </View>
-                    {registrosEnviados.length === 0 ? (
-                        <View style={{ padding: 14 }}>
-                            <Text style={{ color: MUTED }}>Aún no has enviado ningún registro.</Text>
-                        </View>
-                    ) : (
-                        pageItems.map((r, idx) => (
+                        {esSalida ? (
                             <View
-                                key={r.localId}
                                 style={{
                                     flexDirection: "row",
                                     alignItems: "center",
-                                    paddingVertical: 12,
+                                    paddingVertical: 10,
                                     paddingHorizontal: 14,
-                                    borderTopWidth: 1,
-                                    borderTopColor: "#F1F5F9",
-                                    backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: BORDER,
+                                    backgroundColor: "#FFFFFF",
                                 }}
                             >
                                 <Text
                                     style={{
-                                        width: 68,
-                                        color: TEXT,
-                                        fontWeight: "700",
-                                    }}
-                                    numberOfLines={1}
-                                >
-                                    {r.corral}
-                                </Text>
-
-                                <Text
-                                    style={{
-                                        width: 52,
-                                        color: r.idBackend === "—" ? DANGER : TEXT,
-                                        fontWeight: "700",
+                                        width: ANCHO_ID,
+                                        color: MUTED,
+                                        fontWeight: "900",
                                         textAlign: "center",
                                     }}
                                     numberOfLines={1}
                                 >
-                                    {r.idBackend}
+                                    ID
                                 </Text>
+
+                                <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
+
+                                <View style={{ flex: 1, alignItems: "flex-end" }}>
+                                    <Text
+                                        style={{
+                                            width: ANCHO_CROTAL_SALIDA,
+                                            color: MUTED,
+                                            fontWeight: "900",
+                                            textAlign: "left",
+                                        }}
+                                        numberOfLines={1}
+                                    >
+                                        Crotal
+                                    </Text>
+                                </View>
+                            </View>
+                        ) : (
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 14,
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: BORDER,
+                                    backgroundColor: "#FFFFFF",
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        width: ANCHO_CORRAL,
+                                        color: MUTED,
+                                        fontWeight: "900",
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    Corral
+                                </Text>
+
+                                <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
 
                                 <Text
                                     style={{
-                                        flex: 1,
-                                        color: TEXT,
-                                        fontWeight: "700",
-                                        textAlign: "right",
-                                        fontSize: 15,
+                                        width: ANCHO_ID,
+                                        color: MUTED,
+                                        fontWeight: "900",
+                                        textAlign: "center",
                                     }}
                                     numberOfLines={1}
-                                    ellipsizeMode="middle"
                                 >
-                                    {r.crotal}
+                                    ID
                                 </Text>
+
+                                <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                    <Text
+                                        style={{
+                                            color: MUTED,
+                                            fontWeight: "900",
+                                            textAlign: "left",
+                                        }}
+                                        numberOfLines={1}
+                                    >
+                                        Crotal
+                                    </Text>
+                                </View>
                             </View>
-                        ))
-                    )}
+                        )}
+
+                        {registrosEnviados.length === 0 ? (
+                            <View style={{ padding: 14 }}>
+                                <Text style={{ color: MUTED }}>Aún no has enviado ningún registro.</Text>
+                            </View>
+                        ) : (
+                            pageItems.map((r, idx) =>
+                                esSalida ? (
+                                    <View
+                                        key={r.localId}
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 14,
+                                            borderTopWidth: 1,
+                                            borderTopColor: "#F1F5F9",
+                                            backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: ANCHO_ID,
+                                                color: r.idBackend === "—" ? DANGER : TEXT,
+                                                fontWeight: "700",
+                                                textAlign: "center",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {r.idBackend}
+                                        </Text>
+
+                                        <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
+
+                                        <View style={{ flex: 1, alignItems: "flex-end" }}>
+                                            <Text
+                                                style={{
+                                                    width: ANCHO_CROTAL_SALIDA,
+                                                    color: TEXT,
+                                                    fontWeight: "700",
+                                                    textAlign: "left",
+                                                    fontSize: 15,
+                                                }}
+                                                numberOfLines={1}
+                                                ellipsizeMode="middle"
+                                            >
+                                                {r.crotal}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ) : (
+                                    <View
+                                        key={r.localId}
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "flex-start",
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 14,
+                                            borderTopWidth: 1,
+                                            borderTopColor: "#F1F5F9",
+                                            backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: ANCHO_CORRAL,
+                                                color: TEXT,
+                                                fontWeight: "700",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {r.corral}
+                                        </Text>
+
+                                        <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
+
+                                        <Text
+                                            style={{
+                                                width: ANCHO_ID,
+                                                color: r.idBackend === "—" ? DANGER : TEXT,
+                                                fontWeight: "700",
+                                                textAlign: "center",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {r.idBackend}
+                                        </Text>
+
+                                        <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                        <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                            <Text
+                                                style={{
+                                                    color: TEXT,
+                                                    fontWeight: "700",
+                                                    textAlign: "left",
+                                                    fontSize: 14,
+                                                    flexShrink: 1,
+                                                }}
+                                            >
+                                                {r.crotal}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )
+                            )
+                        )}
+                    </View>
                 </View>
                 {/* Enviar */}
                 <View style={{ marginTop: 12 }}>
