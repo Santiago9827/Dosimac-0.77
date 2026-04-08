@@ -7,7 +7,6 @@ import { useAwrConn } from "../../../stores/awrConnStore";
 import { useRoute, RouteProp, useFocusEffect, useNavigation } from "@react-navigation/native";
 import Feather from '@expo/vector-icons/Feather';
 
-
 type LectorMaternidadParams = {
     modo?: "entrada" | "salida" | "lectura" | "busqueda";
     corral?: string;
@@ -25,9 +24,11 @@ const SOFT = "#EEF2FF";
 const SOFT_BORDER = "#C7D2FE";
 const DANGER = "#DC2626";
 
-const ENDPOINT_MATERNITY_ENTRADA = "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity";
+const ENDPOINT_MATERNITY_ENTRADA =
+    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity";
 
-const ENDPOINT_MATERNITY_SALIDA = "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity/exit"
+const ENDPOINT_MATERNITY_SALIDA =
+    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity/exit";
 
 const SHADOW = {
     shadowColor: "#000",
@@ -44,7 +45,7 @@ type RegistroEnviado = {
     crotal: string;
 };
 
-type TipoMovimiento = "entrada" | "salida";
+type TipoMovimiento = "entrada" | "salida" | "lectura";
 
 // ---------- helpers ----------
 const normalizarClave = (valor: string) =>
@@ -104,6 +105,7 @@ async function postMaternity(
 
     return { ok: res.ok, status: res.status, data, rawText };
 }
+
 function upsertRegistroPorCrotal(
     prev: RegistroEnviado[],
     corralNum: number | null,
@@ -276,9 +278,9 @@ const CajaDatoLectura = ({
         </Text>
     </View>
 );
+
 // ---------- componente ----------
 export const LectorMaternidadScreen = () => {
-
     const ANCHO_CORRAL = 60;
     const ANCHO_ID = 56;
     const ANCHO_CROTAL_SALIDA = 150;
@@ -305,7 +307,6 @@ export const LectorMaternidadScreen = () => {
         />
     );
 
-
     const navigation = useNavigation<any>();
 
     const lectorConectado = useAwrConn((s) => s.isConnected);
@@ -314,10 +315,12 @@ export const LectorMaternidadScreen = () => {
     const iniciarLectura = useAwrConn((s) => s.startReading);
     const detenerLectura = useAwrConn((s) => s.stopReading);
     const limpiarCrotalLeido = useAwrConn((s) => s.clearLastTag);
+
     const [idRecibido, setIdRecibido] = useState("");
     const [estadoIdVisual, setEstadoIdVisual] = useState<"neutro" | "success" | "error">("neutro");
     const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+    const autoEnvioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const ultimoCrotalAutoRef = useRef<string | null>(null);
 
     const [corralInput, setCorralInput] = useState("");
     const [tipoMovimiento, setTipoMovimiento] = useState<TipoMovimiento>("entrada");
@@ -330,6 +333,7 @@ export const LectorMaternidadScreen = () => {
 
     const esEntrada = tipoMovimiento === "entrada";
     const esSalida = tipoMovimiento === "salida";
+    const esLectura = tipoMovimiento === "lectura";
 
     const route = useRoute<RouteProp<Record<string, LectorMaternidadParams>, string>>();
     const params = route.params ?? {};
@@ -343,6 +347,18 @@ export const LectorMaternidadScreen = () => {
         const start = pagina * TAM_PAGINA;
         return registrosEnviados.slice(start, start + TAM_PAGINA);
     }, [registrosEnviados, pagina]);
+
+    const requiereCorral = esEntrada;
+    const usaEnvioAutomatico = esLectura || !confirmar;
+    const tiempoAutoEnvioMs = esLectura ? 300 : 1000;
+
+    const limpiarAutoEnvioTimer = React.useCallback(() => {
+        if (autoEnvioTimerRef.current) {
+            clearTimeout(autoEnvioTimerRef.current);
+            autoEnvioTimerRef.current = null;
+        }
+    }, []);
+
     const mostrarIdTemporal = (valor: string, estado: "neutro" | "success" | "error") => {
         if (timerIdRef.current) {
             clearTimeout(timerIdRef.current);
@@ -356,10 +372,14 @@ export const LectorMaternidadScreen = () => {
             setEstadoIdVisual("neutro");
         }, 3000);
     };
+
     useEffect(() => {
         return () => {
             if (timerIdRef.current) {
                 clearTimeout(timerIdRef.current);
+            }
+            if (autoEnvioTimerRef.current) {
+                clearTimeout(autoEnvioTimerRef.current);
             }
         };
     }, []);
@@ -369,11 +389,14 @@ export const LectorMaternidadScreen = () => {
         if (pagina > maxPagina) setPagina(maxPagina);
     }, [registrosEnviados.length, pagina]);
 
-
     useFocusEffect(
         React.useCallback(() => {
             const modoInicial: TipoMovimiento =
-                params.modo === "salida" ? "salida" : "entrada";
+                params.modo === "salida"
+                    ? "salida"
+                    : params.modo === "lectura"
+                        ? "lectura"
+                        : "entrada";
 
             setTipoMovimiento(modoInicial);
             setCorralInput(
@@ -386,6 +409,15 @@ export const LectorMaternidadScreen = () => {
 
             setRegistrosEnviados([]);
             limpiarCrotalLeido();
+            setIdRecibido("");
+            setEstadoIdVisual("neutro");
+
+            if (timerIdRef.current) {
+                clearTimeout(timerIdRef.current);
+            }
+
+            limpiarAutoEnvioTimer();
+            ultimoCrotalAutoRef.current = null;
 
             (async () => {
                 if (!idLector) return;
@@ -395,6 +427,13 @@ export const LectorMaternidadScreen = () => {
             })();
 
             return () => {
+                if (timerIdRef.current) {
+                    clearTimeout(timerIdRef.current);
+                }
+
+                limpiarAutoEnvioTimer();
+                ultimoCrotalAutoRef.current = null;
+
                 detenerLectura?.().catch(() => { });
             };
         }, [
@@ -406,6 +445,7 @@ export const LectorMaternidadScreen = () => {
             iniciarLectura,
             detenerLectura,
             limpiarCrotalLeido,
+            limpiarAutoEnvioTimer,
         ])
     );
 
@@ -415,11 +455,9 @@ export const LectorMaternidadScreen = () => {
         else navigation.navigate("Tabs");
     };
 
-    const onEnviar = async () => {
-        const requiereCorral = esEntrada;
-
+    const onEnviar = React.useCallback(async (crotalForzado?: string) => {
         const corralTxt = corralInput.trim();
-        const crotalTxt = (crotalLeido ?? "").trim();
+        const crotalTxt = (crotalForzado ?? crotalLeido ?? "").trim();
 
         if (requiereCorral && !corralTxt) {
             Alert.alert("Falta corral", "Escribe el corral antes de enviar.");
@@ -451,9 +489,9 @@ export const LectorMaternidadScreen = () => {
                 ? ENDPOINT_MATERNITY_SALIDA
                 : ENDPOINT_MATERNITY_ENTRADA;
 
-            const payload = esSalida
-                ? { crotal: crotalNum }
-                : { corral: corralNum as number, crotal: crotalNum };
+            const payload = requiereCorral
+                ? { corral: corralNum as number, crotal: crotalNum }
+                : { crotal: crotalNum };
 
             const r = await postMaternity(endpointActual, payload);
 
@@ -504,12 +542,52 @@ export const LectorMaternidadScreen = () => {
 
             setPagina(0);
             limpiarCrotalLeido();
+            ultimoCrotalAutoRef.current = null;
         } catch {
             Alert.alert("Error de red", "No se pudo conectar con el servidor.");
         } finally {
             setEstaEnviando(false);
         }
-    };
+    }, [corralInput, crotalLeido, requiereCorral, esEntrada, esSalida, limpiarCrotalLeido]);
+
+    useEffect(() => {
+        const crotalActual = (crotalLeido ?? "").trim();
+
+        if (!usaEnvioAutomatico) {
+            limpiarAutoEnvioTimer();
+            ultimoCrotalAutoRef.current = null;
+            return;
+        }
+
+        if (!crotalActual) {
+            limpiarAutoEnvioTimer();
+            ultimoCrotalAutoRef.current = null;
+            return;
+        }
+
+        if (estaEnviando) return;
+
+        if (ultimoCrotalAutoRef.current === crotalActual) return;
+
+        limpiarAutoEnvioTimer();
+        ultimoCrotalAutoRef.current = crotalActual;
+
+        autoEnvioTimerRef.current = setTimeout(() => {
+            onEnviar(crotalActual);
+        }, tiempoAutoEnvioMs);
+
+        return () => {
+            limpiarAutoEnvioTimer();
+        };
+    }, [
+        usaEnvioAutomatico,
+        tiempoAutoEnvioMs,
+        crotalLeido,
+        estaEnviando,
+        onEnviar,
+        limpiarAutoEnvioTimer,
+    ]);
+
     const estilosCajaId = useMemo(() => {
         if (estadoIdVisual === "success") {
             return {
@@ -556,162 +634,173 @@ export const LectorMaternidadScreen = () => {
 
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 14 }}>
                 {/* Resumen */}
-                <View
-                    style={{
-                        backgroundColor: CARD,
-                        borderRadius: 18,
-                        overflow: "hidden",
-                        borderWidth: 1,
-                        borderColor: BORDER,
-                        ...SHADOW,
-                    }}
-                >
+                {!esLectura && (
                     <View
                         style={{
-                            backgroundColor: SOFT,
-                            padding: 14,
-                            borderBottomWidth: 1,
-                            borderBottomColor: SOFT_BORDER,
+                            backgroundColor: CARD,
+                            borderRadius: 18,
+                            overflow: "hidden",
+                            borderWidth: 1,
+                            borderColor: BORDER,
+                            ...SHADOW,
                         }}
                     >
-                        <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>Resumen</Text>
-                        <Text style={{ color: MUTED, marginTop: 4 }}>
-                            Parámetros elegidos en Configuración
-                        </Text>
-                    </View>
-
-                    <View style={{ padding: 14, gap: 12 }}>
-                        <View style={{ flexDirection: "row", gap: 10 }}>
-                            <MiniResumenCard
-                                icon="swap-horizontal-outline"
-                                titulo="Modo"
-                                valor={tipoMovimiento === "entrada" ? "Entrada" : "Salida"}
-                            />
-
-                            <MiniResumenCard
-                                icon="home-outline"
-                                titulo="Corral"
-                                valor={corralInput || "—"}
-                            />
-                        </View>
-
-                        <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
-
-                        <SwitchRowReadonly
-                            title="Identificar animales desconocidos"
-                            description="Cuando salga un animal sin ID, ofrecer asignarle un ID."
-                            value={detectarDesconocidos}
-                        />
-
-                        <SwitchRowReadonly
-                            title="Confirmar envío"
-                            description="Pedirá confirmación antes de enviar cada registro."
-                            value={confirmar}
-                        />
-
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate("ConfiguracionLectura")}
-                            activeOpacity={0.9}
+                        <View
                             style={{
-                                marginTop: 6,
-                                height: 42,
-                                borderRadius: 12,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                backgroundColor: "#E5E7EB",
+                                backgroundColor: SOFT,
+                                padding: 14,
+                                borderBottomWidth: 1,
+                                borderBottomColor: SOFT_BORDER,
                             }}
                         >
-                            <Text style={{ color: TEXT, fontWeight: "900" }}>
-                                Cambiar configuración
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                {/* Lectura actual */}
-                <View
-                    style={{
-                        backgroundColor: CARD,
-                        borderRadius: 18,
-                        overflow: "hidden",
-                        borderWidth: 1,
-                        borderColor: BORDER,
-                        ...SHADOW,
-                    }}
-                >
-                    <View
-                        style={{
-                            backgroundColor: "#F8FAFF",
-                            padding: 14,
-                            borderBottomWidth: 1,
-                            borderBottomColor: "#E0E7FF",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 10,
-                        }}
-                    >
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: TEXT, fontSize: 19, fontWeight: "900" }}>
-                                Lectura actual
-                            </Text>
+                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>Resumen</Text>
                             <Text style={{ color: MUTED, marginTop: 4 }}>
-                                El crotal detectado aparecerá aquí.
+                                Parámetros elegidos en Configuración
                             </Text>
                         </View>
 
-                        {!lectorConectado && (
-                            <View
+                        <View style={{ padding: 14, gap: 12 }}>
+                            <View style={{ flexDirection: "row", gap: 10 }}>
+                                <MiniResumenCard
+                                    icon="swap-horizontal-outline"
+                                    titulo="Modo"
+                                    valor={
+                                        tipoMovimiento === "entrada"
+                                            ? "Entrada"
+                                            : tipoMovimiento === "salida"
+                                                ? "Salida"
+                                                : "Lectura"
+                                    }
+                                />
+
+                                {esEntrada && (
+                                    <MiniResumenCard
+                                        icon="home-outline"
+                                        titulo="Corral"
+                                        valor={corralInput || "—"}
+                                    />
+                                )}
+                            </View>
+
+                            <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
+
+                            <SwitchRowReadonly
+                                title="Identificar animales desconocidos"
+                                description="Cuando salga un animal sin ID, ofrecer asignarle un ID."
+                                value={detectarDesconocidos}
+                            />
+
+                            <SwitchRowReadonly
+                                title="Confirmar envío"
+                                description="Pedirá confirmación antes de enviar cada registro."
+                                value={confirmar}
+                            />
+
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate("ConfiguracionLectura")}
+                                activeOpacity={0.9}
                                 style={{
-                                    flexDirection: "row",
+                                    marginTop: 6,
+                                    height: 42,
+                                    borderRadius: 12,
                                     alignItems: "center",
-                                    gap: 6,
-                                    paddingVertical: 6,
-                                    paddingHorizontal: 10,
-                                    borderRadius: 999,
-                                    backgroundColor: "#FEF2F2",
-                                    borderWidth: 1,
-                                    borderColor: "#FECACA",
+                                    justifyContent: "center",
+                                    backgroundColor: "#E5E7EB",
                                 }}
                             >
-                                <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
-                                <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
-                                    AWR no conectado
+                                <Text style={{ color: TEXT, fontWeight: "900" }}>
+                                    Cambiar configuración
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+
+                {/* Lectura actual */}
+                {!esLectura && (
+                    <View
+                        style={{
+                            backgroundColor: CARD,
+                            borderRadius: 18,
+                            overflow: "hidden",
+                            borderWidth: 1,
+                            borderColor: BORDER,
+                            ...SHADOW,
+                        }}
+                    >
+                        <View
+                            style={{
+                                backgroundColor: "#F8FAFF",
+                                padding: 14,
+                                borderBottomWidth: 1,
+                                borderBottomColor: "#E0E7FF",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 10,
+                            }}
+                        >
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: TEXT, fontSize: 19, fontWeight: "900" }}>
+                                    Lectura actual
+                                </Text>
+                                <Text style={{ color: MUTED, marginTop: 4 }}>
+                                    El crotal detectado aparecerá aquí.
                                 </Text>
                             </View>
-                        )}
+
+                            {!lectorConectado && (
+                                <View
+                                    style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 6,
+                                        paddingVertical: 6,
+                                        paddingHorizontal: 10,
+                                        borderRadius: 999,
+                                        backgroundColor: "#FEF2F2",
+                                        borderWidth: 1,
+                                        borderColor: "#FECACA",
+                                    }}
+                                >
+                                    <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
+                                    <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
+                                        AWR no conectado
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+
+                        <View style={{ padding: 14, gap: 12 }}>
+                            <CajaDatoLectura
+                                icon="barcode-outline"
+                                titulo="Crotal leído"
+                                valor={crotalLeido ? String(crotalLeido) : "—"}
+                                fondo="#F8FAFF"
+                                borde="#E2E8F0"
+                                colorTitulo="#64748B"
+                                colorValor={TEXT}
+                            />
+
+                            <CajaDatoLectura
+                                icon={
+                                    estadoIdVisual === "success"
+                                        ? "checkmark-circle-outline"
+                                        : estadoIdVisual === "error"
+                                            ? "alert-circle-outline"
+                                            : "hash"
+                                }
+                                usarFeather={estadoIdVisual === "neutro"}
+                                titulo="ID"
+                                valor={idRecibido ? String(idRecibido) : "—"}
+                                fondo={estilosCajaId.backgroundColor}
+                                borde={estilosCajaId.borderColor}
+                                colorTitulo={estilosCajaId.colorSubtexto}
+                                colorValor={estilosCajaId.colorTexto}
+                            />
+                        </View>
                     </View>
-                    <View style={{ padding: 14, gap: 12 }}>
-                        <CajaDatoLectura
-                            icon="barcode-outline"
-                            titulo="Crotal leído"
-                            valor={crotalLeido ? String(crotalLeido) : "—"}
-                            fondo="#F8FAFF"
-                            borde="#E2E8F0"
-                            colorTitulo="#64748B"
-                            colorValor={TEXT}
-                        />
-
-                        <CajaDatoLectura
-                            icon={
-                                estadoIdVisual === "success"
-                                    ? "checkmark-circle-outline"
-                                    : estadoIdVisual === "error"
-                                        ? "alert-circle-outline"
-                                        : "hash"
-                            }
-                            usarFeather={estadoIdVisual === "neutro"}
-                            titulo="ID"
-                            valor={idRecibido ? String(idRecibido) : "—"}
-                            fondo={estilosCajaId.backgroundColor}
-                            borde={estilosCajaId.borderColor}
-                            colorTitulo={estilosCajaId.colorSubtexto}
-                            colorValor={estilosCajaId.colorTexto}
-                        />
-                    </View>
-                </View>
-
-
+                )}
 
                 {/* Tabla */}
                 <View
@@ -738,9 +827,34 @@ export const LectorMaternidadScreen = () => {
                             gap: 10,
                         }}
                     >
-                        <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                            Registros enviados
-                        </Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
+                                Registros enviados
+                            </Text>
+
+                            {esLectura && !lectorConectado && (
+                                <View
+                                    style={{
+                                        marginTop: 8,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        alignSelf: "flex-start",
+                                        gap: 6,
+                                        paddingVertical: 6,
+                                        paddingHorizontal: 10,
+                                        borderRadius: 999,
+                                        backgroundColor: "#FEF2F2",
+                                        borderWidth: 1,
+                                        borderColor: "#FECACA",
+                                    }}
+                                >
+                                    <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
+                                    <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
+                                        AWR no conectado
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
 
                         {registrosEnviados.length > TAM_PAGINA && (
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -796,7 +910,7 @@ export const LectorMaternidadScreen = () => {
                     </View>
 
                     <View style={{ position: "relative" }}>
-                        {esEntrada && (
+                        {!esLectura && esEntrada && (
                             <>
                                 <LineaVerticalTabla
                                     left={PADDING_TABLA_X + ANCHO_CORRAL + ESPACIO_CORRAL_ID_ENTRADA / 2}
@@ -819,7 +933,42 @@ export const LectorMaternidadScreen = () => {
                             />
                         )}
 
-                        {esSalida ? (
+                        {esLectura ? (
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 14,
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: BORDER,
+                                    backgroundColor: "#FFFFFF",
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        flex: 1,
+                                        color: MUTED,
+                                        fontWeight: "900",
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    Crotal
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        width: ANCHO_ID,
+                                        color: MUTED,
+                                        fontWeight: "900",
+                                        textAlign: "center",
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    ID
+                                </Text>
+                            </View>
+                        ) : esSalida ? (
                             <View
                                 style={{
                                     flexDirection: "row",
@@ -915,11 +1064,49 @@ export const LectorMaternidadScreen = () => {
 
                         {registrosEnviados.length === 0 ? (
                             <View style={{ padding: 14 }}>
-                                <Text style={{ color: MUTED }}>Aún no has enviado ningún registro.</Text>
+                                <Text style={{ color: MUTED }}>No hay registros.</Text>
                             </View>
                         ) : (
                             pageItems.map((r, idx) =>
-                                esSalida ? (
+                                esLectura ? (
+                                    <View
+                                        key={r.localId}
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 14,
+                                            borderTopWidth: 1,
+                                            borderTopColor: "#F1F5F9",
+                                            backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                flex: 1,
+                                                color: TEXT,
+                                                fontWeight: "700",
+                                                fontSize: 15,
+                                            }}
+                                            numberOfLines={1}
+                                            ellipsizeMode="middle"
+                                        >
+                                            {r.crotal}
+                                        </Text>
+
+                                        <Text
+                                            style={{
+                                                width: ANCHO_ID,
+                                                color: r.idBackend === "—" ? DANGER : TEXT,
+                                                fontWeight: "700",
+                                                textAlign: "center",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {r.idBackend}
+                                        </Text>
+                                    </View>
+                                ) : esSalida ? (
                                     <View
                                         key={r.localId}
                                         style={{
@@ -1021,16 +1208,26 @@ export const LectorMaternidadScreen = () => {
                         )}
                     </View>
                 </View>
+
                 {/* Enviar */}
                 <View style={{ marginTop: 12 }}>
                     <TouchableOpacity
-                        onPress={onEnviar}
-                        disabled={estaEnviando}
+                        onPress={() => {
+                            if (esLectura || !confirmar) return;
+                            onEnviar();
+                        }}
+                        disabled={estaEnviando || !confirmar || esLectura}
                         activeOpacity={0.9}
                         style={{
                             height: 46,
                             borderRadius: 14,
-                            backgroundColor: estaEnviando ? "#A5B4FC" : BRAND,
+                            backgroundColor: esLectura
+                                ? "#CBD5E1"
+                                : !confirmar
+                                    ? "#CBD5E1"
+                                    : estaEnviando
+                                        ? "#A5B4FC"
+                                        : BRAND,
                             alignItems: "center",
                             justifyContent: "center",
                             flexDirection: "row",
@@ -1043,7 +1240,13 @@ export const LectorMaternidadScreen = () => {
                         }}
                     >
                         <Text style={{ color: "white", fontWeight: "900", fontSize: 16 }}>
-                            {estaEnviando ? "Enviando..." : "Enviar"}
+                            {esLectura
+                                ? "Lectura automática activa"
+                                : !confirmar
+                                    ? "Envío automático activo"
+                                    : estaEnviando
+                                        ? "Enviando..."
+                                        : "Enviar"}
                         </Text>
                     </TouchableOpacity>
                 </View>
