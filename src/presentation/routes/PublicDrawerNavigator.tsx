@@ -22,8 +22,10 @@ import { SettingsStackNavigator } from './SettingsStackNavigator';
 //  Tu pantalla principal sin sesión (la “principal pública”)
 import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
 import { ConfiguracionIPScreen } from "../screens/ip/ConfiguracionIPScreen";
+import { PublicStartScreen } from '../routes/PantallaSeleccionInicio';
 type PublicDrawerParamList = {
     Login: undefined;
+    PublicStart: undefined;
     PublicHome: undefined;
     Register: undefined;
     FarmList: undefined;
@@ -50,7 +52,7 @@ export const PublicDrawerNavigator = () => {
     return (
         <Drawer.Navigator
             id="PublicDrawer"
-            initialRouteName="Login"
+            initialRouteName="PublicStart"
             drawerContent={(props) => <PublicDrawerContent {...props} />}
             screenOptions={{
                 headerShown: false,
@@ -77,6 +79,15 @@ export const PublicDrawerNavigator = () => {
 
             {/*  Pantalla principal pública (SIN sesión). La ocultamos del DrawerItemList */}
             <Drawer.Screen
+                name="PublicStart"
+                component={PublicStartScreen}
+                options={{
+                    drawerItemStyle: { height: 0 },
+                    drawerLabel: () => null,
+                }}
+            />
+
+            <Drawer.Screen
                 name="PublicHome"
                 component={HomeScreen}
                 options={{
@@ -84,7 +95,6 @@ export const PublicDrawerNavigator = () => {
                     drawerLabel: () => null,
                 }}
             />
-
             {/*  Rutas públicas “de alta dispositivo” (también ocultas; las pintamos manualmente) */}
             <Drawer.Screen
                 name="Register"
@@ -155,7 +165,10 @@ const PublicDrawerContent = (props: DrawerContentComponentProps) => {
 
     const iconColor = (focused: boolean) => (focused ? activeTint : inactiveTint);
 
-    const isSimpleMenu = activeRoute === "Login" || activeRoute === "ConfigIP";
+    const isSimpleMenu =
+        activeRoute === "Login" ||
+        activeRoute === "ConfigIP" ||
+        activeRoute === "PublicStart";
     return (
         <DrawerContentScrollView
             {...props}

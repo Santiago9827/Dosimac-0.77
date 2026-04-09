@@ -431,7 +431,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
 
       {/*  Cerrar sesión */}
-      <DrawerItem
+      {/* <DrawerItem
         label="Cerrar sesión"
         icon={() => <IonIcon name="log-out-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
@@ -444,7 +444,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
           // (IMPORTANTE: añade arriba const logout = useAuthStore((s)=>s.logout); en CustomDrawerContent)
           logout();
         }}
-      />
+      /> */}
 
       {/*  Alta dispositivos justo debajo */}
       <DrawerItem
@@ -503,13 +503,13 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         style={itemStyle(false)}
         onPress={() => go("AnimalSearch")}
       /> */}
-      <DrawerItem
+      {/* <DrawerItem
         label="Configuración IP"
         icon={() => <IonIcon name="wifi-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}
         onPress={() => go("ConfigIP")}
-      />
+      /> */}
       <DrawerItem
         label="Configuracion AWR"
         icon={() => (
@@ -543,7 +543,15 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       )}
       {/* Footer */}
       <View style={{ marginTop: "auto" }}>
-        <Text style={{ marginLeft: 16, marginBottom: 6, fontSize: 12, fontWeight: "600", color: "#666" }}>
+        <Text
+          style={{
+            marginLeft: 16,
+            marginBottom: 6,
+            fontSize: 12,
+            fontWeight: "600",
+            color: "#666",
+          }}
+        >
           {t("common:softwareVersion", { defaultValue: "softwareVersion" })} 3
         </Text>
 
@@ -563,6 +571,25 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
             focused && { backgroundColor: activeBg },
           ]}
           onPress={() => go("Settings")}
+        />
+
+        <DrawerItem
+          label="Configuración IP"
+          icon={() => <IonIcon name="wifi-outline" color={inactiveTint} />}
+          labelStyle={labelStyle(false)}
+          style={itemStyle(false)}
+          onPress={() => go("ConfigIP")}
+        />
+
+        <DrawerItem
+          label="Cerrar sesión"
+          icon={() => <IonIcon name="log-out-outline" color={inactiveTint} />}
+          labelStyle={labelStyle(false)}
+          style={itemStyle(false)}
+          onPress={() => {
+            props.navigation.closeDrawer();
+            logout();
+          }}
         />
       </View>
     </DrawerContentScrollView>
