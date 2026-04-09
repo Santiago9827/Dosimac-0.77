@@ -511,7 +511,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         onPress={() => go("ConfigIP")}
       />
       <DrawerItem
-        label="AWR"
+        label="Configuracion AWR"
         icon={() => (
           <IonIcon
             name={awrOpen ? "chevron-down-outline" : "chevron-forward-outline"}

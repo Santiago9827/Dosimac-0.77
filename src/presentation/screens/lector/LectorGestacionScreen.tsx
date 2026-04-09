@@ -6,6 +6,7 @@ import { useAwrConn } from "../../../stores/awrConnStore";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Appbar, Switch } from "react-native-paper";
 import Feather from '@expo/vector-icons/Feather';
+import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
 
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
@@ -852,27 +853,30 @@ export const LectorGestacionScreen = () => {
                                     El crotal detectado y el ID asociado aparecerán aquí.
                                 </Text>
                             </View>
-
-                            {!lectorConectado && (
-                                <View
-                                    style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 6,
-                                        paddingVertical: 6,
-                                        paddingHorizontal: 10,
-                                        borderRadius: 999,
-                                        backgroundColor: "#FEF2F2",
-                                        borderWidth: 1,
-                                        borderColor: "#FECACA",
-                                    }}
-                                >
-                                    <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
-                                    <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
-                                        AWR no conectado
-                                    </Text>
-                                </View>
-                            )}
+                            <View style={{ alignSelf: "flex-start", marginTop: -2 }}>
+                                {lectorConectado ? (
+                                    <IndicadorConexionAnimado />
+                                ) : (
+                                    <View
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            gap: 6,
+                                            paddingVertical: 6,
+                                            paddingHorizontal: 10,
+                                            borderRadius: 999,
+                                            backgroundColor: "#FEF2F2",
+                                            borderWidth: 1,
+                                            borderColor: "#FECACA",
+                                        }}
+                                    >
+                                        <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
+                                        <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
+                                            AWR no conectado
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
                         </View>
                         <View style={{ padding: 14, gap: 12 }}>
                             <CajaDatoLectura

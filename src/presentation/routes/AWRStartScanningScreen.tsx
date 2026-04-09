@@ -19,7 +19,7 @@ export const AWRStartScanningScreen = ({ navigation }) => {
                 <Card mode="contained">
                     <Card.Content>
                         <Text style={{ fontSize: 18, textAlign: 'center' }}>
-                            Pantalla de pruebas para escanear lectores Agrident AWR300.
+                            Pantalla  para escanear lectores Agrident AWR300.
                         </Text>
                     </Card.Content>
                 </Card>
