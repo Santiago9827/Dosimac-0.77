@@ -12,10 +12,13 @@ import {
 } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { TouchableOpacity } from "react-native";
+import { awrStore } from "../../stores/awrStore";
+import { useAwrConn } from "../../stores/awrConnStore";
 
 type Modo = "entrada" | "salida" | "lectura" | "busqueda";
 
-const BRAND = "#0F766E";        // verde azulado (similar al de tu botón)
+const BRAND = "#0F766E";
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
 const BORDER = "#E5E7EB";
@@ -77,6 +80,14 @@ function OptionCard({
 
 export const ConfiguracionLecturaMaternidadScreen = () => {
     const navigation = useNavigation<any>();
+    const lectorConectado = useAwrConn((s) => s.isConnected);
+    const espadasGuardadas = awrStore((s) => s.devices);
+
+    const hayEspadasGuardadas = espadasGuardadas.length > 0;
+
+    const irAConfiguracionAwr = () => {
+        navigation.navigate(hayEspadasGuardadas ? "AWR-SAVED" : "AWR-STARTSCAN");
+    };
 
     const [modo, setModo] = useState<Modo>("entrada");
     const [corral, setCorral] = useState("");
@@ -84,6 +95,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
     const [confirmar, setConfirmar] = useState(true);
 
     const requiereCorral = modo === "entrada";
+
     const puedeContinuar = useMemo(() => {
         if (requiereCorral) return corral.trim().length > 0;
         return true;
@@ -170,7 +182,6 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                             <View style={{ height: 12 }} />
 
-                            {/*  SOLO EN ENTRADA: Corral */}
                             {modo === "entrada" && (
                                 <>
                                     <TextInput
@@ -197,7 +208,6 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                 </>
                             )}
 
-                            {/*  ENTRADA Y SALIDA: switches */}
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                                 <View style={{ flex: 1, paddingRight: 10 }}>
                                     <Text style={{ color: TEXT, fontWeight: "800" }}>
@@ -207,7 +217,6 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                         Cuando leas un animal sin identificar, podrás asignarle un ID
                                     </Text>
                                 </View>
-                                {/* ✅ te faltaba este Switch */}
                                 <Switch value={detectarDesconocidos} onValueChange={setDetectarDesconocidos} />
                             </View>
 
@@ -225,6 +234,81 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                         </Card.Content>
                     </Card>
                 )}
+
+                {/* Aviso AWR: visible en TODOS los modos */}
+                {!lectorConectado && (
+                    <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
+                        <Card.Content>
+                            <TouchableOpacity
+                                activeOpacity={0.9}
+                                onPress={irAConfiguracionAwr}
+                                style={{
+                                    borderRadius: 16,
+                                    borderWidth: 1,
+                                    borderColor: "#FECACA",
+                                    backgroundColor: "#FEF2F2",
+                                    padding: 14,
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 12,
+                                    }}
+                                >
+                                    <View
+                                        style={{
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: 999,
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            backgroundColor: "#FEE2E2",
+                                        }}
+                                    >
+                                        <Ionicons
+                                            name="alert-circle-outline"
+                                            size={20}
+                                            color="#DC2626"
+                                        />
+                                    </View>
+
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={{
+                                                color: "#991B1B",
+                                                fontWeight: "900",
+                                                fontSize: 15,
+                                            }}
+                                        >
+                                            AWR no conectado
+                                        </Text>
+
+                                        <Text
+                                            style={{
+                                                color: "#B91C1C",
+                                                marginTop: 3,
+                                                fontSize: 12,
+                                            }}
+                                        >
+                                            {hayEspadasGuardadas
+                                                ? "Tienes AWR guardadas. Pulsa para seleccionar una."
+                                                : "No tienes ninguna AWR guardada. Pulsa para escanear una."}
+                                        </Text>
+                                    </View>
+
+                                    <Ionicons
+                                        name="chevron-forward-outline"
+                                        size={22}
+                                        color="#DC2626"
+                                    />
+                                </View>
+                            </TouchableOpacity>
+                        </Card.Content>
+                    </Card>
+                )}
+
                 {/* CTA abajo */}
                 <View style={{ marginTop: "auto" }}>
                     <Button
