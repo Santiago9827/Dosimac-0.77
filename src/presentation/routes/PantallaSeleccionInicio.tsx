@@ -6,8 +6,11 @@ import {
     StyleSheet,
     StatusBar,
     SafeAreaView,
+    Image,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+const LOGO_CTICONTROL = require("../../assets/images/logo-cti.png");
+
 
 export const PublicStartScreen = ({ navigation }: any) => {
     return (
@@ -16,15 +19,27 @@ export const PublicStartScreen = ({ navigation }: any) => {
 
             <SafeAreaView style={styles.safe}>
                 <View style={styles.header}>
-                    <View style={styles.badge}>
-                        <Text style={styles.badgeTexto}>DOSIMAC</Text>
+                    <View style={styles.logoContainer}>
+                        <Image
+                            source={LOGO_CTICONTROL}
+                            style={styles.logo}
+                            resizeMode="contain"
+                        />
                     </View>
 
-                    <Text style={styles.titulo}>Bienvenido</Text>
-                    <Text style={styles.subtitulo}>
-                        Selecciona cómo quieres acceder
-                    </Text>
+                    <View style={styles.textosContainer}>
+                        <Text style={styles.titulo}>Bienvenido</Text>
+                        <Text style={styles.subtitulo}>
+                            Selecciona cómo quieres acceder
+                        </Text>
+
+                        <View style={styles.badge}>
+                            <Text style={styles.badgeTexto}>DOSIMAC</Text>
+                        </View>
+                    </View>
                 </View>
+
+
 
                 <View style={styles.contenido}>
                     <View style={styles.bloque}>
@@ -80,7 +95,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
     },
     header: {
-        paddingTop: 34,
+        paddingTop: 72,
         alignItems: "center",
     },
     badge: {
@@ -90,13 +105,26 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFF",
         borderWidth: 1,
         borderColor: "#DBEAFE",
-        marginBottom: 14,
+        marginTop: 14,
     },
     badgeTexto: {
         fontSize: 11,
         fontWeight: "900",
         letterSpacing: 1.4,
         color: "#2563EB",
+    },
+    logoContainer: {
+        marginTop: 24,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    logo: {
+        width: 240,
+        height: 90,
+    },
+    textosContainer: {
+        marginTop: 18,
+        alignItems: "center",
     },
     titulo: {
         fontSize: 30,
@@ -114,7 +142,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         gap: 22,
-        marginTop: 10,
+        marginTop: -70,
     },
     bloque: {
         alignItems: "center",
