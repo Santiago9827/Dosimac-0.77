@@ -7,6 +7,7 @@ import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/nativ
 import { Appbar, Switch } from "react-native-paper";
 import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
+import { obtenerLecturaEspada } from "../../routes/obtenerLecturaEspada";
 
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
@@ -89,21 +90,21 @@ async function postGestation(
 }
 function upsertRegistroPorCrotal(
     prev: RegistroEnviado[],
-    corralNum: number | null,
-    crotalNum: number,
+    corralValor: string,
+    crotalValor: string,
     idBackend: string
 ) {
-    const key = normalizarClave(String(crotalNum));
+    const key = normalizarClave(String(crotalValor));
     const idx = prev.findIndex((x) => normalizarClave(x.crotal) === key);
 
-    const corralTexto = corralNum !== null ? String(corralNum) : "—";
+    const corralTexto = corralValor?.trim() ? corralValor : "—";
 
     if (idx >= 0) {
         const copia = [...prev];
         const actualizado: RegistroEnviado = {
             ...copia[idx],
             corral: corralTexto,
-            crotal: String(crotalNum),
+            crotal: String(crotalValor),
             idBackend: idBackend || "—",
         };
         copia.splice(idx, 1);
@@ -115,7 +116,7 @@ function upsertRegistroPorCrotal(
             localId: String(Date.now()),
             corral: corralTexto,
             idBackend: idBackend || "—",
-            crotal: String(crotalNum),
+            crotal: String(crotalValor),
         },
         ...prev,
     ];
@@ -482,30 +483,98 @@ export const LectorGestacionScreen = () => {
 
     const enviarRegistro = React.useCallback(async (crotalForzado?: string) => {
         const requiereCorral = esEntrada;
-
         const corralTxt = corralInput.trim();
         const crotalTxt = (crotalForzado ?? crotalLeido ?? "").trim();
-
-        if (requiereCorral && !corralTxt) {
-            Alert.alert("Falta corral", "Escribe el corral antes de enviar.");
-            return;
-        }
 
         if (!crotalTxt) {
             Alert.alert("Falta crotal", "Acerca el crotal al lector antes de enviar.");
             return;
         }
 
-        const corralNum = requiereCorral ? parseNumeroSeguro(corralTxt) : null;
         const crotalNum = parseNumeroSeguro(crotalTxt);
-
-        if (requiereCorral && corralNum === null) {
-            Alert.alert("Corral inválido", "El corral debe ser un número.");
-            return;
-        }
 
         if (crotalNum === null) {
             Alert.alert("Crotal inválido", "El crotal debe ser numérico.");
+            return;
+        }
+
+        if (esLectura) {
+            try {
+                setEstaEnviando(true);
+
+                const respuesta = await obtenerLecturaEspada(String(crotalNum));
+                if (!respuesta.ok) {
+                    if (respuesta.status === 404) {
+                        mostrarIdTemporal("—", "error");
+                        setRegistrosEnviados((prev) =>
+                            upsertRegistroPorCrotal(prev, "—", String(crotalNum), "—")
+                        );
+                        return;
+                    }
+
+                    const detalle =
+                        (respuesta.data && (respuesta.data.message || respuesta.data.error)) ||
+                        respuesta.rawText ||
+                        `HTTP ${respuesta.status}`;
+
+                    Alert.alert("Error en lectura", String(detalle));
+                    return;
+                }
+
+                const animal = respuesta.data ?? {};
+
+                const idBackendTexto =
+                    animal?.animalId !== null &&
+                        animal?.animalId !== undefined &&
+                        String(animal.animalId).trim() !== ""
+                        ? String(animal.animalId)
+                        : "—";
+
+                const crotalTexto =
+                    animal?.crotal !== null &&
+                        animal?.crotal !== undefined &&
+                        String(animal.crotal).trim() !== ""
+                        ? String(animal.crotal)
+                        : String(crotalNum);
+
+                const corralTexto =
+                    animal?.corralName !== null &&
+                        animal?.corralName !== undefined &&
+                        String(animal.corralName).trim() !== ""
+                        ? String(animal.corralName)
+                        : "—";
+
+                if (idBackendTexto !== "—") {
+                    mostrarIdTemporal(idBackendTexto, "success");
+                } else {
+                    mostrarIdTemporal("—", "error");
+                }
+
+                setRegistrosEnviados((prev) =>
+                    upsertRegistroPorCrotal(prev, corralTexto, crotalTexto, idBackendTexto)
+                );
+
+                setPagina(0);
+                limpiarCrotalLeido();
+                ultimoCrotalAutoRef.current = null;
+                return;
+            } catch {
+                Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+                return;
+            } finally {
+                setEstaEnviando(false);
+            }
+        }
+
+        if (requiereCorral && !corralTxt) {
+            Alert.alert("Falta corral", "Escribe el corral antes de enviar.");
+            return;
+        }
+
+        const corralNum = requiereCorral ? parseNumeroSeguro(corralTxt) : null;
+
+        if (requiereCorral && corralNum === null) {
+            Alert.alert("Corral inválido", "El corral debe ser un número.");
             return;
         }
 
@@ -529,7 +598,9 @@ export const LectorGestacionScreen = () => {
                 }
 
                 const detalle =
-                    (respuesta.data && (respuesta.data.message || respuesta.data.error)) || respuesta.rawText || `HTTP ${respuesta.status}`;
+                    (respuesta.data && (respuesta.data.message || respuesta.data.error)) ||
+                    respuesta.rawText ||
+                    `HTTP ${respuesta.status}`;
 
                 Alert.alert("Error al enviar", String(detalle));
                 return;
@@ -556,7 +627,12 @@ export const LectorGestacionScreen = () => {
             }
 
             setRegistrosEnviados((prev) =>
-                upsertRegistroPorCrotal(prev, corralNum, crotalNum, idBackendTexto)
+                upsertRegistroPorCrotal(
+                    prev,
+                    corralNum !== null ? String(corralNum) : "—",
+                    String(crotalNum),
+                    idBackendTexto
+                )
             );
 
             setPagina(0);
@@ -567,7 +643,7 @@ export const LectorGestacionScreen = () => {
         } finally {
             setEstaEnviando(false);
         }
-    }, [esEntrada, corralInput, crotalLeido, limpiarCrotalLeido]);
+    }, [esEntrada, esLectura, esSalida, corralInput, crotalLeido, limpiarCrotalLeido]);
 
     const onEnviar = () => {
         if (esLectura || !confirmar) return;
@@ -1056,14 +1132,16 @@ export const LectorGestacionScreen = () => {
                                 >
                                     <Text
                                         style={{
-                                            flex: 1,
+                                            width: ANCHO_CORRAL,
                                             color: MUTED,
                                             fontWeight: "900",
                                         }}
                                         numberOfLines={1}
                                     >
-                                        Crotal
+                                        Corral
                                     </Text>
+
+                                    <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
 
                                     <Text
                                         style={{
@@ -1076,6 +1154,21 @@ export const LectorGestacionScreen = () => {
                                     >
                                         ID
                                     </Text>
+
+                                    <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                    <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                        <Text
+                                            style={{
+                                                color: MUTED,
+                                                fontWeight: "900",
+                                                textAlign: "left",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            Crotal
+                                        </Text>
+                                    </View>
                                 </View>
                             ) : esSalida ? (
                                 <View
@@ -1182,7 +1275,7 @@ export const LectorGestacionScreen = () => {
                                             key={r.localId}
                                             style={{
                                                 flexDirection: "row",
-                                                alignItems: "center",
+                                                alignItems: "flex-start",
                                                 paddingVertical: 12,
                                                 paddingHorizontal: 14,
                                                 borderTopWidth: 1,
@@ -1192,16 +1285,16 @@ export const LectorGestacionScreen = () => {
                                         >
                                             <Text
                                                 style={{
-                                                    flex: 1,
+                                                    width: ANCHO_CORRAL,
                                                     color: TEXT,
                                                     fontWeight: "700",
-                                                    fontSize: 15,
                                                 }}
                                                 numberOfLines={1}
-                                                ellipsizeMode="middle"
                                             >
-                                                {r.crotal}
+                                                {r.corral}
                                             </Text>
+
+                                            <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
 
                                             <Text
                                                 style={{
@@ -1214,6 +1307,24 @@ export const LectorGestacionScreen = () => {
                                             >
                                                 {r.idBackend}
                                             </Text>
+
+                                            <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                            <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                                <Text
+                                                    style={{
+                                                        color: TEXT,
+                                                        fontWeight: "700",
+                                                        textAlign: "left",
+                                                        fontSize: 14,
+                                                        flexShrink: 1,
+                                                    }}
+                                                    numberOfLines={1}
+                                                    ellipsizeMode="middle"
+                                                >
+                                                    {r.crotal}
+                                                </Text>
+                                            </View>
                                         </View>
                                     ) : esSalida ? (
                                         <View
