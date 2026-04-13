@@ -97,7 +97,7 @@ async function postMaternity(
             try {
                 data = JSON.parse(rawText);
             } catch {
-                data = null;
+                data = rawText;
             }
         }
     } catch {
@@ -567,15 +567,15 @@ export const LectorMaternidadScreen = () => {
             const r = await postMaternity(endpointActual, payload);
 
             if (!r.ok) {
-                if (r.status === 400) {
-                    Alert.alert("No válido", "El corral y/o el crotal que has enviado no existe.");
-                    return;
-                }
-
                 const detalle =
                     (r.data && typeof r.data === "object" && (r.data.message || r.data.error)) ||
                     r.rawText ||
                     `HTTP ${r.status}`;
+
+                if (r.status === 400) {
+                    Alert.alert(String(detalle));
+                    return;
+                }
 
                 Alert.alert("Error al enviar", String(detalle));
                 return;

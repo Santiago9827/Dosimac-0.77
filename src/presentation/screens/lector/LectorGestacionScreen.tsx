@@ -593,7 +593,7 @@ export const LectorGestacionScreen = () => {
 
             if (!respuesta.ok) {
                 if (respuesta.status === 400) {
-                    Alert.alert("No válido", "El corral y/o el crotal que has enviado no existe.");
+                    Alert.alert("Animal no está en Gestation.");
                     return;
                 }
 
