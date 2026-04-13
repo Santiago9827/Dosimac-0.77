@@ -605,12 +605,11 @@ export const LectorGestacionScreen = () => {
                 Alert.alert("Error al enviar", String(detalle));
                 return;
             }
-
             const idBackendRaw =
-                respuesta.data?.id ??
                 respuesta.data?.animalId ??
                 respuesta.data?.idAnimal ??
                 respuesta.data?.identificador ??
+                respuesta.data?.id ??
                 (respuesta.rawText ? respuesta.rawText.replace(/^id\s*/i, "").trim() : null);
 
             const idBackendTexto =

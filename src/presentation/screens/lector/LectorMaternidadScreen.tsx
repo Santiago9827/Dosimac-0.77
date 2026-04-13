@@ -582,13 +582,11 @@ export const LectorMaternidadScreen = () => {
             }
 
             const idBackendRaw =
-                typeof r.data === "number" || typeof r.data === "string"
-                    ? r.data
-                    : r.data?.id ??
-                    r.data?.animalId ??
-                    r.data?.idAnimal ??
-                    r.data?.identificador ??
-                    (r.rawText ? r.rawText.replace(/^id\s*/i, "").trim() : null);
+                r.data?.animalId ??
+                r.data?.idAnimal ??
+                r.data?.identificador ??
+                r.data?.id ??
+                (r.rawText ? r.rawText.replace(/^id\s*/i, "").trim() : null);
 
             const idBackendTexto =
                 idBackendRaw !== null &&
