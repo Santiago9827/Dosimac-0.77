@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
@@ -435,6 +435,7 @@ export const LectorGestacionScreen = () => {
     const esSalida = tipoMovimiento === "salida";
     const esLectura = tipoMovimiento === "lectura";
     const esBusqueda = tipoMovimiento === "busqueda";
+    const scrollRef = useRef<ScrollView | null>(null);
 
     const requiereCorral = esEntrada;
     const usaEnvioAutomatico = !esBusqueda && (esLectura || !confirmar);
@@ -907,8 +908,14 @@ export const LectorGestacionScreen = () => {
         };
     }, [estadoIdVisual]);
 
+
     return (
-        <View style={{ flex: 1, backgroundColor: BG }}>
+
+        <KeyboardAvoidingView
+            style={{ flex: 1, backgroundColor: BG }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={90}
+        >
             <Appbar.Header
                 elevated
                 style={{
@@ -921,8 +928,17 @@ export const LectorGestacionScreen = () => {
                 <Appbar.Content title="Lector Gestación" titleStyle={{ color: TEXT }} />
             </Appbar.Header>
 
-            <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 14 }}>
-
+            <ScrollView
+                ref={scrollRef}
+                contentContainerStyle={{
+                    padding: 16,
+                    paddingBottom: 140,
+                    gap: 14,
+                    flexGrow: 1,
+                }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
                 {esBusqueda && (
                     <View
                         style={{
@@ -1813,6 +1829,6 @@ export const LectorGestacionScreen = () => {
                     </View>
                 )}
             </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
     );
 };

@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, } from "react-native";
 import { Appbar, Switch, TextInput } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
@@ -408,6 +408,7 @@ export const LectorMaternidadScreen = () => {
     const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const autoEnvioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const ultimoCrotalAutoRef = useRef<string | null>(null);
+    const scrollRef = useRef<ScrollView | null>(null);
 
     const [corralInput, setCorralInput] = useState("");
     const [tipoMovimiento, setTipoMovimiento] = useState<TipoMovimiento>("entrada");
@@ -425,6 +426,8 @@ export const LectorMaternidadScreen = () => {
 
     const route = useRoute<RouteProp<Record<string, LectorMaternidadParams>, string>>();
     const params = route.params ?? {};
+
+
 
     const valorBusquedaParam = params.valorBusqueda ?? "";
     const animalEncontradoParam = params.animalEncontrado ?? null;
@@ -888,9 +891,12 @@ export const LectorMaternidadScreen = () => {
             icono: "id-card-outline" as const,
         };
     }, [estadoIdVisual]);
-
     return (
-        <View style={{ flex: 1, backgroundColor: BG }}>
+        <KeyboardAvoidingView
+            style={{ flex: 1, backgroundColor: BG }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={90}
+        >
             <Appbar.Header
                 elevated
                 style={{
@@ -903,8 +909,17 @@ export const LectorMaternidadScreen = () => {
                 <Appbar.Content title="Lector Maternidad" titleStyle={{ color: TEXT }} />
             </Appbar.Header>
 
-            <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 14 }}>
-
+            <ScrollView
+                ref={scrollRef}
+                contentContainerStyle={{
+                    padding: 16,
+                    paddingBottom: 140,
+                    gap: 14,
+                    flexGrow: 1,
+                }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
                 {esBusqueda && (
                     <View
                         style={{
@@ -1764,6 +1779,6 @@ export const LectorMaternidadScreen = () => {
                     </View>
                 )}
             </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
     );
 };
