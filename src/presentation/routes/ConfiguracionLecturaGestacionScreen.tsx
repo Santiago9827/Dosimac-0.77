@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Alert } from "react-native";
+import { View, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import {
     Appbar,
     Button,
@@ -403,13 +403,26 @@ export const ConfiguracionGestacionScreen = () => {
     ]);
 
     return (
-        <View style={{ flex: 1, backgroundColor: BG }}>
+        <KeyboardAvoidingView
+            style={{ flex: 1, backgroundColor: BG }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={90}
+        >
             <Appbar.Header elevated style={{ backgroundColor: BRAND }}>
                 <Appbar.BackAction color="white" onPress={() => navigation.goBack()} />
                 <Appbar.Content title="Configuración Gestacion" titleStyle={{ color: "white" }} />
             </Appbar.Header>
 
-            <View style={{ padding: 16, gap: 12, flex: 1 }}>
+            <ScrollView
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    padding: 16,
+                    gap: 12,
+                    paddingBottom: 24,
+                }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
                 <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
                     <Card.Content>
                         <Text style={{ fontSize: 18, fontWeight: "900", color: TEXT }}>
@@ -602,13 +615,14 @@ export const ConfiguracionGestacionScreen = () => {
                                         placeholder={
                                             tipoBusqueda === "crotal"
                                                 ? "Ej: 982091072397436"
-                                                : "Ej: 13"
+                                                : "Ej: A13"
                                         }
-                                        keyboardType="number-pad"
+                                        keyboardType={tipoBusqueda === "crotal" ? "number-pad" : "default"}
+                                        autoCapitalize={tipoBusqueda === "id" ? "characters" : "none"}
+                                        autoCorrect={false}
                                         outlineColor={BORDER}
                                         activeOutlineColor={BRAND}
                                     />
-
                                     {valorBusqueda.trim().length === 0 && (
                                         <Text style={{ color: "#DC2626", fontWeight: "700", marginTop: 8 }}>
                                             {tipoBusqueda === "crotal"
@@ -649,12 +663,12 @@ export const ConfiguracionGestacionScreen = () => {
                                         ? `Animal localizado. Ahora acerca a la espada el crotal ${crotalEsperado} para confirmar la coincidencia.`
                                         : "Consultando información del animal en el backend."}
                             </Text>
-
+                            {/* 
                             {!!crotalLeido && (
                                 <Text style={{ marginTop: 10, color: TEXT, fontWeight: "800" }}>
                                     Crotal leído: {String(crotalLeido)}
                                 </Text>
-                            )}
+                            )} */}
                         </Card.Content>
                     </Card>
                 )}
@@ -731,8 +745,7 @@ export const ConfiguracionGestacionScreen = () => {
                         </Card.Content>
                     </Card>
                 )}
-
-                <View style={{ marginTop: "auto" }}>
+                <View style={{ marginTop: 16 }}>
                     <Button
                         mode="contained"
                         onPress={onContinuar}
@@ -750,10 +763,10 @@ export const ConfiguracionGestacionScreen = () => {
                         contentStyle={{ height: 48 }}
                         labelStyle={{ fontSize: 16, fontWeight: "900" }}
                     >
-                        Continuar
+                        {modo === "busqueda" ? "Escanear" : "Continuar"}
                     </Button>
                 </View>
-            </View>
-        </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
