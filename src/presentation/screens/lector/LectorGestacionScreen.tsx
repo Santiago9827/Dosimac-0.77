@@ -4,11 +4,10 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
-import { Appbar, Switch } from "react-native-paper";
+import { Appbar, Switch, TextInput } from "react-native-paper";
 import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
-import { obtenerLecturaEspada } from "../../routes/obtenerLecturaEspada";
-import { formatearSoloFecha } from "../../routes/obtenerLecturaEspada";
+import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId } from "../../routes/obtenerLecturaEspada";
 
 
 const BG = "#F6F7FB";
@@ -124,21 +123,21 @@ function upsertRegistroPorCrotal(
     ];
 }
 // ---------- UI helpers ----------
-const InfoRow = ({
-    icon,
-    label,
-    value,
-}: {
-    icon: any;
-    label: string;
-    value: string;
-}) => (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <Ionicons name={icon} size={18} color={MUTED} />
-        <Text style={{ color: MUTED, fontWeight: "800", width: 160 }}>{label}</Text>
-        <Text style={{ color: TEXT, fontWeight: "900", flex: 1, textAlign: "right" }}>{value}</Text>
-    </View>
-);
+// const InfoRow = ({
+//     icon,
+//     label,
+//     value,
+// }: {
+//     icon: any;
+//     label: string;
+//     value: string;
+// }) => (
+//     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+//         <Ionicons name={icon} size={18} color={MUTED} />
+//         <Text style={{ color: MUTED, fontWeight: "800", width: 160 }}>{label}</Text>
+//         <Text style={{ color: TEXT, fontWeight: "900", flex: 1, textAlign: "right" }}>{value}</Text>
+//     </View>
+// );
 
 const SwitchRowReadonly = ({
     title,
@@ -364,6 +363,7 @@ const formatearFecha = (fecha?: string) => {
         return fecha;
     }
 };
+
 // ---------- componente ----------
 export const LectorGestacionScreen = () => {
 
@@ -390,6 +390,7 @@ export const LectorGestacionScreen = () => {
 
     const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
     const [confirmar, setConfirmar] = useState(true);
+
 
     // UI state
     const [corralInput, setCorralInput] = useState("");
@@ -420,6 +421,12 @@ export const LectorGestacionScreen = () => {
     // paginación
     const TAM_PAGINA = 10;
     const [pagina, setPagina] = useState(0);
+
+    const [mostrarActualizarId, setMostrarActualizarId] = useState(false);
+    const [nuevoIdManual, setNuevoIdManual] = useState("");
+    const [crotalPendienteId, setCrotalPendienteId] = useState("");
+    const [corralPendienteId, setCorralPendienteId] = useState("—");
+    const [actualizandoId, setActualizandoId] = useState(false);
 
     const totalPaginas = Math.max(1, Math.ceil(registrosEnviados.length / TAM_PAGINA));
 
@@ -457,6 +464,22 @@ export const LectorGestacionScreen = () => {
             }}
         />
     );
+
+    const abrirActualizacionId = React.useCallback((crotal: string, corral: string) => {
+        if (!detectarDesconocidos) return;
+
+        setMostrarActualizarId(true);
+        setNuevoIdManual("");
+        setCrotalPendienteId(String(crotal));
+        setCorralPendienteId(corral?.trim() ? corral : "—");
+    }, [detectarDesconocidos]);
+
+    const cerrarActualizacionId = React.useCallback(() => {
+        setMostrarActualizarId(false);
+        setNuevoIdManual("");
+        setCrotalPendienteId("");
+        setCorralPendienteId("—");
+    }, []);
 
 
     useEffect(() => {
@@ -499,6 +522,7 @@ export const LectorGestacionScreen = () => {
             setConfirmar(confirmarParam);
             setIdRecibido("");
             setEstadoIdVisual("neutro");
+            cerrarActualizacionId();
 
             if (timerIdRef.current) {
                 clearTimeout(timerIdRef.current);
@@ -552,6 +576,7 @@ export const LectorGestacionScreen = () => {
             detectarParam,
             confirmarParam,
             limpiarAutoEnvioTimer,
+            cerrarActualizacionId,
         ])
     );
     const volverACtiFeed = () => {
@@ -608,6 +633,7 @@ export const LectorGestacionScreen = () => {
                         String(animal.animalId).trim() !== ""
                         ? String(animal.animalId)
                         : "—";
+                const esIdDesconocido = idBackendTexto === "0";
 
                 const crotalTexto =
                     animal?.crotal !== null &&
@@ -623,8 +649,12 @@ export const LectorGestacionScreen = () => {
                         ? String(animal.corralName)
                         : "—";
 
-                if (idBackendTexto !== "—") {
+                if (esIdDesconocido) {
+                    mostrarIdTemporal("0", "error");
+                    abrirActualizacionId(crotalTexto, corralTexto);
+                } else if (idBackendTexto !== "—") {
                     mostrarIdTemporal(idBackendTexto, "success");
+                    cerrarActualizacionId();
                 } else {
                     mostrarIdTemporal("—", "error");
                 }
@@ -697,9 +727,14 @@ export const LectorGestacionScreen = () => {
                     String(idBackendRaw).trim() !== ""
                     ? String(idBackendRaw)
                     : "—";
+            const esIdDesconocido = idBackendTexto === "0";
 
-            if (idBackendTexto !== "—") {
+            if (esIdDesconocido) {
+                mostrarIdTemporal("0", "error");
+                abrirActualizacionId(String(crotalNum), corralNum !== null ? String(corralNum) : "—");
+            } else if (idBackendTexto !== "—") {
                 mostrarIdTemporal(idBackendTexto, "success");
+                cerrarActualizacionId();
             } else {
                 mostrarIdTemporal("—", "error");
             }
@@ -727,6 +762,80 @@ export const LectorGestacionScreen = () => {
         if (esLectura || !confirmar) return;
         enviarRegistro();
     };
+
+    const actualizarIdAnimal = React.useCallback(async () => {
+        const idManual = nuevoIdManual.trim();
+        const crotalTxt = crotalPendienteId.trim();
+
+        if (!idManual) {
+            Alert.alert("Falta ID", "Escribe el nuevo ID antes de actualizar.");
+            return;
+        }
+
+        if (!crotalTxt) {
+            Alert.alert("Falta crotal", "No hay crotal asociado para actualizar.");
+            return;
+        }
+
+        const crotalNum = parseNumeroSeguro(crotalTxt);
+
+        if (crotalNum === null) {
+            Alert.alert("Crotal inválido", "El crotal asociado no es válido.");
+            return;
+        }
+
+        try {
+            setActualizandoId(true);
+
+            const respuesta = await postActualizarId({
+                crotal: crotalNum,
+                id: idManual,
+            });
+
+            if (!respuesta.ok) {
+                const detalle =
+                    (respuesta.data && (respuesta.data.message || respuesta.data.error || respuesta.data.mensaje)) ||
+                    respuesta.rawText ||
+                    `HTTP ${respuesta.status}`;
+
+                Alert.alert("Error al actualizar ID", String(detalle));
+                return;
+            }
+
+            const idActualizado =
+                respuesta.data?.animalId ??
+                respuesta.data?.idAnimal ??
+                respuesta.data?.identificador ??
+                respuesta.data?.id ??
+                idManual;
+
+            const idActualizadoTexto =
+                idActualizado !== null &&
+                    idActualizado !== undefined &&
+                    String(idActualizado).trim() !== ""
+                    ? String(idActualizado)
+                    : idManual;
+
+            mostrarIdTemporal(idActualizadoTexto, "success");
+
+            setRegistrosEnviados((prev) =>
+                upsertRegistroPorCrotal(
+                    prev,
+                    corralPendienteId,
+                    crotalPendienteId,
+                    idActualizadoTexto
+                )
+            );
+
+            cerrarActualizacionId();
+        } catch {
+            Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+        } finally {
+            setActualizandoId(false);
+        }
+    }, [nuevoIdManual, crotalPendienteId, corralPendienteId, cerrarActualizacionId]);
+
+
     useEffect(() => {
         const crotalActual = (crotalLeido ?? "").trim();
 
@@ -1141,8 +1250,77 @@ export const LectorGestacionScreen = () => {
                                 borde={estilosCajaId.borderColor}
                                 colorTitulo={estilosCajaId.colorSubtexto}
                                 colorValor={estilosCajaId.colorTexto}
-                                textoSecundario={estadoIdVisual === "error" ? "Animal desconocido" : undefined}
+                                textoSecundario={
+                                    mostrarActualizarId
+                                        ? "Animal sin ID asignado"
+                                        : estadoIdVisual === "error"
+                                            ? "Animal desconocido"
+                                            : undefined
+                                } />
+                        </View>
+                    </View>
+                )}
+
+                {!esBusqueda && mostrarActualizarId && (
+                    <View
+                        style={{
+                            backgroundColor: CARD,
+                            borderRadius: 18,
+                            overflow: "hidden",
+                            borderWidth: 1,
+                            borderColor: BORDER,
+                            ...SHADOW,
+                        }}
+                    >
+                        <View
+                            style={{
+                                backgroundColor: "#FEF2F2",
+                                padding: 14,
+                                borderBottomWidth: 1,
+                                borderBottomColor: "#FECACA",
+                            }}
+                        >
+                            <Text style={{ color: DANGER, fontSize: 18, fontWeight: "900" }}>
+                                Animal sin ID
+                            </Text>
+                            <Text style={{ color: "#B91C1C", marginTop: 4 }}>
+                                Escribe un ID manual para actualizar el crotal leído.
+                            </Text>
+                        </View>
+
+                        <View style={{ padding: 14, gap: 12 }}>
+                            <Text style={{ color: MUTED, fontWeight: "800" }}>
+                                Crotal: {crotalPendienteId || "—"}
+                            </Text>
+
+                            <TextInput
+                                mode="outlined"
+                                label="Nuevo ID"
+                                value={nuevoIdManual}
+                                onChangeText={setNuevoIdManual}
+                                placeholder="Ej: A13"
+                                autoCapitalize="characters"
+                                autoCorrect={false}
+                                outlineColor={BORDER}
+                                activeOutlineColor={BRAND}
                             />
+
+                            <TouchableOpacity
+                                onPress={actualizarIdAnimal}
+                                disabled={actualizandoId}
+                                activeOpacity={0.9}
+                                style={{
+                                    height: 46,
+                                    borderRadius: 14,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    backgroundColor: actualizandoId ? "#A5B4FC" : BRAND,
+                                }}
+                            >
+                                <Text style={{ color: "white", fontWeight: "900", fontSize: 16 }}>
+                                    {actualizandoId ? "Actualizando..." : "Actualizar ID"}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 )}
@@ -1460,7 +1638,7 @@ export const LectorGestacionScreen = () => {
                                             <Text
                                                 style={{
                                                     width: ANCHO_ID,
-                                                    color: r.idBackend === "—" ? DANGER : TEXT,
+                                                    color: r.idBackend === "—" || r.idBackend === "0" ? DANGER : TEXT,
                                                     fontWeight: "700",
                                                     textAlign: "center",
                                                 }}
