@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Alert } from "react-native";
 import {
     Appbar,
@@ -15,12 +15,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { TouchableOpacity } from "react-native";
 import { awrStore } from "../../stores/awrStore";
 import { useAwrConn } from "../../stores/awrConnStore";
-
-
+import { obtenerLecturaEspada, obtenerAnimalPorId } from "../routes/obtenerLecturaEspada";
 
 type Modo = "entrada" | "salida" | "lectura" | "busqueda";
-const ENDPOINT_BUSQUEDA_ANIMAL =
-    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/busquedaAnimal";
 
 const BRAND = "#0F766E";
 const BG = "#F6F7FB";
@@ -75,6 +72,7 @@ function OptionCard({
             >
                 {label}
             </Button>
+
             {active && (
                 <View style={{ height: 3, backgroundColor: BRAND, opacity: 0.9 }} />
             )}
@@ -86,56 +84,182 @@ export const ConfiguracionGestacionScreen = () => {
     const navigation = useNavigation<any>();
 
     const lectorConectado = useAwrConn((s) => s.isConnected);
+    const crotalLeido = useAwrConn((s) => s.lastTag);
+    const iniciarLectura = useAwrConn((s) => s.startReading);
+    const detenerLectura = useAwrConn((s) => s.stopReading);
+    const limpiarCrotalLeido = useAwrConn((s) => s.clearLastTag);
+
     const espadasGuardadas = awrStore((s) => s.devices);
-
     const hayEspadasGuardadas = espadasGuardadas.length > 0;
-
-    const irAConfiguracionAwr = () => {
-        navigation.navigate(hayEspadasGuardadas ? "AWR-SAVED" : "AWR-STARTSCAN");
-    };
-
 
     const [modo, setModo] = useState<Modo>("entrada");
     const [corral, setCorral] = useState("");
     const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
     const [confirmar, setConfirmar] = useState(true);
 
+    const [tipoBusqueda, setTipoBusqueda] = useState<"crotal" | "id">("crotal");
+    const [origenBusquedaCrotal, setOrigenBusquedaCrotal] = useState<"manual" | "espada">("manual");
     const [valorBusqueda, setValorBusqueda] = useState("");
+
     const [buscandoAnimal, setBuscandoAnimal] = useState(false);
+    const [leyendoBusquedaEspada, setLeyendoBusquedaEspada] = useState(false);
+    const [esperandoCoincidencia, setEsperandoCoincidencia] = useState(false);
+
+    const [animalPendiente, setAnimalPendiente] = useState<any | null>(null);
+    const [crotalEsperado, setCrotalEsperado] = useState("");
 
     const requiereCorral = modo === "entrada";
     const requiereBusqueda = modo === "busqueda";
 
+    const irAConfiguracionAwr = () => {
+        navigation.navigate(hayEspadasGuardadas ? "AWR-SAVED" : "AWR-STARTSCAN");
+    };
+
+    const resetEstadoBusqueda = async () => {
+        setBuscandoAnimal(false);
+        setLeyendoBusquedaEspada(false);
+        setEsperandoCoincidencia(false);
+        setAnimalPendiente(null);
+        setCrotalEsperado("");
+        limpiarCrotalLeido();
+        try {
+            await detenerLectura?.();
+        } catch { }
+    };
+
+    useEffect(() => {
+        return () => {
+            detenerLectura?.().catch(() => { });
+        };
+    }, [detenerLectura]);
+
+    useEffect(() => {
+        resetEstadoBusqueda();
+    }, [modo, tipoBusqueda, origenBusquedaCrotal]);
+
     const puedeContinuar = useMemo(() => {
         if (requiereCorral) return corral.trim().length > 0;
-        if (requiereBusqueda) return valorBusqueda.trim().length > 0;
+
+        if (requiereBusqueda) {
+            if (tipoBusqueda === "crotal" && origenBusquedaCrotal === "espada") {
+                return lectorConectado;
+            }
+            return valorBusqueda.trim().length > 0;
+        }
+
         return true;
-    }, [requiereCorral, requiereBusqueda, corral, valorBusqueda]);
+    }, [
+        requiereCorral,
+        requiereBusqueda,
+        corral,
+        valorBusqueda,
+        tipoBusqueda,
+        origenBusquedaCrotal,
+        lectorConectado,
+    ]);
+
+    const prepararEsperaCoincidencia = async (animal: any) => {
+        const crotalAnimal =
+            animal?.crotal !== null &&
+                animal?.crotal !== undefined &&
+                String(animal.crotal).trim() !== ""
+                ? String(animal.crotal).trim()
+                : "";
+
+        if (!crotalAnimal) {
+            Alert.alert("Error", "El backend no devolvió un crotal válido para comparar.");
+            return false;
+        }
+
+        if (!lectorConectado) {
+            Alert.alert("AWR no conectado", "Conecta una espada antes de continuar.");
+            return false;
+        }
+
+        try {
+            setAnimalPendiente(animal);
+            setCrotalEsperado(crotalAnimal);
+            setEsperandoCoincidencia(true);
+
+            limpiarCrotalLeido();
+            await iniciarLectura();
+
+            return true;
+        } catch {
+            Alert.alert("Error", "No se pudo iniciar la lectura con la espada.");
+            setEsperandoCoincidencia(false);
+            setAnimalPendiente(null);
+            setCrotalEsperado("");
+            return false;
+        }
+    };
 
     const onContinuar = async () => {
         if (modo === "busqueda") {
-            const valor = valorBusqueda.trim();
-
-            if (!valor) {
-                Alert.alert("Falta dato", "Escribe un ID o un crotal para buscar.");
-                return;
-            }
-
             try {
                 setBuscandoAnimal(true);
 
-                const r = await buscarAnimalEnBackend(valor);
+                // Búsqueda por crotal leyendo directamente de la espada
+                if (tipoBusqueda === "crotal" && origenBusquedaCrotal === "espada") {
+                    if (!lectorConectado) {
+                        Alert.alert("AWR no conectado", "Conecta una espada antes de continuar.");
+                        return;
+                    }
+
+                    setLeyendoBusquedaEspada(true);
+                    limpiarCrotalLeido();
+
+                    try {
+                        await iniciarLectura();
+                    } catch {
+                        Alert.alert("Error", "No se pudo iniciar la lectura con la espada.");
+                        setLeyendoBusquedaEspada(false);
+                    }
+
+                    return;
+                }
+
+                const valor = valorBusqueda.trim();
+
+                if (!valor) {
+                    Alert.alert(
+                        "Falta dato",
+                        tipoBusqueda === "crotal"
+                            ? "Escribe un crotal para buscar."
+                            : "Escribe un ID para buscar."
+                    );
+                    return;
+                }
+
+                const r =
+                    tipoBusqueda === "crotal"
+                        ? await obtenerLecturaEspada(valor)
+                        : await obtenerAnimalPorId(valor);
 
                 if (!r.ok) {
                     if (r.status === 404) {
-                        Alert.alert("No encontrado", "No existe ningún animal con ese ID o crotal.");
+                        Alert.alert(
+                            "No encontrado",
+                            tipoBusqueda === "crotal"
+                                ? "No existe ningún animal con ese crotal."
+                                : "No existe ningún animal con ese ID."
+                        );
                         return;
                     }
 
                     const detalle =
-                        (r.data && (r.data.message || r.data.error)) ||
-                        r.rawText ||
-                        `HTTP ${r.status}`;
+                        typeof r.data === "string"
+                            ? r.data
+                            : r.data?.message ||
+                            r.data?.error ||
+                            r.data?.mensaje ||
+                            r.rawText ||
+                            `HTTP ${r.status}`;
+
+                    if (r.status === 400) {
+                        Alert.alert("Aviso", String(detalle));
+                        return;
+                    }
 
                     Alert.alert("Error en la búsqueda", String(detalle));
                     return;
@@ -144,15 +268,17 @@ export const ConfiguracionGestacionScreen = () => {
                 const animalEncontrado = r.data ?? null;
 
                 if (!animalEncontrado) {
-                    Alert.alert("No encontrado", "No existe ningún animal con ese ID o crotal.");
+                    Alert.alert(
+                        "No encontrado",
+                        tipoBusqueda === "crotal"
+                            ? "No existe ningún animal con ese crotal."
+                            : "No existe ningún animal con ese ID."
+                    );
                     return;
                 }
 
-                navigation.navigate("LectorGestacion", {
-                    modo,
-                    valorBusqueda: valor,
-                    animalEncontrado,
-                });
+                const ok = await prepararEsperaCoincidencia(animalEncontrado);
+                if (!ok) return;
 
                 return;
             } catch {
@@ -170,33 +296,111 @@ export const ConfiguracionGestacionScreen = () => {
             confirmar,
         });
     };
-    async function buscarAnimalEnBackend(valor: string) {
-        const res = await fetch(ENDPOINT_BUSQUEDA_ANIMAL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ valor }),
-        });
 
-        let data: any = null;
-        let rawText = "";
+    // Caso: búsqueda por crotal usando la espada directamente
+    useEffect(() => {
+        const crotalActual = String(crotalLeido ?? "").trim();
 
-        try {
-            rawText = await res.text();
+        if (!leyendoBusquedaEspada || !crotalActual) return;
 
-            if (rawText) {
-                try {
-                    data = JSON.parse(rawText);
-                } catch {
-                    data = rawText;
+        let cancelado = false;
+
+        const ejecutarBusqueda = async () => {
+            try {
+                const r = await obtenerLecturaEspada(crotalActual);
+
+                if (cancelado) return;
+
+                if (!r.ok) {
+                    setLeyendoBusquedaEspada(false);
+
+                    if (r.status === 404) {
+                        Alert.alert("No encontrado", "No existe ningún animal con ese crotal.");
+                        return;
+                    }
+
+                    const detalle =
+                        typeof r.data === "string"
+                            ? r.data
+                            : r.data?.message ||
+                            r.data?.error ||
+                            r.data?.mensaje ||
+                            r.rawText ||
+                            `HTTP ${r.status}`;
+
+                    if (r.status === 400) {
+                        Alert.alert("Aviso", String(detalle));
+                        return;
+                    }
+
+                    Alert.alert("Error en la búsqueda", String(detalle));
+                    return;
                 }
-            }
-        } catch {
-            rawText = "";
-            data = null;
-        }
 
-        return { ok: res.ok, status: res.status, data, rawText };
-    }
+                const animalEncontrado = r.data ?? null;
+
+                if (!animalEncontrado) {
+                    setLeyendoBusquedaEspada(false);
+                    Alert.alert("No encontrado", "No existe ningún animal con ese crotal.");
+                    return;
+                }
+
+                setLeyendoBusquedaEspada(false);
+                limpiarCrotalLeido();
+                detenerLectura?.().catch(() => { });
+
+                navigation.navigate("LectorGestacion", {
+                    modo: "busqueda",
+                    tipoBusqueda: "crotal",
+                    origenBusquedaCrotal: "espada",
+                    valorBusqueda: String(animalEncontrado?.crotal ?? crotalActual),
+                    animalEncontrado,
+                });
+            } catch {
+                if (cancelado) return;
+                setLeyendoBusquedaEspada(false);
+                Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+            }
+        };
+
+        ejecutarBusqueda();
+
+        return () => {
+            cancelado = true;
+        };
+    }, [leyendoBusquedaEspada, crotalLeido, navigation, limpiarCrotalLeido, detenerLectura]);
+
+    // Caso: búsqueda manual por crotal o por ID, y esperar coincidencia con la espada
+    useEffect(() => {
+        const leido = String(crotalLeido ?? "").trim();
+        const esperado = String(crotalEsperado ?? "").trim();
+
+        if (!esperandoCoincidencia || !animalPendiente || !leido || !esperado) return;
+        if (leido !== esperado) return;
+
+        setEsperandoCoincidencia(false);
+        limpiarCrotalLeido();
+        detenerLectura?.().catch(() => { });
+
+        navigation.navigate("LectorGestacion", {
+            modo: "busqueda",
+            tipoBusqueda,
+            origenBusquedaCrotal,
+            valorBusqueda,
+            animalEncontrado: animalPendiente,
+        });
+    }, [
+        esperandoCoincidencia,
+        animalPendiente,
+        crotalLeido,
+        crotalEsperado,
+        navigation,
+        limpiarCrotalLeido,
+        detenerLectura,
+        tipoBusqueda,
+        origenBusquedaCrotal,
+        valorBusqueda,
+    ]);
 
     return (
         <View style={{ flex: 1, backgroundColor: BG }}>
@@ -206,7 +410,6 @@ export const ConfiguracionGestacionScreen = () => {
             </Appbar.Header>
 
             <View style={{ padding: 16, gap: 12, flex: 1 }}>
-                {/* Card: opciones */}
                 <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
                     <Card.Content>
                         <Text style={{ fontSize: 18, fontWeight: "900", color: TEXT }}>
@@ -270,7 +473,6 @@ export const ConfiguracionGestacionScreen = () => {
 
                             <View style={{ height: 12 }} />
 
-                            {/*  SOLO EN ENTRADA: Corral */}
                             {modo === "entrada" && (
                                 <>
                                     <TextInput
@@ -297,7 +499,6 @@ export const ConfiguracionGestacionScreen = () => {
                                 </>
                             )}
 
-                            {/*  ENTRADA Y SALIDA: switches */}
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                                 <View style={{ flex: 1, paddingRight: 10 }}>
                                     <Text style={{ color: TEXT, fontWeight: "800" }}>
@@ -307,7 +508,6 @@ export const ConfiguracionGestacionScreen = () => {
                                         Cuando leas un animal sin identificar, podrás asignarle un ID
                                     </Text>
                                 </View>
-                                {/*  te faltaba este Switch */}
                                 <Switch value={detectarDesconocidos} onValueChange={setDetectarDesconocidos} />
                             </View>
 
@@ -325,6 +525,7 @@ export const ConfiguracionGestacionScreen = () => {
                         </Card.Content>
                     </Card>
                 )}
+
                 {modo === "busqueda" && (
                     <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
                         <Card.Content>
@@ -336,31 +537,128 @@ export const ConfiguracionGestacionScreen = () => {
                             </View>
 
                             <Text style={{ marginTop: 6, color: MUTED }}>
-                                Escribe un ID o un crotal para buscar el animal.
+                                Elige si quieres buscar por crotal o por ID.
                             </Text>
 
                             <View style={{ height: 12 }} />
 
-                            <TextInput
-                                mode="outlined"
-                                label="ID o crotal"
-                                value={valorBusqueda}
-                                onChangeText={setValorBusqueda}
-                                placeholder="Ej: 99 o 982091072397436"
-                                keyboardType="number-pad"
-                                // left={<TextInput.Icon icon="magnify" />}
-                                outlineColor={BORDER}
-                                activeOutlineColor={BRAND}
-                            />
+                            <View style={{ flexDirection: "row", gap: 10 }}>
+                                <OptionCard
+                                    label="Por crotal"
+                                    icon="barcode-outline"
+                                    active={tipoBusqueda === "crotal"}
+                                    onPress={() => {
+                                        setTipoBusqueda("crotal");
+                                        setValorBusqueda("");
+                                    }}
+                                />
+                                <OptionCard
+                                    label="Por ID"
+                                    icon="id-card-outline"
+                                    active={tipoBusqueda === "id"}
+                                    onPress={() => {
+                                        setTipoBusqueda("id");
+                                        setValorBusqueda("");
+                                    }}
+                                />
+                            </View>
 
-                            {valorBusqueda.trim().length === 0 && (
-                                <Text style={{ color: "#DC2626", fontWeight: "700", marginTop: 8 }}>
-                                    Escribe un ID o un crotal para continuar.
+                            {tipoBusqueda === "crotal" && (
+                                <>
+                                    <View style={{ height: 12 }} />
+
+                                    <View style={{ flexDirection: "row", gap: 10 }}>
+                                        <OptionCard
+                                            label="Manual"
+                                            icon="create-outline"
+                                            active={origenBusquedaCrotal === "manual"}
+                                            onPress={() => {
+                                                setOrigenBusquedaCrotal("manual");
+                                                setValorBusqueda("");
+                                            }}
+                                        />
+                                        <OptionCard
+                                            label="Con espada"
+                                            icon="barcode-outline"
+                                            active={origenBusquedaCrotal === "espada"}
+                                            onPress={() => {
+                                                setOrigenBusquedaCrotal("espada");
+                                                setValorBusqueda("");
+                                            }}
+                                        />
+                                    </View>
+                                </>
+                            )}
+
+                            {!(tipoBusqueda === "crotal" && origenBusquedaCrotal === "espada") && (
+                                <>
+                                    <View style={{ height: 12 }} />
+
+                                    <TextInput
+                                        mode="outlined"
+                                        label={tipoBusqueda === "crotal" ? "Crotal" : "ID"}
+                                        value={valorBusqueda}
+                                        onChangeText={setValorBusqueda}
+                                        placeholder={
+                                            tipoBusqueda === "crotal"
+                                                ? "Ej: 982091072397436"
+                                                : "Ej: 13"
+                                        }
+                                        keyboardType="number-pad"
+                                        outlineColor={BORDER}
+                                        activeOutlineColor={BRAND}
+                                    />
+
+                                    {valorBusqueda.trim().length === 0 && (
+                                        <Text style={{ color: "#DC2626", fontWeight: "700", marginTop: 8 }}>
+                                            {tipoBusqueda === "crotal"
+                                                ? "Escribe un crotal para continuar."
+                                                : "Escribe un ID para continuar."}
+                                        </Text>
+                                    )}
+                                </>
+                            )}
+
+                            {tipoBusqueda === "crotal" && origenBusquedaCrotal === "espada" && (
+                                <Text style={{ color: MUTED, marginTop: 12 }}>
+                                    Al continuar, se leerá la espada en esta pantalla y se buscará el animal con ese crotal.
                                 </Text>
                             )}
                         </Card.Content>
                     </Card>
                 )}
+
+                {(buscandoAnimal || leyendoBusquedaEspada || esperandoCoincidencia) && (
+                    <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
+                        <Card.Content>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                                <Ionicons name="scan-outline" size={22} color={BRAND} />
+                                <Text style={{ fontSize: 16, fontWeight: "900", color: TEXT }}>
+                                    {leyendoBusquedaEspada
+                                        ? "Leyendo espada..."
+                                        : esperandoCoincidencia
+                                            ? "Esperando coincidencia"
+                                            : "Buscando animal..."}
+                                </Text>
+                            </View>
+
+                            <Text style={{ marginTop: 8, color: MUTED }}>
+                                {leyendoBusquedaEspada
+                                    ? "Acerca el crotal al lector para identificar el animal."
+                                    : esperandoCoincidencia
+                                        ? `Animal localizado. Ahora acerca a la espada el crotal ${crotalEsperado} para confirmar la coincidencia.`
+                                        : "Consultando información del animal en el backend."}
+                            </Text>
+
+                            {!!crotalLeido && (
+                                <Text style={{ marginTop: 10, color: TEXT, fontWeight: "800" }}>
+                                    Crotal leído: {String(crotalLeido)}
+                                </Text>
+                            )}
+                        </Card.Content>
+                    </Card>
+                )}
+
                 {!lectorConectado && (
                     <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
                         <Card.Content>
@@ -433,12 +731,17 @@ export const ConfiguracionGestacionScreen = () => {
                         </Card.Content>
                     </Card>
                 )}
-                {/* CTA abajo */}
+
                 <View style={{ marginTop: "auto" }}>
                     <Button
                         mode="contained"
                         onPress={onContinuar}
-                        disabled={!puedeContinuar || buscandoAnimal}
+                        disabled={
+                            !puedeContinuar ||
+                            buscandoAnimal ||
+                            leyendoBusquedaEspada ||
+                            esperandoCoincidencia
+                        }
                         style={{
                             borderRadius: 16,
                             paddingVertical: 6,

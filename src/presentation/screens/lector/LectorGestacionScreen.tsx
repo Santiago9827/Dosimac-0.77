@@ -8,6 +8,8 @@ import { Appbar, Switch } from "react-native-paper";
 import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
 import { obtenerLecturaEspada } from "../../routes/obtenerLecturaEspada";
+import { formatearSoloFecha } from "../../routes/obtenerLecturaEspada";
+
 
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
@@ -291,6 +293,77 @@ const CajaDatoLectura = ({
         )}
     </View>
 );
+
+const FichaDatoAnimal = ({
+    icon,
+    titulo,
+    valor,
+    anchoCompleto = false,
+}: {
+    icon: any;
+    titulo: string;
+    valor: string;
+    anchoCompleto?: boolean;
+}) => (
+    <View
+        style={{
+            width: anchoCompleto ? "100%" : "48%",
+            backgroundColor: "#F8FAFF",
+            borderWidth: 1.5,
+            borderColor: "#CBD5E1",
+            borderRadius: 16,
+            padding: 14,
+        }}
+    >
+        <View
+            style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 8,
+            }}
+        >
+            <Ionicons name={icon} size={16} color={BRAND} />
+            <Text
+                style={{
+                    color: MUTED,
+                    fontWeight: "800",
+                    fontSize: 12,
+                }}
+            >
+                {titulo}
+            </Text>
+        </View>
+
+        <Text
+            style={{
+                color: TEXT,
+                fontWeight: "900",
+                fontSize: 16,
+            }}
+            numberOfLines={anchoCompleto ? 2 : 1}
+            ellipsizeMode="tail"
+        >
+            {valor}
+        </Text>
+    </View>
+);
+
+
+const formatearFecha = (fecha?: string) => {
+    if (!fecha) return "—";
+
+    try {
+        const fechaLimpia = fecha.replace("[UTC]", "");
+        const d = new Date(fechaLimpia);
+
+        if (Number.isNaN(d.getTime())) return fecha;
+
+        return d.toLocaleString("es-ES");
+    } catch {
+        return fecha;
+    }
+};
 // ---------- componente ----------
 export const LectorGestacionScreen = () => {
 
@@ -338,6 +411,11 @@ export const LectorGestacionScreen = () => {
     const confirmarParam = route.params?.confirmar ?? true;
     const valorBusquedaParam = route.params?.valorBusqueda ?? "";
     const animalEncontradoParam = route.params?.animalEncontrado ?? null;
+    const animalBusqueda = animalEncontradoParam ?? null;
+    // const tipoBusquedaParam = route.params?.tipoBusqueda ?? "crotal";
+
+    const fechaCambioEstado = formatearFecha(animalBusqueda?.stateChangeDate);
+    const fechaEntradaSistema = formatearFecha(animalBusqueda?.systemEntryDate);
 
     // paginación
     const TAM_PAGINA = 10;
@@ -379,6 +457,7 @@ export const LectorGestacionScreen = () => {
             }}
         />
     );
+
 
     useEffect(() => {
         const maxPagina = Math.max(0, Math.ceil(registrosEnviados.length / TAM_PAGINA) - 1);
@@ -752,60 +831,143 @@ export const LectorGestacionScreen = () => {
                             }}
                         >
                             <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                                Resultado de búsqueda
+                                Información del animal
                             </Text>
                             <Text style={{ color: MUTED, marginTop: 4 }}>
-                                Información devuelta por el backend para el animal encontrado.
+                                Datos localizados en la búsqueda.
                             </Text>
                         </View>
 
-                        <View style={{ padding: 14, gap: 12 }}>
-                            <InfoRow
-                                icon="search-outline"
-                                label="Buscado"
-                                value={valorBusquedaParam || "—"}
-                            />
+                        <View style={{ padding: 14, gap: 14 }}>
+                            {/* Bloque principal */}
+                            <View
+                                style={{
+                                    backgroundColor: "#EEF2FF",
+                                    borderWidth: 1,
+                                    borderColor: "#C7D2FE",
+                                    borderRadius: 18,
+                                    padding: 16,
+                                    gap: 10,
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                    }}
+                                >
+                                    <View
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            gap: 8,
+                                        }}
+                                    >
+                                        {/* <Ionicons name="paw-outline" size={18} color={BRAND} /> */}
+                                        <Text style={{ color: BRAND, fontWeight: "900", fontSize: 15 }}>
+                                            Ficha Animal
+                                        </Text>
+                                    </View>
+                                </View>
 
-                            <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
+                                <Text
+                                    style={{
+                                        color: TEXT,
+                                        fontSize: 28,
+                                        fontWeight: "900",
+                                    }}
+                                >
+                                    ID {String(animalBusqueda?.animalId ?? "—")}
+                                </Text>
 
-                            <InfoRow
-                                icon="id-card-outline"
-                                label="ID"
-                                value={
-                                    String(
-                                        animalEncontradoParam?.id ??
-                                        animalEncontradoParam?.idAnimal ??
-                                        animalEncontradoParam?.identificador ??
-                                        "—"
-                                    )
-                                }
-                            />
+                                <Text
+                                    style={{
+                                        color: MUTED,
+                                        fontSize: 15,
+                                        fontWeight: "700",
+                                    }}
+                                >
+                                    Crotal {String(animalBusqueda?.crotal ?? "—")}
+                                </Text>
 
-                            <InfoRow
-                                icon="barcode-outline"
-                                label="Crotal"
-                                value={
-                                    String(
-                                        animalEncontradoParam?.crotal ??
-                                        animalEncontradoParam?.tag ??
-                                        "—"
-                                    )
-                                }
-                            />
+                                {/* <View
+                                    style={{
+                                        alignSelf: "flex-start",
+                                        marginTop: 4,
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 5,
+                                        borderRadius: 999,
+                                        backgroundColor: "#FFFFFF",
+                                        borderWidth: 1,
+                                        borderColor: "#D1D5DB",
+                                    }}
+                                >
+                                    <Text style={{ color: TEXT, fontWeight: "800", fontSize: 12 }}>
+                                        Estado: {String(animalBusqueda?.state ?? "—")}
+                                    </Text>
+                                </View> */}
+                            </View>
+
+                            {/* Grid de datos */}
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    flexWrap: "wrap",
+                                    justifyContent: "space-between",
+                                    gap: 12,
+                                }}
+                            >
+                                <FichaDatoAnimal
+                                    icon="home-outline"
+                                    titulo="Corral"
+                                    valor={String(animalBusqueda?.corralName ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="business-outline"
+                                    titulo="Nave"
+                                    valor={String(animalBusqueda?.houseName ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="git-branch-outline"
+                                    titulo="Estado"
+                                    valor={String(animalBusqueda?.state ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="fitness-outline"
+                                    titulo="Condición corporal"
+                                    valor={String(animalBusqueda?.bodyConditionCorrection ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="refresh-outline"
+                                    titulo="Ciclo"
+                                    valor={String(animalBusqueda?.cycle ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="time-outline"
+                                    titulo="Entrada en sistema"
+                                    valor={formatearSoloFecha(animalBusqueda?.systemEntryDate)}
+                                />
+                            </View>
 
                             <TouchableOpacity
                                 onPress={() => navigation.navigate("ConfiguracionGestacion")}
                                 activeOpacity={0.9}
                                 style={{
-                                    marginTop: 6,
-                                    height: 42,
-                                    borderRadius: 12,
+                                    marginTop: 4,
+                                    height: 46,
+                                    borderRadius: 14,
                                     alignItems: "center",
                                     justifyContent: "center",
                                     backgroundColor: "#E5E7EB",
                                 }}
                             >
-                                <Text style={{ color: TEXT, fontWeight: "900" }}>
+                                <Text style={{ color: TEXT, fontWeight: "900", fontSize: 15 }}>
                                     Nueva búsqueda
                                 </Text>
                             </TouchableOpacity>

@@ -15,6 +15,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { TouchableOpacity } from "react-native";
 import { awrStore } from "../../stores/awrStore";
 import { useAwrConn } from "../../stores/awrConnStore";
+import { obtenerLecturaEspada, obtenerAnimalPorId } from "../routes/obtenerLecturaEspada";
 
 type Modo = "entrada" | "salida" | "lectura" | "busqueda";
 
@@ -93,7 +94,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
     const [corral, setCorral] = useState("");
     const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
     const [confirmar, setConfirmar] = useState(true);
-
+    const [tipoBusqueda, setTipoBusqueda] = useState<"crotal" | "id">("crotal");
     const requiereCorral = modo === "entrada";
 
     const puedeContinuar = useMemo(() => {
