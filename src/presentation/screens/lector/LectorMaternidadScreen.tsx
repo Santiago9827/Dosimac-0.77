@@ -8,12 +8,18 @@ import { useRoute, RouteProp, useFocusEffect, useNavigation } from "@react-navig
 import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../../presentation/components/shared/IndicadorConexionAnimado";
 import { obtenerLecturaEspada } from "../../routes/obtenerLecturaEspada";
+import { formatearSoloFecha } from "../../routes/obtenerLecturaEspada";
+
 
 type LectorMaternidadParams = {
     modo?: "entrada" | "salida" | "lectura" | "busqueda";
     corral?: string;
     detectarDesconocidos?: boolean;
     confirmar?: boolean;
+    tipoBusqueda?: "crotal" | "id";
+    origenBusquedaCrotal?: "manual" | "espada";
+    valorBusqueda?: string;
+    animalEncontrado?: any;
 };
 
 const BG = "#F6F7FB";
@@ -47,8 +53,7 @@ type RegistroEnviado = {
     crotal: string;
 };
 
-type TipoMovimiento = "entrada" | "salida" | "lectura";
-
+type TipoMovimiento = "entrada" | "salida" | "lectura" | "busqueda";
 // ---------- helpers ----------
 const normalizarClave = (valor: string) =>
     valor.trim().toUpperCase().replace(/\s+/g, "");
@@ -281,6 +286,61 @@ const CajaDatoLectura = ({
     </View>
 );
 
+const FichaDatoAnimal = ({
+    icon,
+    titulo,
+    valor,
+    anchoCompleto = false,
+}: {
+    icon: any;
+    titulo: string;
+    valor: string;
+    anchoCompleto?: boolean;
+}) => (
+    <View
+        style={{
+            width: anchoCompleto ? "100%" : "48%",
+            backgroundColor: "#F8FAFF",
+            borderWidth: 1,
+            borderColor: "#E2E8F0",
+            borderRadius: 16,
+            padding: 14,
+        }}
+    >
+        <View
+            style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 8,
+            }}
+        >
+            <Ionicons name={icon} size={16} color={BRAND} />
+            <Text
+                style={{
+                    color: MUTED,
+                    fontWeight: "800",
+                    fontSize: 12,
+                }}
+            >
+                {titulo}
+            </Text>
+        </View>
+
+        <Text
+            style={{
+                color: TEXT,
+                fontWeight: "900",
+                fontSize: 16,
+            }}
+            numberOfLines={anchoCompleto ? 2 : 1}
+            ellipsizeMode="tail"
+        >
+            {valor}
+        </Text>
+    </View>
+);
+
 // ---------- componente ----------
 export const LectorMaternidadScreen = () => {
     const ANCHO_CORRAL = 60;
@@ -336,9 +396,14 @@ export const LectorMaternidadScreen = () => {
     const esEntrada = tipoMovimiento === "entrada";
     const esSalida = tipoMovimiento === "salida";
     const esLectura = tipoMovimiento === "lectura";
+    const esBusqueda = tipoMovimiento === "busqueda";
 
     const route = useRoute<RouteProp<Record<string, LectorMaternidadParams>, string>>();
     const params = route.params ?? {};
+
+    const valorBusquedaParam = params.valorBusqueda ?? "";
+    const animalEncontradoParam = params.animalEncontrado ?? null;
+    const animalBusqueda = animalEncontradoParam ?? null;
 
     const TAM_PAGINA = 10;
     const [pagina, setPagina] = useState(0);
@@ -398,7 +463,9 @@ export const LectorMaternidadScreen = () => {
                     ? "salida"
                     : params.modo === "lectura"
                         ? "lectura"
-                        : "entrada";
+                        : params.modo === "busqueda"
+                            ? "busqueda"
+                            : "entrada";
 
             setTipoMovimiento(modoInicial);
             setCorralInput(
@@ -422,12 +489,12 @@ export const LectorMaternidadScreen = () => {
             ultimoCrotalAutoRef.current = null;
 
             (async () => {
+                if (modoInicial === "busqueda") return;
                 if (!idLector) return;
                 try {
                     await iniciarLectura();
                 } catch { }
             })();
-
             return () => {
                 if (timerIdRef.current) {
                     clearTimeout(timerIdRef.current);
@@ -707,8 +774,136 @@ export const LectorMaternidadScreen = () => {
             </Appbar.Header>
 
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 14 }}>
+
+                {esBusqueda && (
+                    <View
+                        style={{
+                            backgroundColor: CARD,
+                            borderRadius: 18,
+                            overflow: "hidden",
+                            borderWidth: 1,
+                            borderColor: BORDER,
+                            ...SHADOW,
+                        }}
+                    >
+                        <View
+                            style={{
+                                backgroundColor: SOFT,
+                                padding: 14,
+                                borderBottomWidth: 1,
+                                borderBottomColor: SOFT_BORDER,
+                            }}
+                        >
+                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
+                                Información del animal
+                            </Text>
+                            <Text style={{ color: MUTED, marginTop: 4 }}>
+                                Datos localizados en la búsqueda.
+                            </Text>
+                        </View>
+
+                        <View style={{ padding: 14, gap: 14 }}>
+                            <View
+                                style={{
+                                    backgroundColor: "#EEF2FF",
+                                    borderWidth: 1,
+                                    borderColor: "#C7D2FE",
+                                    borderRadius: 18,
+                                    padding: 16,
+                                    gap: 10,
+                                }}
+                            >
+                                <Text style={{ color: BRAND, fontWeight: "900", fontSize: 15 }}>
+                                    Ficha Animal
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: TEXT,
+                                        fontSize: 28,
+                                        fontWeight: "900",
+                                    }}
+                                >
+                                    ID {String(animalBusqueda?.animalId ?? "—")}
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: MUTED,
+                                        fontSize: 15,
+                                        fontWeight: "700",
+                                    }}
+                                >
+                                    Crotal {String(animalBusqueda?.crotal ?? "—")}
+                                </Text>
+                            </View>
+
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    flexWrap: "wrap",
+                                    justifyContent: "space-between",
+                                    gap: 12,
+                                }}
+                            >
+                                <FichaDatoAnimal
+                                    icon="home-outline"
+                                    titulo="Corral"
+                                    valor={String(animalBusqueda?.corralName ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="business-outline"
+                                    titulo="Nave"
+                                    valor={String(animalBusqueda?.houseName ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="git-branch-outline"
+                                    titulo="Estado"
+                                    valor={String(animalBusqueda?.state ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="fitness-outline"
+                                    titulo="Condición corporal"
+                                    valor={String(animalBusqueda?.bodyConditionCorrection ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="refresh-outline"
+                                    titulo="Ciclo"
+                                    valor={String(animalBusqueda?.cycle ?? "—")}
+                                />
+
+                                <FichaDatoAnimal
+                                    icon="time-outline"
+                                    titulo="Entrada en sistema"
+                                    valor={formatearSoloFecha(animalBusqueda?.systemEntryDate)}
+                                />
+                            </View>
+
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate("ConfiguracionLecturaMaternidad")}
+                                activeOpacity={0.9}
+                                style={{
+                                    marginTop: 4,
+                                    height: 46,
+                                    borderRadius: 14,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    backgroundColor: "#E5E7EB",
+                                }}
+                            >
+                                <Text style={{ color: TEXT, fontWeight: "900", fontSize: 15 }}>
+                                    Nueva búsqueda
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
                 {/* Resumen */}
-                {!esLectura && (
+                {!esLectura && !esBusqueda && (
                     <View
                         style={{
                             backgroundColor: CARD,
@@ -791,7 +986,7 @@ export const LectorMaternidadScreen = () => {
                 )}
 
                 {/* Lectura actual */}
-                {!esLectura && (
+                {!esLectura && !esBusqueda && (
                     <View
                         style={{
                             backgroundColor: CARD,
@@ -881,488 +1076,493 @@ export const LectorMaternidadScreen = () => {
                 )}
 
                 {/* Tabla */}
-                <View
-                    style={{
-                        marginTop: 12,
-                        backgroundColor: CARD,
-                        borderRadius: 18,
-                        overflow: "hidden",
-                        borderWidth: 1,
-                        borderColor: BORDER,
-                        ...SHADOW,
-                    }}
-                >
+                {!esBusqueda && (
                     <View
                         style={{
-                            paddingVertical: 10,
-                            paddingHorizontal: 14,
-                            backgroundColor: "#F8FAFF",
-                            borderBottomWidth: 1,
-                            borderBottomColor: "#E0E7FF",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 10,
+                            marginTop: 12,
+                            backgroundColor: CARD,
+                            borderRadius: 18,
+                            overflow: "hidden",
+                            borderWidth: 1,
+                            borderColor: BORDER,
+                            ...SHADOW,
                         }}
                     >
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                                Registros enviados
-                            </Text>
+                        <View
+                            style={{
+                                paddingVertical: 10,
+                                paddingHorizontal: 14,
+                                backgroundColor: "#F8FAFF",
+                                borderBottomWidth: 1,
+                                borderBottomColor: "#E0E7FF",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 10,
+                            }}
+                        >
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
+                                    Registros enviados
+                                </Text>
 
-                            {esLectura && !lectorConectado && (
-                                <View
-                                    style={{
-                                        marginTop: 8,
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        alignSelf: "flex-start",
-                                        gap: 6,
-                                        paddingVertical: 6,
-                                        paddingHorizontal: 10,
-                                        borderRadius: 999,
-                                        backgroundColor: "#FEF2F2",
-                                        borderWidth: 1,
-                                        borderColor: "#FECACA",
-                                    }}
-                                >
-                                    <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
-                                    <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
-                                        AWR no conectado
+                                {esLectura && !lectorConectado && (
+                                    <View
+                                        style={{
+                                            marginTop: 8,
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            alignSelf: "flex-start",
+                                            gap: 6,
+                                            paddingVertical: 6,
+                                            paddingHorizontal: 10,
+                                            borderRadius: 999,
+                                            backgroundColor: "#FEF2F2",
+                                            borderWidth: 1,
+                                            borderColor: "#FECACA",
+                                        }}
+                                    >
+                                        <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
+                                        <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
+                                            AWR no conectado
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {registrosEnviados.length > TAM_PAGINA && (
+                                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                                    <TouchableOpacity
+                                        onPress={() => setPagina((p) => Math.max(0, p - 1))}
+                                        disabled={pagina === 0}
+                                        activeOpacity={0.9}
+                                        style={{
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 18,
+                                            borderRadius: 12,
+                                            backgroundColor: pagina === 0 ? "#E5E7EB" : BRAND,
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                color: pagina === 0 ? "#6B7280" : "white",
+                                                fontWeight: "900",
+                                            }}
+                                        >
+                                            {"<"}
+                                        </Text>
+                                    </TouchableOpacity>
+
+                                    <Text style={{ color: MUTED, fontWeight: "900" }}>
+                                        {pagina + 1}/{totalPaginas}
                                     </Text>
+
+                                    <TouchableOpacity
+                                        onPress={() => setPagina((p) => Math.min(totalPaginas - 1, p + 1))}
+                                        disabled={pagina >= totalPaginas - 1}
+                                        activeOpacity={0.9}
+                                        style={{
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 18,
+                                            borderRadius: 12,
+                                            backgroundColor: pagina >= totalPaginas - 1 ? "#E5E7EB" : BRAND,
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                color: pagina >= totalPaginas - 1 ? "#6B7280" : "white",
+                                                fontWeight: "900",
+                                            }}
+                                        >
+                                            {">"}
+                                        </Text>
+                                    </TouchableOpacity>
                                 </View>
                             )}
                         </View>
 
-                        {registrosEnviados.length > TAM_PAGINA && (
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                                <TouchableOpacity
-                                    onPress={() => setPagina((p) => Math.max(0, p - 1))}
-                                    disabled={pagina === 0}
-                                    activeOpacity={0.9}
-                                    style={{
-                                        paddingVertical: 12,
-                                        paddingHorizontal: 18,
-                                        borderRadius: 12,
-                                        backgroundColor: pagina === 0 ? "#E5E7EB" : BRAND,
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            fontSize: 16,
-                                            color: pagina === 0 ? "#6B7280" : "white",
-                                            fontWeight: "900",
-                                        }}
-                                    >
-                                        {"<"}
-                                    </Text>
-                                </TouchableOpacity>
+                        <View style={{ position: "relative" }}>
+                            {!esLectura && esEntrada && (
+                                <>
+                                    <LineaVerticalTabla
+                                        left={PADDING_TABLA_X + ANCHO_CORRAL + ESPACIO_CORRAL_ID_ENTRADA / 2}
+                                    />
+                                    <LineaVerticalTabla
+                                        left={
+                                            PADDING_TABLA_X +
+                                            ANCHO_CORRAL +
+                                            ESPACIO_CORRAL_ID_ENTRADA +
+                                            ANCHO_ID +
+                                            ESPACIO_ID_CROTAL_ENTRADA / 2
+                                        }
+                                    />
+                                </>
+                            )}
 
-                                <Text style={{ color: MUTED, fontWeight: "900" }}>
-                                    {pagina + 1}/{totalPaginas}
-                                </Text>
-
-                                <TouchableOpacity
-                                    onPress={() => setPagina((p) => Math.min(totalPaginas - 1, p + 1))}
-                                    disabled={pagina >= totalPaginas - 1}
-                                    activeOpacity={0.9}
-                                    style={{
-                                        paddingVertical: 12,
-                                        paddingHorizontal: 18,
-                                        borderRadius: 12,
-                                        backgroundColor: pagina >= totalPaginas - 1 ? "#E5E7EB" : BRAND,
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            fontSize: 16,
-                                            color: pagina >= totalPaginas - 1 ? "#6B7280" : "white",
-                                            fontWeight: "900",
-                                        }}
-                                    >
-                                        {">"}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                    </View>
-
-                    <View style={{ position: "relative" }}>
-                        {!esLectura && esEntrada && (
-                            <>
+                            {esSalida && (
                                 <LineaVerticalTabla
-                                    left={PADDING_TABLA_X + ANCHO_CORRAL + ESPACIO_CORRAL_ID_ENTRADA / 2}
+                                    left={PADDING_TABLA_X + ANCHO_ID + ESPACIO_ID_CROTAL_SALIDA / 2}
                                 />
-                                <LineaVerticalTabla
-                                    left={
-                                        PADDING_TABLA_X +
-                                        ANCHO_CORRAL +
-                                        ESPACIO_CORRAL_ID_ENTRADA +
-                                        ANCHO_ID +
-                                        ESPACIO_ID_CROTAL_ENTRADA / 2
-                                    }
-                                />
-                            </>
-                        )}
+                            )}
 
-                        {esSalida && (
-                            <LineaVerticalTabla
-                                left={PADDING_TABLA_X + ANCHO_ID + ESPACIO_ID_CROTAL_SALIDA / 2}
-                            />
-                        )}
-
-                        {esLectura ? (
-                            <View
-                                style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    paddingVertical: 10,
-                                    paddingHorizontal: 14,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: BORDER,
-                                    backgroundColor: "#FFFFFF",
-                                }}
-                            >
-                                <Text
+                            {esLectura ? (
+                                <View
                                     style={{
-                                        width: ANCHO_CORRAL,
-                                        color: MUTED,
-                                        fontWeight: "900",
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 14,
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: BORDER,
+                                        backgroundColor: "#FFFFFF",
                                     }}
-                                    numberOfLines={1}
                                 >
-                                    Corral
-                                </Text>
-
-                                <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
-
-                                <Text
-                                    style={{
-                                        width: ANCHO_ID,
-                                        color: MUTED,
-                                        fontWeight: "900",
-                                        textAlign: "center",
-                                    }}
-                                    numberOfLines={1}
-                                >
-                                    ID
-                                </Text>
-
-                                <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
-
-                                <View style={{ flex: 1, alignItems: "flex-start" }}>
                                     <Text
                                         style={{
+                                            width: ANCHO_CORRAL,
                                             color: MUTED,
                                             fontWeight: "900",
-                                            textAlign: "left",
                                         }}
                                         numberOfLines={1}
                                     >
-                                        Crotal
+                                        Corral
                                     </Text>
-                                </View>
-                            </View>
-                        ) : esSalida ? (
-                            <View
-                                style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    paddingVertical: 10,
-                                    paddingHorizontal: 14,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: BORDER,
-                                    backgroundColor: "#FFFFFF",
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        width: ANCHO_ID,
-                                        color: MUTED,
-                                        fontWeight: "900",
-                                        textAlign: "center",
-                                    }}
-                                    numberOfLines={1}
-                                >
-                                    ID
-                                </Text>
 
-                                <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
+                                    <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
 
-                                <View style={{ flex: 1, alignItems: "flex-end" }}>
                                     <Text
                                         style={{
-                                            width: ANCHO_CROTAL_SALIDA,
+                                            width: ANCHO_ID,
                                             color: MUTED,
                                             fontWeight: "900",
-                                            textAlign: "left",
+                                            textAlign: "center",
                                         }}
                                         numberOfLines={1}
                                     >
-                                        Crotal
+                                        ID
                                     </Text>
-                                </View>
-                            </View>
-                        ) : (
-                            <View
-                                style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    paddingVertical: 10,
-                                    paddingHorizontal: 14,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: BORDER,
-                                    backgroundColor: "#FFFFFF",
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        width: ANCHO_CORRAL,
-                                        color: MUTED,
-                                        fontWeight: "900",
-                                    }}
-                                    numberOfLines={1}
-                                >
-                                    Corral
-                                </Text>
 
-                                <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
+                                    <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
 
-                                <Text
-                                    style={{
-                                        width: ANCHO_ID,
-                                        color: MUTED,
-                                        fontWeight: "900",
-                                        textAlign: "center",
-                                    }}
-                                    numberOfLines={1}
-                                >
-                                    ID
-                                </Text>
-
-                                <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
-
-                                <View style={{ flex: 1, alignItems: "flex-start" }}>
-                                    <Text
-                                        style={{
-                                            color: MUTED,
-                                            fontWeight: "900",
-                                            textAlign: "left",
-                                        }}
-                                        numberOfLines={1}
-                                    >
-                                        Crotal
-                                    </Text>
-                                </View>
-                            </View>
-                        )}
-
-                        {registrosEnviados.length === 0 ? (
-                            <View style={{ padding: 14 }}>
-                                <Text style={{ color: MUTED }}>No hay registros.</Text>
-                            </View>
-                        ) : (
-                            pageItems.map((r, idx) =>
-                                esLectura ? (
-                                    <View
-                                        key={r.localId}
-                                        style={{
-                                            flexDirection: "row",
-                                            alignItems: "flex-start",
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 14,
-                                            borderTopWidth: 1,
-                                            borderTopColor: "#F1F5F9",
-                                            backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
-                                        }}
-                                    >
+                                    <View style={{ flex: 1, alignItems: "flex-start" }}>
                                         <Text
                                             style={{
-                                                width: ANCHO_CORRAL,
-                                                color: TEXT,
-                                                fontWeight: "700",
+                                                color: MUTED,
+                                                fontWeight: "900",
+                                                textAlign: "left",
                                             }}
                                             numberOfLines={1}
                                         >
-                                            {r.corral}
+                                            Crotal
                                         </Text>
+                                    </View>
+                                </View>
+                            ) : esSalida ? (
+                                <View
+                                    style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 14,
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: BORDER,
+                                        backgroundColor: "#FFFFFF",
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            width: ANCHO_ID,
+                                            color: MUTED,
+                                            fontWeight: "900",
+                                            textAlign: "center",
+                                        }}
+                                        numberOfLines={1}
+                                    >
+                                        ID
+                                    </Text>
 
-                                        <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
+                                    <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
 
+                                    <View style={{ flex: 1, alignItems: "flex-end" }}>
                                         <Text
                                             style={{
-                                                width: ANCHO_ID,
-                                                color: r.idBackend === "—" ? DANGER : TEXT,
-                                                fontWeight: "700",
-                                                textAlign: "center",
+                                                width: ANCHO_CROTAL_SALIDA,
+                                                color: MUTED,
+                                                fontWeight: "900",
+                                                textAlign: "left",
                                             }}
                                             numberOfLines={1}
                                         >
-                                            {r.idBackend}
+                                            Crotal
                                         </Text>
+                                    </View>
+                                </View>
+                            ) : (
+                                <View
+                                    style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 14,
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: BORDER,
+                                        backgroundColor: "#FFFFFF",
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            width: ANCHO_CORRAL,
+                                            color: MUTED,
+                                            fontWeight: "900",
+                                        }}
+                                        numberOfLines={1}
+                                    >
+                                        Corral
+                                    </Text>
 
-                                        <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+                                    <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
 
-                                        <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                    <Text
+                                        style={{
+                                            width: ANCHO_ID,
+                                            color: MUTED,
+                                            fontWeight: "900",
+                                            textAlign: "center",
+                                        }}
+                                        numberOfLines={1}
+                                    >
+                                        ID
+                                    </Text>
+
+                                    <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                    <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                        <Text
+                                            style={{
+                                                color: MUTED,
+                                                fontWeight: "900",
+                                                textAlign: "left",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            Crotal
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+
+                            {registrosEnviados.length === 0 ? (
+                                <View style={{ padding: 14 }}>
+                                    <Text style={{ color: MUTED }}>No hay registros.</Text>
+                                </View>
+                            ) : (
+                                pageItems.map((r, idx) =>
+                                    esLectura ? (
+                                        <View
+                                            key={r.localId}
+                                            style={{
+                                                flexDirection: "row",
+                                                alignItems: "flex-start",
+                                                paddingVertical: 12,
+                                                paddingHorizontal: 14,
+                                                borderTopWidth: 1,
+                                                borderTopColor: "#F1F5F9",
+                                                backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                            }}
+                                        >
                                             <Text
                                                 style={{
+                                                    width: ANCHO_CORRAL,
                                                     color: TEXT,
                                                     fontWeight: "700",
-                                                    textAlign: "left",
-                                                    fontSize: 14,
-                                                    flexShrink: 1,
                                                 }}
                                                 numberOfLines={1}
-                                                ellipsizeMode="middle"
                                             >
-                                                {r.crotal}
+                                                {r.corral}
                                             </Text>
-                                        </View>
-                                    </View>
-                                ) : esSalida ? (
-                                    <View
-                                        key={r.localId}
-                                        style={{
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 14,
-                                            borderTopWidth: 1,
-                                            borderTopColor: "#F1F5F9",
-                                            backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                width: ANCHO_ID,
-                                                color: r.idBackend === "—" ? DANGER : TEXT,
-                                                fontWeight: "700",
-                                                textAlign: "center",
-                                            }}
-                                            numberOfLines={1}
-                                        >
-                                            {r.idBackend}
-                                        </Text>
 
-                                        <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
+                                            <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
 
-                                        <View style={{ flex: 1, alignItems: "flex-end" }}>
                                             <Text
                                                 style={{
-                                                    width: ANCHO_CROTAL_SALIDA,
-                                                    color: TEXT,
+                                                    width: ANCHO_ID,
+                                                    color: r.idBackend === "—" ? DANGER : TEXT,
                                                     fontWeight: "700",
-                                                    textAlign: "left",
-                                                    fontSize: 15,
+                                                    textAlign: "center",
                                                 }}
                                                 numberOfLines={1}
-                                                ellipsizeMode="middle"
                                             >
-                                                {r.crotal}
+                                                {r.idBackend}
                                             </Text>
+
+                                            <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                            <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                                <Text
+                                                    style={{
+                                                        color: TEXT,
+                                                        fontWeight: "700",
+                                                        textAlign: "left",
+                                                        fontSize: 14,
+                                                        flexShrink: 1,
+                                                    }}
+                                                    numberOfLines={1}
+                                                    ellipsizeMode="middle"
+                                                >
+                                                    {r.crotal}
+                                                </Text>
+                                            </View>
                                         </View>
-                                    </View>
-                                ) : (
-                                    <View
-                                        key={r.localId}
-                                        style={{
-                                            flexDirection: "row",
-                                            alignItems: "flex-start",
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 14,
-                                            borderTopWidth: 1,
-                                            borderTopColor: "#F1F5F9",
-                                            backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
-                                        }}
-                                    >
-                                        <Text
+                                    ) : esSalida ? (
+                                        <View
+                                            key={r.localId}
                                             style={{
-                                                width: ANCHO_CORRAL,
-                                                color: TEXT,
-                                                fontWeight: "700",
+                                                flexDirection: "row",
+                                                alignItems: "center",
+                                                paddingVertical: 12,
+                                                paddingHorizontal: 14,
+                                                borderTopWidth: 1,
+                                                borderTopColor: "#F1F5F9",
+                                                backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
                                             }}
-                                            numberOfLines={1}
                                         >
-                                            {r.corral}
-                                        </Text>
-
-                                        <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
-
-                                        <Text
-                                            style={{
-                                                width: ANCHO_ID,
-                                                color: r.idBackend === "—" ? DANGER : TEXT,
-                                                fontWeight: "700",
-                                                textAlign: "center",
-                                            }}
-                                            numberOfLines={1}
-                                        >
-                                            {r.idBackend}
-                                        </Text>
-
-                                        <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
-
-                                        <View style={{ flex: 1, alignItems: "flex-start" }}>
                                             <Text
                                                 style={{
+                                                    width: ANCHO_ID,
+                                                    color: r.idBackend === "—" ? DANGER : TEXT,
+                                                    fontWeight: "700",
+                                                    textAlign: "center",
+                                                }}
+                                                numberOfLines={1}
+                                            >
+                                                {r.idBackend}
+                                            </Text>
+
+                                            <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
+
+                                            <View style={{ flex: 1, alignItems: "flex-end" }}>
+                                                <Text
+                                                    style={{
+                                                        width: ANCHO_CROTAL_SALIDA,
+                                                        color: TEXT,
+                                                        fontWeight: "700",
+                                                        textAlign: "left",
+                                                        fontSize: 15,
+                                                    }}
+                                                    numberOfLines={1}
+                                                    ellipsizeMode="middle"
+                                                >
+                                                    {r.crotal}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    ) : (
+                                        <View
+                                            key={r.localId}
+                                            style={{
+                                                flexDirection: "row",
+                                                alignItems: "flex-start",
+                                                paddingVertical: 12,
+                                                paddingHorizontal: 14,
+                                                borderTopWidth: 1,
+                                                borderTopColor: "#F1F5F9",
+                                                backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                            }}
+                                        >
+                                            <Text
+                                                style={{
+                                                    width: ANCHO_CORRAL,
                                                     color: TEXT,
                                                     fontWeight: "700",
-                                                    textAlign: "left",
-                                                    fontSize: 14,
-                                                    flexShrink: 1,
                                                 }}
+                                                numberOfLines={1}
                                             >
-                                                {r.crotal}
+                                                {r.corral}
                                             </Text>
+
+                                            <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
+
+                                            <Text
+                                                style={{
+                                                    width: ANCHO_ID,
+                                                    color: r.idBackend === "—" ? DANGER : TEXT,
+                                                    fontWeight: "700",
+                                                    textAlign: "center",
+                                                }}
+                                                numberOfLines={1}
+                                            >
+                                                {r.idBackend}
+                                            </Text>
+
+                                            <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                            <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                                <Text
+                                                    style={{
+                                                        color: TEXT,
+                                                        fontWeight: "700",
+                                                        textAlign: "left",
+                                                        fontSize: 14,
+                                                        flexShrink: 1,
+                                                    }}
+                                                >
+                                                    {r.crotal}
+                                                </Text>
+                                            </View>
                                         </View>
-                                    </View>
+                                    )
                                 )
-                            )
-                        )}
+                            )}
+                        </View>
                     </View>
-                </View>
+                )}
 
                 {/* Enviar */}
-                <View style={{ marginTop: 12 }}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            if (esLectura || !confirmar) return;
-                            onEnviar();
-                        }}
-                        disabled={estaEnviando || !confirmar || esLectura}
-                        activeOpacity={0.9}
-                        style={{
-                            height: 46,
-                            borderRadius: 14,
-                            backgroundColor: esLectura
-                                ? "#CBD5E1"
-                                : !confirmar
+                {!esBusqueda && (
+
+                    <View style={{ marginTop: 12 }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (esLectura || !confirmar) return;
+                                onEnviar();
+                            }}
+                            disabled={estaEnviando || !confirmar || esLectura}
+                            activeOpacity={0.9}
+                            style={{
+                                height: 46,
+                                borderRadius: 14,
+                                backgroundColor: esLectura
                                     ? "#CBD5E1"
-                                    : estaEnviando
-                                        ? "#A5B4FC"
-                                        : BRAND,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexDirection: "row",
-                            gap: 10,
-                            shadowColor: "#000",
-                            shadowOpacity: 0.1,
-                            shadowRadius: 8,
-                            shadowOffset: { width: 0, height: 3 },
-                            elevation: 2,
-                        }}
-                    >
-                        <Text style={{ color: "white", fontWeight: "900", fontSize: 16 }}>
-                            {esLectura
-                                ? "Lectura automática activa"
-                                : !confirmar
-                                    ? "Envío automático activo"
-                                    : estaEnviando
-                                        ? "Enviando..."
-                                        : "Enviar"}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                                    : !confirmar
+                                        ? "#CBD5E1"
+                                        : estaEnviando
+                                            ? "#A5B4FC"
+                                            : BRAND,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexDirection: "row",
+                                gap: 10,
+                                shadowColor: "#000",
+                                shadowOpacity: 0.1,
+                                shadowRadius: 8,
+                                shadowOffset: { width: 0, height: 3 },
+                                elevation: 2,
+                            }}
+                        >
+                            <Text style={{ color: "white", fontWeight: "900", fontSize: 16 }}>
+                                {esLectura
+                                    ? "Lectura automática activa"
+                                    : !confirmar
+                                        ? "Envío automático activo"
+                                        : estaEnviando
+                                            ? "Enviando..."
+                                            : "Enviar"}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </ScrollView>
         </View>
     );
