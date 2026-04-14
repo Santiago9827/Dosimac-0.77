@@ -701,15 +701,18 @@ export const LectorGestacionScreen = () => {
             const respuesta = await postGestation(endpointActual, payload);
 
             if (!respuesta.ok) {
-                if (respuesta.status === 400) {
-                    Alert.alert("Animal no está en Gestation.");
-                    return;
-                }
-
                 const detalle =
-                    (respuesta.data && (respuesta.data.message || respuesta.data.error)) ||
+                    (respuesta.data &&
+                        (respuesta.data.message ||
+                            respuesta.data.error ||
+                            respuesta.data.mensaje)) ||
                     respuesta.rawText ||
                     `HTTP ${respuesta.status}`;
+
+                if (respuesta.status === 400) {
+                    Alert.alert("Aviso", String(detalle));
+                    return;
+                }
 
                 Alert.alert("Error al enviar", String(detalle));
                 return;
