@@ -8,7 +8,7 @@ import { useAuthStore } from "../../../stores/authStore";
 
 const STORAGE_KEY = "@cti_portal_base_url";
 const DEFAULT_PATH = "/CtiAlimentacion/";
-const DEFAULT_PORT = "8080";
+const DEFAULT_PORT = "6060";
 
 function stripDefaultPort(host: string) {
     // si es host:8080 -> mostrar solo host
