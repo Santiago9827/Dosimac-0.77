@@ -8,6 +8,8 @@ import { useRoute, RouteProp, useFocusEffect, useNavigation } from "@react-navig
 import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../../presentation/components/shared/IndicadorConexionAnimado";
 import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId } from "../../routes/obtenerLecturaEspada";
+import { construirEndpointEspada } from "../../../stores/apiConfig";
+
 
 
 type LectorMaternidadParams = {
@@ -32,11 +34,11 @@ const SOFT_BORDER = "#C7D2FE";
 const DANGER = "#DC2626";
 const SUCCESS = "#16A34A";
 
-const ENDPOINT_MATERNITY_ENTRADA =
-    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity";
+// const ENDPOINT_MATERNITY_ENTRADA =
+//     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity";
 
-const ENDPOINT_MATERNITY_SALIDA =
-    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity/exit";
+// const ENDPOINT_MATERNITY_SALIDA =
+//     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/maternity/exit";
 
 const SHADOW = {
     shadowColor: "#000",
@@ -673,9 +675,16 @@ export const LectorMaternidadScreen = () => {
         try {
             setEstaEnviando(true);
 
-            const endpointActual = esSalida
-                ? ENDPOINT_MATERNITY_SALIDA
-                : ENDPOINT_MATERNITY_ENTRADA;
+            let endpointActual = "";
+
+            try {
+                endpointActual = await construirEndpointEspada(
+                    esSalida ? "maternity/exit" : "maternity"
+                );
+            } catch (error: any) {
+                Alert.alert("Error", error?.message || "No hay IP configurada.");
+                return;
+            }
 
             const payload = requiereCorral
                 ? { corral: corralNum as number, crotal: crotalNum }

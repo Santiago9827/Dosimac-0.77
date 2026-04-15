@@ -1,7 +1,10 @@
-const BASE_URL = "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/readCrotal";
+/* eslint-disable prettier/prettier */
+import { construirEndpointEspada } from "../../stores/apiConfig";
 
 export async function obtenerLecturaEspada(crotal: string) {
-    const respuesta = await fetch(`${BASE_URL}/${encodeURIComponent(crotal)}`, {
+    const baseUrl = await construirEndpointEspada("readCrotal");
+
+    const respuesta = await fetch(`${baseUrl}/${encodeURIComponent(crotal)}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -33,11 +36,11 @@ export async function obtenerLecturaEspada(crotal: string) {
         rawText: textoPlano,
     };
 }
-
-const BASE_URL_ID = "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/readId";
 
 export async function obtenerAnimalPorId(id: string) {
-    const respuesta = await fetch(`${BASE_URL_ID}/${encodeURIComponent(id)}`, {
+    const baseUrl = await construirEndpointEspada("readId");
+
+    const respuesta = await fetch(`${baseUrl}/${encodeURIComponent(id)}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -69,14 +72,13 @@ export async function obtenerAnimalPorId(id: string) {
         rawText: textoPlano,
     };
 }
-
-const ENDPOINT_UPDATE_ID =
-    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/updateId";
 
 export async function postActualizarId(
     payload: { crotal: number; id: string }
 ) {
-    const res = await fetch(ENDPOINT_UPDATE_ID, {
+    const endpoint = await construirEndpointEspada("updateId");
+
+    const res = await fetch(endpoint, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -103,9 +105,7 @@ export async function postActualizarId(
     return { ok: res.ok, status: res.status, data, rawText };
 }
 
-
-
-//Funcion para mostrar solo fecha 
+// Funcion para mostrar solo fecha
 export function formatearSoloFecha(fecha?: string) {
     if (!fecha) return "—";
 

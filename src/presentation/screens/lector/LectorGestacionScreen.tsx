@@ -8,7 +8,7 @@ import { Appbar, Switch, TextInput } from "react-native-paper";
 import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
 import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId } from "../../routes/obtenerLecturaEspada";
-
+import { construirEndpointEspada } from "../../../stores/apiConfig";
 
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
@@ -24,11 +24,11 @@ const SUCCESS = "#16A34A";
 // const ENDPOINT_GESTATION =
 //     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation";
 
-const ENDPOINT_GESTATION_ENTRADA =
-    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation";
+// const ENDPOINT_GESTATION_ENTRADA =
+//     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation";
 
-const ENDPOINT_GESTATION_SALIDA =
-    "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation/exit";
+// const ENDPOINT_GESTATION_SALIDA =
+//     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation/exit";
 
 const SHADOW = {
     shadowColor: "#000",
@@ -695,9 +695,16 @@ export const LectorGestacionScreen = () => {
                 ? { corral: corralNum as number, crotal: crotalNum }
                 : { crotal: crotalNum };
 
-            const endpointActual = esSalida
-                ? ENDPOINT_GESTATION_SALIDA
-                : ENDPOINT_GESTATION_ENTRADA;
+            let endpointActual = "";
+
+            try {
+                endpointActual = await construirEndpointEspada(
+                    esSalida ? "gestation/exit" : "gestation"
+                );
+            } catch (error: any) {
+                Alert.alert("Error", error?.message || "No hay IP configurada.");
+                return;
+            }
 
             const respuesta = await postGestation(endpointActual, payload);
 
@@ -718,6 +725,7 @@ export const LectorGestacionScreen = () => {
                 Alert.alert("Error al enviar", String(detalle));
                 return;
             }
+
             const idBackendRaw =
                 respuesta.data?.animalId ??
                 respuesta.data?.idAnimal ??
@@ -731,6 +739,7 @@ export const LectorGestacionScreen = () => {
                     String(idBackendRaw).trim() !== ""
                     ? String(idBackendRaw)
                     : "—";
+
             const esIdDesconocido = idBackendTexto === "0";
 
             if (esIdDesconocido) {
