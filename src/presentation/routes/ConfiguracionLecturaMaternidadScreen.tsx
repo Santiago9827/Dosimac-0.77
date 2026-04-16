@@ -22,6 +22,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { awrStore } from "../../stores/awrStore";
 import { useAwrConn } from "../../stores/awrConnStore";
 import { obtenerLecturaEspada, obtenerAnimalPorId } from "../routes/obtenerLecturaEspada";
+import { useTranslation } from "react-i18next";
 
 type Modo = "entrada" | "salida" | "lectura" | "busqueda";
 
@@ -87,6 +88,8 @@ function OptionCard({
 }
 
 export const ConfiguracionLecturaMaternidadScreen = () => {
+    const { t } = useTranslation();
+
     const navigation = useNavigation<any>();
 
     const lectorConectado = useAwrConn((s) => s.isConnected);
@@ -179,7 +182,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
         }
 
         if (!lectorConectado) {
-            Alert.alert("AWR no conectado", "Conecta una espada antes de continuar.");
+            Alert.alert(
+                t("maternidadConfig_alert_awrNotConnected"),
+                t("maternidadConfig_alert_connectSwordBeforeContinue")
+            );
             return false;
         }
 
@@ -193,8 +199,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
             return true;
         } catch {
-            Alert.alert("Error", "No se pudo iniciar la lectura con la espada.");
-            setEsperandoCoincidencia(false);
+            Alert.alert(
+                t("maternidadConfig_alert_error"),
+                t("maternidadConfig_alert_couldNotStartReading")
+            ); setEsperandoCoincidencia(false);
             setAnimalPendiente(null);
             setCrotalEsperado("");
             return false;
@@ -208,8 +216,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                 if (tipoBusqueda === "crotal" && origenBusquedaCrotal === "espada") {
                     if (!lectorConectado) {
-                        Alert.alert("AWR no conectado", "Conecta una espada antes de continuar.");
-                        return;
+                        Alert.alert(
+                            t("maternidadConfig_alert_awrNotConnected"),
+                            t("maternidadConfig_alert_connectSwordBeforeContinue")
+                        ); return;
                     }
 
                     setLeyendoBusquedaEspada(true);
@@ -218,8 +228,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                     try {
                         await iniciarLectura();
                     } catch {
-                        Alert.alert("Error", "No se pudo iniciar la lectura con la espada.");
-                        setLeyendoBusquedaEspada(false);
+                        Alert.alert(
+                            t("maternidadConfig_alert_error"),
+                            t("maternidadConfig_alert_couldNotStartReading")
+                        ); setLeyendoBusquedaEspada(false);
                     }
 
                     return;
@@ -229,10 +241,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                 if (!valor) {
                     Alert.alert(
-                        "Falta dato",
+                        t("maternidadConfig_alert_missingData"),
                         tipoBusqueda === "crotal"
-                            ? "Escribe un crotal para buscar."
-                            : "Escribe un ID para buscar."
+                            ? t("maternidadConfig_alert_writeCrotalToSearch")
+                            : t("maternidadConfig_alert_writeIdToSearch")
                     );
                     return;
                 }
@@ -245,10 +257,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                 if (!r.ok) {
                     if (r.status === 404) {
                         Alert.alert(
-                            "No encontrado",
+                            t("maternidadConfig_alert_notFound"),
                             tipoBusqueda === "crotal"
-                                ? "No existe ningún animal con ese crotal."
-                                : "No existe ningún animal con ese ID."
+                                ? t("maternidadConfig_alert_noAnimalWithCrotal")
+                                : t("maternidadConfig_alert_noAnimalWithId")
                         );
                         return;
                     }
@@ -263,11 +275,11 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                             `HTTP ${r.status}`;
 
                     if (r.status === 400) {
-                        Alert.alert("Aviso", String(detalle));
+                        Alert.alert(t("maternidadConfig_alert_warning"), String(detalle));
                         return;
                     }
 
-                    Alert.alert("Error en la búsqueda", String(detalle));
+                    Alert.alert(t("maternidadConfig_alert_searchError"), String(detalle));
                     return;
                 }
 
@@ -275,10 +287,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                 if (!animalEncontrado) {
                     Alert.alert(
-                        "No encontrado",
+                        t("maternidadConfig_alert_notFound"),
                         tipoBusqueda === "crotal"
-                            ? "No existe ningún animal con ese crotal."
-                            : "No existe ningún animal con ese ID."
+                            ? t("maternidadConfig_alert_noAnimalWithCrotal")
+                            : t("maternidadConfig_alert_noAnimalWithId")
                     );
                     return;
                 }
@@ -288,8 +300,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                 return;
             } catch {
-                Alert.alert("Error de red", "No se pudo conectar con el servidor.");
-                return;
+                Alert.alert(
+                    t("maternidadConfig_alert_networkError"),
+                    t("maternidadConfig_alert_networkErrorMessage")
+                ); return;
             } finally {
                 setBuscandoAnimal(false);
             }
@@ -320,8 +334,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                     setLeyendoBusquedaEspada(false);
 
                     if (r.status === 404) {
-                        Alert.alert("No encontrado", "No existe ningún animal con ese crotal.");
-                        return;
+                        Alert.alert(
+                            t("maternidadConfig_alert_notFound"),
+                            t("maternidadConfig_alert_noAnimalWithCrotal")
+                        ); return;
                     }
 
                     const detalle =
@@ -334,11 +350,11 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                             `HTTP ${r.status}`;
 
                     if (r.status === 400) {
-                        Alert.alert("Aviso", String(detalle));
+                        Alert.alert(t("maternidadConfig_alert_warning"), String(detalle));
                         return;
                     }
 
-                    Alert.alert("Error en la búsqueda", String(detalle));
+                    Alert.alert(t("maternidadConfig_alert_searchError"), String(detalle));
                     return;
                 }
 
@@ -346,8 +362,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                 if (!animalEncontrado) {
                     setLeyendoBusquedaEspada(false);
-                    Alert.alert("No encontrado", "No existe ningún animal con ese crotal.");
-                    return;
+                    Alert.alert(
+                        t("maternidadConfig_alert_notFound"),
+                        t("maternidadConfig_alert_noAnimalWithCrotal")
+                    ); return;
                 }
 
                 setLeyendoBusquedaEspada(false);
@@ -364,7 +382,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
             } catch {
                 if (cancelado) return;
                 setLeyendoBusquedaEspada(false);
-                Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+                Alert.alert(
+                    t("maternidadConfig_alert_networkError"),
+                    t("maternidadConfig_alert_networkErrorMessage")
+                );
             }
         };
 
@@ -414,7 +435,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
         >
             <Appbar.Header elevated style={{ backgroundColor: BRAND }}>
                 <Appbar.BackAction color="white" onPress={() => navigation.goBack()} />
-                <Appbar.Content title="Configuración Maternidad" titleStyle={{ color: "white" }} />
+                <Appbar.Content title={t("maternidadConfig_screenTitle")} titleStyle={{ color: "white" }} />
             </Appbar.Header>
 
             <ScrollView
@@ -430,23 +451,23 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                 <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
                     <Card.Content>
                         <Text style={{ fontSize: 18, fontWeight: "900", color: TEXT }}>
-                            Elige una opción
+                            {t("maternidadConfig_chooseOptionTitle")}
                         </Text>
                         <Text style={{ marginTop: 4, color: MUTED }}>
-                            Define el flujo antes de empezar con el lector.
+                            {t("maternidadConfig_chooseOptionDescription")}
                         </Text>
 
                         <View style={{ height: 12 }} />
 
                         <View style={{ flexDirection: "row", gap: 10 }}>
                             <OptionCard
-                                label="Entrada"
+                                label={t("maternidadConfig_entry")}
                                 icon="log-in-outline"
                                 active={modo === "entrada"}
                                 onPress={() => setModo("entrada")}
                             />
                             <OptionCard
-                                label="Salida"
+                                label={t("maternidadConfig_exit")}
                                 icon="log-out-outline"
                                 active={modo === "salida"}
                                 onPress={() => setModo("salida")}
@@ -457,13 +478,13 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                         <View style={{ flexDirection: "row", gap: 10 }}>
                             <OptionCard
-                                label="Lectura"
+                                label={t("maternidadConfig_reading")}
                                 icon="barcode-outline"
                                 active={modo === "lectura"}
                                 onPress={() => setModo("lectura")}
                             />
                             <OptionCard
-                                label="Búsqueda"
+                                label={t("maternidadConfig_search")}
                                 icon="search-outline"
                                 active={modo === "busqueda"}
                                 onPress={() => setModo("busqueda")}
@@ -478,14 +499,15 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                                 <Ionicons name="options-outline" size={18} color={BRAND} />
                                 <Text style={{ fontSize: 16, fontWeight: "900", color: TEXT }}>
-                                    {modo === "entrada" ? "Parámetros de entrada" : "Parámetros de salida"}
+                                    {modo === "entrada" ? t("maternidadConfig_entryParamsTitle")
+                                        : t("maternidadConfig_exitParamsTitle")}
                                 </Text>
                             </View>
 
                             <Text style={{ marginTop: 6, color: MUTED }}>
                                 {modo === "entrada"
-                                    ? "Selecciona el corral y el comportamiento del flujo."
-                                    : "Configura el comportamiento del flujo de salida."}
+                                    ? t("maternidadConfig_entryParamsDescription")
+                                    : t("maternidadConfig_exitParamsDescription")}
                             </Text>
 
                             <View style={{ height: 12 }} />
@@ -494,7 +516,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                 <>
                                     <TextInput
                                         mode="outlined"
-                                        label="Corral"
+                                        label={t("maternidadConfig_corralLabel")}
                                         value={corral}
                                         onChangeText={setCorral}
                                         placeholder="Ej: 1"
@@ -506,7 +528,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                                     {!puedeContinuar && (
                                         <Text style={{ color: "#DC2626", fontWeight: "700", marginTop: 8 }}>
-                                            Escribe el corral para continuar.
+                                            {t("maternidadConfig_corralRequired")}
                                         </Text>
                                     )}
 
@@ -519,10 +541,10 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                                 <View style={{ flex: 1, paddingRight: 10 }}>
                                     <Text style={{ color: TEXT, fontWeight: "800" }}>
-                                        Identificar animales desconocidos
+                                        {t("maternidadConfig_detectUnknownTitle")}
                                     </Text>
                                     <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
-                                        Cuando leas un animal sin identificar, podrás asignarle un ID
+                                        {t("maternidadConfig_detectUnknownDescription")}
                                     </Text>
                                 </View>
                                 <Switch value={detectarDesconocidos} onValueChange={setDetectarDesconocidos} />
@@ -534,7 +556,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                 <View style={{ flex: 1, paddingRight: 10 }}>
                                     <Text style={{ color: TEXT, fontWeight: "800" }}>Confirmar envío</Text>
                                     <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
-                                        Pedirá confirmación antes de enviar cada registro.
+                                        {t("maternidadConfig_confirmDescription")}
                                     </Text>
                                 </View>
                                 <Switch value={confirmar} onValueChange={setConfirmar} />
@@ -549,19 +571,19 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                                 <Ionicons name="search-outline" size={18} color={BRAND} />
                                 <Text style={{ fontSize: 16, fontWeight: "900", color: TEXT }}>
-                                    Búsqueda de animal
+                                    {t("maternidadConfig_animalSearchTitle")}
                                 </Text>
                             </View>
 
                             <Text style={{ marginTop: 6, color: MUTED }}>
-                                Elige si quieres buscar por crotal o por ID.
+                                {t("maternidadConfig_animalSearchDescription")}
                             </Text>
 
                             <View style={{ height: 12 }} />
 
                             <View style={{ flexDirection: "row", gap: 10 }}>
                                 <OptionCard
-                                    label="Por crotal"
+                                    label={t("maternidadConfig_searchByCrotal")}
                                     icon="barcode-outline"
                                     active={tipoBusqueda === "crotal"}
                                     onPress={() => {
@@ -570,7 +592,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                     }}
                                 />
                                 <OptionCard
-                                    label="Por ID"
+                                    label={t("maternidadConfig_searchById")}
                                     icon="id-card-outline"
                                     active={tipoBusqueda === "id"}
                                     onPress={() => {
@@ -586,7 +608,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                                     <View style={{ flexDirection: "row", gap: 10 }}>
                                         <OptionCard
-                                            label="Manual"
+                                            label={t("maternidadConfig_manual")}
                                             icon="create-outline"
                                             active={origenBusquedaCrotal === "manual"}
                                             onPress={() => {
@@ -595,7 +617,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                             }}
                                         />
                                         <OptionCard
-                                            label="Con espada"
+                                            label={t("maternidadConfig_withSword")}
                                             icon="barcode-outline"
                                             active={origenBusquedaCrotal === "espada"}
                                             onPress={() => {
@@ -613,13 +635,14 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                                     <TextInput
                                         mode="outlined"
-                                        label={tipoBusqueda === "crotal" ? "Crotal" : "ID"}
+                                        label={tipoBusqueda === "crotal" ? t("maternidadConfig_crotalLabelSearch")
+                                            : t("maternidadConfig_idLabelSearch")}
                                         value={valorBusqueda}
                                         onChangeText={setValorBusqueda}
                                         placeholder={
                                             tipoBusqueda === "crotal"
-                                                ? "Ej: 982091072397436"
-                                                : "Ej: A13"
+                                                ? t("maternidadConfig_crotalPlaceholderSearch")
+                                                : t("maternidadConfig_idPlaceholderSearch")
                                         }
                                         keyboardType={tipoBusqueda === "crotal" ? "number-pad" : "default"}
                                         autoCapitalize={tipoBusqueda === "id" ? "characters" : "none"}
@@ -631,8 +654,8 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                     {valorBusqueda.trim().length === 0 && (
                                         <Text style={{ color: "#DC2626", fontWeight: "700", marginTop: 8 }}>
                                             {tipoBusqueda === "crotal"
-                                                ? "Escribe un crotal para continuar."
-                                                : "Escribe un ID para continuar."}
+                                                ? t("maternidadConfig_crotalRequiredSearch")
+                                                : t("maternidadConfig_idRequiredSearch")}
                                         </Text>
                                     )}
                                 </>
@@ -640,7 +663,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
                             {tipoBusqueda === "crotal" && origenBusquedaCrotal === "espada" && (
                                 <Text style={{ color: MUTED, marginTop: 12 }}>
-                                    Al pulsar Escanear, se leerá la espada en esta pantalla y se buscará el animal con ese crotal.
+                                    {t("maternidadConfig_searchWithSwordHelp")}
                                 </Text>
                             )}
                         </Card.Content>
@@ -654,19 +677,19 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                 <Ionicons name="scan-outline" size={22} color={BRAND} />
                                 <Text style={{ fontSize: 16, fontWeight: "900", color: TEXT }}>
                                     {leyendoBusquedaEspada
-                                        ? "Leyendo espada..."
+                                        ? t("maternidadConfig_readingSword")
                                         : esperandoCoincidencia
-                                            ? "Esperando coincidencia"
-                                            : "Buscando animal..."}
+                                            ? t("maternidadConfig_waitingMatch")
+                                            : t("maternidadConfig_searchingAnimal")}
                                 </Text>
                             </View>
 
                             <Text style={{ marginTop: 8, color: MUTED }}>
                                 {leyendoBusquedaEspada
-                                    ? "Acerca el crotal al lector para identificar el animal."
+                                    ? t("maternidadConfig_readingSwordDescription")
                                     : esperandoCoincidencia
-                                        ? `Animal localizado. Ahora acerca a la espada el crotal ${crotalEsperado} para confirmar la coincidencia.`
-                                        : "Consultando información del animal en el backend."}
+                                        ? t("maternidadConfig_waitingMatchDescription", { crotal: crotalEsperado })
+                                        : t("maternidadConfig_searchingAnimalDescription")}
                             </Text>
                         </Card.Content>
                     </Card>
@@ -718,7 +741,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                                 fontSize: 15,
                                             }}
                                         >
-                                            AWR no conectado
+                                            {t("maternidadConfig_awrDisconnectedTitle")}
                                         </Text>
 
                                         <Text
@@ -729,8 +752,8 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                             }}
                                         >
                                             {hayEspadasGuardadas
-                                                ? "Tienes AWR guardadas. Pulsa para seleccionar una."
-                                                : "No tienes ninguna AWR guardada. Pulsa para escanear una."}
+                                                ? t("maternidadConfig_awrSavedDescription")
+                                                : t("maternidadConfig_awrNotSavedDescription")}
                                         </Text>
                                     </View>
 
@@ -763,7 +786,8 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                         contentStyle={{ height: 48 }}
                         labelStyle={{ fontSize: 16, fontWeight: "900" }}
                     >
-                        {modo === "busqueda" ? "Escanear" : "Continuar"}
+                        {modo === "busqueda" ? t("maternidadConfig_scan")
+                            : t("maternidadConfig_continue")}
                     </Button>
                 </View>
             </ScrollView>

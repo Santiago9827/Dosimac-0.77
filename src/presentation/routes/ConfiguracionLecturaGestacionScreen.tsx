@@ -16,6 +16,7 @@ import { TouchableOpacity } from "react-native";
 import { awrStore } from "../../stores/awrStore";
 import { useAwrConn } from "../../stores/awrConnStore";
 import { obtenerLecturaEspada, obtenerAnimalPorId } from "../routes/obtenerLecturaEspada";
+import { useTranslation } from "react-i18next";
 
 type Modo = "entrada" | "salida" | "lectura" | "busqueda";
 
@@ -81,6 +82,7 @@ function OptionCard({
 }
 
 export const ConfiguracionGestacionScreen = () => {
+    const { t } = useTranslation();
     const navigation = useNavigation<any>();
 
     const lectorConectado = useAwrConn((s) => s.isConnected);
@@ -172,8 +174,10 @@ export const ConfiguracionGestacionScreen = () => {
         }
 
         if (!lectorConectado) {
-            Alert.alert("AWR no conectado", "Conecta una espada antes de continuar.");
-            return false;
+            Alert.alert(
+                t("gestacionConfig_alerts_awrNotConnected"),
+                t("gestacionConfig_alerts_connectSwordBeforeContinue")
+            ); return false;
         }
 
         try {
@@ -186,8 +190,10 @@ export const ConfiguracionGestacionScreen = () => {
 
             return true;
         } catch {
-            Alert.alert("Error", "No se pudo iniciar la lectura con la espada.");
-            setEsperandoCoincidencia(false);
+            Alert.alert(
+                t("gestacionConfig_alerts_error"),
+                t("gestacionConfig_alerts_couldNotStartReading")
+            ); setEsperandoCoincidencia(false);
             setAnimalPendiente(null);
             setCrotalEsperado("");
             return false;
@@ -202,8 +208,10 @@ export const ConfiguracionGestacionScreen = () => {
                 // Búsqueda por crotal leyendo directamente de la espada
                 if (tipoBusqueda === "crotal" && origenBusquedaCrotal === "espada") {
                     if (!lectorConectado) {
-                        Alert.alert("AWR no conectado", "Conecta una espada antes de continuar.");
-                        return;
+                        Alert.alert(
+                            t("gestacionConfig_alerts_awrNotConnected"),
+                            t("gestacionConfig_alerts_connectSwordBeforeContinue")
+                        ); return;
                     }
 
                     setLeyendoBusquedaEspada(true);
@@ -212,8 +220,10 @@ export const ConfiguracionGestacionScreen = () => {
                     try {
                         await iniciarLectura();
                     } catch {
-                        Alert.alert("Error", "No se pudo iniciar la lectura con la espada.");
-                        setLeyendoBusquedaEspada(false);
+                        Alert.alert(
+                            t("gestacionConfig_alerts_error"),
+                            t("gestacionConfig_alerts_couldNotStartReading")
+                        ); setLeyendoBusquedaEspada(false);
                     }
 
                     return;
@@ -225,8 +235,8 @@ export const ConfiguracionGestacionScreen = () => {
                     Alert.alert(
                         "Falta dato",
                         tipoBusqueda === "crotal"
-                            ? "Escribe un crotal para buscar."
-                            : "Escribe un ID para buscar."
+                            ? t("gestacionConfig_alerts_writeCrotalToSearch")
+                            : t("gestacionConfig_alerts_writeIdToSearch")
                     );
                     return;
                 }
@@ -239,10 +249,10 @@ export const ConfiguracionGestacionScreen = () => {
                 if (!r.ok) {
                     if (r.status === 404) {
                         Alert.alert(
-                            "No encontrado",
+                            t("gestacionConfig_alerts_notFound"),
                             tipoBusqueda === "crotal"
-                                ? "No existe ningún animal con ese crotal."
-                                : "No existe ningún animal con ese ID."
+                                ? t("gestacionConfig_alerts_animalNotFoundByCrotal")
+                                : t("gestacionConfig_alerts_animalNotFoundById")
                         );
                         return;
                     }
@@ -257,11 +267,11 @@ export const ConfiguracionGestacionScreen = () => {
                             `HTTP ${r.status}`;
 
                     if (r.status === 400) {
-                        Alert.alert("Aviso", String(detalle));
+                        Alert.alert(t("gestacionConfig_alerts_warning"), String(detalle));
                         return;
                     }
 
-                    Alert.alert("Error en la búsqueda", String(detalle));
+                    Alert.alert(t("gestacionConfig_alerts_searchError"), String(detalle));
                     return;
                 }
 
@@ -269,10 +279,10 @@ export const ConfiguracionGestacionScreen = () => {
 
                 if (!animalEncontrado) {
                     Alert.alert(
-                        "No encontrado",
+                        t("gestacionConfig_alerts_notFound"),
                         tipoBusqueda === "crotal"
-                            ? "No existe ningún animal con ese crotal."
-                            : "No existe ningún animal con ese ID."
+                            ? t("gestacionConfig_alerts_animalNotFoundByCrotal")
+                            : t("gestacionConfig_alerts_animalNotFoundById")
                     );
                     return;
                 }
@@ -282,8 +292,10 @@ export const ConfiguracionGestacionScreen = () => {
 
                 return;
             } catch {
-                Alert.alert("Error de red", "No se pudo conectar con el servidor.");
-                return;
+                Alert.alert(
+                    t("gestacionConfig_alerts_networkError"),
+                    t("gestacionConfig_alerts_networkErrorMessage")
+                ); return;
             } finally {
                 setBuscandoAnimal(false);
             }
@@ -315,8 +327,10 @@ export const ConfiguracionGestacionScreen = () => {
                     setLeyendoBusquedaEspada(false);
 
                     if (r.status === 404) {
-                        Alert.alert("No encontrado", "No existe ningún animal con ese crotal.");
-                        return;
+                        Alert.alert(
+                            t("gestacionConfig_alerts_notFound"),
+                            t("gestacionConfig_alerts_animalNotFoundByCrotal")
+                        ); return;
                     }
 
                     const detalle =
@@ -329,11 +343,11 @@ export const ConfiguracionGestacionScreen = () => {
                             `HTTP ${r.status}`;
 
                     if (r.status === 400) {
-                        Alert.alert("Aviso", String(detalle));
+                        Alert.alert(t("gestacionConfig_alerts_warning"), String(detalle));
                         return;
                     }
 
-                    Alert.alert("Error en la búsqueda", String(detalle));
+                    Alert.alert(t("gestacionConfig_alerts_searchError"), String(detalle));
                     return;
                 }
 
@@ -341,8 +355,10 @@ export const ConfiguracionGestacionScreen = () => {
 
                 if (!animalEncontrado) {
                     setLeyendoBusquedaEspada(false);
-                    Alert.alert("No encontrado", "No existe ningún animal con ese crotal.");
-                    return;
+                    Alert.alert(
+                        t("gestacionConfig_alerts_notFound"),
+                        t("gestacionConfig_alerts_animalNotFoundByCrotal")
+                    ); return;
                 }
 
                 setLeyendoBusquedaEspada(false);
@@ -359,7 +375,10 @@ export const ConfiguracionGestacionScreen = () => {
             } catch {
                 if (cancelado) return;
                 setLeyendoBusquedaEspada(false);
-                Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+                Alert.alert(
+                    t("gestacionConfig_alerts_networkError"),
+                    t("gestacionConfig_alerts_networkErrorMessage")
+                );
             }
         };
 
@@ -410,7 +429,7 @@ export const ConfiguracionGestacionScreen = () => {
         >
             <Appbar.Header elevated style={{ backgroundColor: BRAND }}>
                 <Appbar.BackAction color="white" onPress={() => navigation.goBack()} />
-                <Appbar.Content title="Configuración Gestacion" titleStyle={{ color: "white" }} />
+                <Appbar.Content title={t("gestacionConfig_screenTitle")} titleStyle={{ color: "white" }} />
             </Appbar.Header>
 
             <ScrollView
@@ -426,23 +445,23 @@ export const ConfiguracionGestacionScreen = () => {
                 <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
                     <Card.Content>
                         <Text style={{ fontSize: 18, fontWeight: "900", color: TEXT }}>
-                            Elige una opción
+                            {t("gestacionConfig_chooseOptionTitle")}
                         </Text>
                         <Text style={{ marginTop: 4, color: MUTED }}>
-                            Define el flujo antes de empezar con el lector.
+                            {t("gestacionConfig_chooseOptionDescription")}
                         </Text>
 
                         <View style={{ height: 12 }} />
 
                         <View style={{ flexDirection: "row", gap: 10 }}>
                             <OptionCard
-                                label="Entrada"
+                                label={t("gestacionConfig_entry")}
                                 icon="log-in-outline"
                                 active={modo === "entrada"}
                                 onPress={() => setModo("entrada")}
                             />
                             <OptionCard
-                                label="Salida"
+                                label={t("gestacionConfig_exit")}
                                 icon="log-out-outline"
                                 active={modo === "salida"}
                                 onPress={() => setModo("salida")}
@@ -453,13 +472,13 @@ export const ConfiguracionGestacionScreen = () => {
 
                         <View style={{ flexDirection: "row", gap: 10 }}>
                             <OptionCard
-                                label="Lectura"
+                                label={t("gestacionConfig_reading")}
                                 icon="barcode-outline"
                                 active={modo === "lectura"}
                                 onPress={() => setModo("lectura")}
                             />
                             <OptionCard
-                                label="Búsqueda"
+                                label={t("gestacionConfig_search")}
                                 icon="search-outline"
                                 active={modo === "busqueda"}
                                 onPress={() => setModo("busqueda")}
@@ -480,8 +499,8 @@ export const ConfiguracionGestacionScreen = () => {
 
                             <Text style={{ marginTop: 6, color: MUTED }}>
                                 {modo === "entrada"
-                                    ? "Selecciona el corral y el comportamiento del flujo."
-                                    : "Configura el comportamiento del flujo de salida."}
+                                    ? t("gestacionConfig_entryParamsDescription")
+                                    : t("gestacionConfig_exitParamsDescription")}
                             </Text>
 
                             <View style={{ height: 12 }} />
@@ -490,10 +509,10 @@ export const ConfiguracionGestacionScreen = () => {
                                 <>
                                     <TextInput
                                         mode="outlined"
-                                        label="Corral"
+                                        label={t("gestacionConfig_corralLabel")}
                                         value={corral}
                                         onChangeText={setCorral}
-                                        placeholder="Ej: 1"
+                                        placeholder={t("gestacionConfig_corralPlaceholder")}
                                         keyboardType="number-pad"
                                         left={<TextInput.Icon icon="home-outline" />}
                                         outlineColor={BORDER}
@@ -502,7 +521,7 @@ export const ConfiguracionGestacionScreen = () => {
 
                                     {!puedeContinuar && (
                                         <Text style={{ color: "#DC2626", fontWeight: "700", marginTop: 8 }}>
-                                            Escribe el corral para continuar.
+                                            {t("gestacionConfig_corralRequired")}
                                         </Text>
                                     )}
 
@@ -515,10 +534,10 @@ export const ConfiguracionGestacionScreen = () => {
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                                 <View style={{ flex: 1, paddingRight: 10 }}>
                                     <Text style={{ color: TEXT, fontWeight: "800" }}>
-                                        Identificar animales desconocidos
+                                        {t("gestacionConfig_detectUnknownTitle")}
                                     </Text>
                                     <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
-                                        Cuando leas un animal sin identificar, podrás asignarle un ID
+                                        {t("gestacionConfig_detectUnknownDescription")}
                                     </Text>
                                 </View>
                                 <Switch value={detectarDesconocidos} onValueChange={setDetectarDesconocidos} />
@@ -528,9 +547,9 @@ export const ConfiguracionGestacionScreen = () => {
 
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                                 <View style={{ flex: 1, paddingRight: 10 }}>
-                                    <Text style={{ color: TEXT, fontWeight: "800" }}>Confirmar envío</Text>
+                                    <Text style={{ color: TEXT, fontWeight: "800" }}> {t("gestacionConfig_confirmTitle")}</Text>
                                     <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
-                                        Pedirá confirmación antes de enviar los registro.
+                                        {t("gestacionConfig_confirmDescription")}
                                     </Text>
                                 </View>
                                 <Switch value={confirmar} onValueChange={setConfirmar} />
@@ -545,19 +564,19 @@ export const ConfiguracionGestacionScreen = () => {
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                                 <Ionicons name="search-outline" size={18} color={BRAND} />
                                 <Text style={{ fontSize: 16, fontWeight: "900", color: TEXT }}>
-                                    Búsqueda de animal
+                                    {t("gestacionConfig_animalSearchTitle")}
                                 </Text>
                             </View>
 
                             <Text style={{ marginTop: 6, color: MUTED }}>
-                                Elige si quieres buscar por crotal o por ID.
+                                {t("gestacionConfig_animalSearchDescription")}
                             </Text>
 
                             <View style={{ height: 12 }} />
 
                             <View style={{ flexDirection: "row", gap: 10 }}>
                                 <OptionCard
-                                    label="Por crotal"
+                                    label={t("gestacionConfig_searchByCrotal")}
                                     icon="barcode-outline"
                                     active={tipoBusqueda === "crotal"}
                                     onPress={() => {
@@ -566,7 +585,7 @@ export const ConfiguracionGestacionScreen = () => {
                                     }}
                                 />
                                 <OptionCard
-                                    label="Por ID"
+                                    label={t("gestacionConfig_searchById")}
                                     icon="id-card-outline"
                                     active={tipoBusqueda === "id"}
                                     onPress={() => {
@@ -582,7 +601,7 @@ export const ConfiguracionGestacionScreen = () => {
 
                                     <View style={{ flexDirection: "row", gap: 10 }}>
                                         <OptionCard
-                                            label="Manual"
+                                            label={t("gestacionConfig_manual")}
                                             icon="create-outline"
                                             active={origenBusquedaCrotal === "manual"}
                                             onPress={() => {
@@ -591,7 +610,7 @@ export const ConfiguracionGestacionScreen = () => {
                                             }}
                                         />
                                         <OptionCard
-                                            label="Con espada"
+                                            label={t("gestacionConfig_withSword")}
                                             icon="barcode-outline"
                                             active={origenBusquedaCrotal === "espada"}
                                             onPress={() => {
@@ -614,8 +633,8 @@ export const ConfiguracionGestacionScreen = () => {
                                         onChangeText={setValorBusqueda}
                                         placeholder={
                                             tipoBusqueda === "crotal"
-                                                ? "Ej: 982091072397436"
-                                                : "Ej: A13"
+                                                ? t("gestacionConfig_crotalPlaceholderSearch")
+                                                : t("gestacionConfig_idPlaceholderSearch")
                                         }
                                         keyboardType={tipoBusqueda === "crotal" ? "number-pad" : "default"}
                                         autoCapitalize={tipoBusqueda === "id" ? "characters" : "none"}
@@ -626,8 +645,8 @@ export const ConfiguracionGestacionScreen = () => {
                                     {valorBusqueda.trim().length === 0 && (
                                         <Text style={{ color: "#DC2626", fontWeight: "700", marginTop: 8 }}>
                                             {tipoBusqueda === "crotal"
-                                                ? "Escribe un crotal para continuar."
-                                                : "Escribe un ID para continuar."}
+                                                ? t("gestacionConfig_crotalRequiredSearch")
+                                                : t("gestacionConfig_idRequiredSearch")}
                                         </Text>
                                     )}
                                 </>
@@ -635,7 +654,7 @@ export const ConfiguracionGestacionScreen = () => {
 
                             {tipoBusqueda === "crotal" && origenBusquedaCrotal === "espada" && (
                                 <Text style={{ color: MUTED, marginTop: 12 }}>
-                                    Al continuar, se leerá la espada en esta pantalla y se buscará el animal con ese crotal.
+                                    {t("gestacionConfig_searchWithSwordHelp")}
                                 </Text>
                             )}
                         </Card.Content>
@@ -649,19 +668,19 @@ export const ConfiguracionGestacionScreen = () => {
                                 <Ionicons name="scan-outline" size={22} color={BRAND} />
                                 <Text style={{ fontSize: 16, fontWeight: "900", color: TEXT }}>
                                     {leyendoBusquedaEspada
-                                        ? "Leyendo espada..."
+                                        ? t("gestacionConfig_readingSword")
                                         : esperandoCoincidencia
-                                            ? "Esperando coincidencia"
-                                            : "Buscando animal..."}
+                                            ? t("gestacionConfig_waitingMatch")
+                                            : t("gestacionConfig_searchingAnimal")}
                                 </Text>
                             </View>
 
                             <Text style={{ marginTop: 8, color: MUTED }}>
                                 {leyendoBusquedaEspada
-                                    ? "Acerca el crotal al lector para identificar el animal."
+                                    ? t("gestacionConfig_readingSwordDescription")
                                     : esperandoCoincidencia
-                                        ? `Animal localizado. Ahora acerca a la espada el crotal ${crotalEsperado} para confirmar la coincidencia.`
-                                        : "Consultando información del animal en el backend."}
+                                        ? t("gestacionConfig_waitingMatchDescription", { crotal: crotalEsperado })
+                                        : t("gestacionConfig_searchingAnimalDescription")}
                             </Text>
                             {/* 
                             {!!crotalLeido && (
@@ -719,7 +738,7 @@ export const ConfiguracionGestacionScreen = () => {
                                                 fontSize: 15,
                                             }}
                                         >
-                                            AWR no conectado
+                                            {t("gestacionConfig_awrDisconnectedTitle")}
                                         </Text>
 
                                         <Text
@@ -730,8 +749,8 @@ export const ConfiguracionGestacionScreen = () => {
                                             }}
                                         >
                                             {hayEspadasGuardadas
-                                                ? "Tienes espadas guardadas. Pulsa para seleccionar una."
-                                                : "No tienes ninguna espada guardada. Pulsa para escanear una."}
+                                                ? t("gestacionConfig_awrSavedDescription")
+                                                : t("gestacionConfig_awrNotSavedDescription")}
                                         </Text>
                                     </View>
 
@@ -763,7 +782,8 @@ export const ConfiguracionGestacionScreen = () => {
                         contentStyle={{ height: 48 }}
                         labelStyle={{ fontSize: 16, fontWeight: "900" }}
                     >
-                        {modo === "busqueda" ? "Escanear" : "Continuar"}
+                        {modo === "busqueda" ? t("gestacionConfig_scan")
+                            : t("gestacionConfig_continue")}
                     </Button>
                 </View>
             </ScrollView>
