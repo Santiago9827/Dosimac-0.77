@@ -9,6 +9,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../../presentation/components/shared/IndicadorConexionAnimado";
 import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId } from "../../routes/obtenerLecturaEspada";
 import { construirEndpointEspada } from "../../../stores/apiConfig";
+import { useTranslation } from "react-i18next";
 
 
 
@@ -390,6 +391,8 @@ export const LectorMaternidadScreen = () => {
 
 
     const navigation = useNavigation<any>();
+    const { t } = useTranslation();
+
 
     const lectorConectado = useAwrConn((s) => s.isConnected);
     const idLector = useAwrConn((s) => s.currentId);
@@ -575,14 +578,20 @@ export const LectorMaternidadScreen = () => {
         const crotalTxt = (crotalForzado ?? crotalLeido ?? "").trim();
 
         if (!crotalTxt) {
-            Alert.alert("Falta crotal", "Acerca el crotal al lector antes de enviar.");
+            Alert.alert(
+                t("maternityReader_alertMissingCrotalTitle"),
+                t("maternityReader_alertMissingCrotalMessage")
+            );
             return;
         }
 
         const crotalNum = parseNumeroSeguro(crotalTxt);
 
         if (crotalNum === null) {
-            Alert.alert("Crotal inválido", "El crotal debe ser numérico.");
+            Alert.alert(
+                t("maternityReader_alertInvalidCrotalTitle"),
+                t("maternityReader_alertInvalidCrotalMessage")
+            );
             return;
         }
 
@@ -606,7 +615,7 @@ export const LectorMaternidadScreen = () => {
                         respuesta.rawText ||
                         `HTTP ${respuesta.status}`;
 
-                    Alert.alert("Error en lectura", String(detalle));
+                    Alert.alert(t("maternityReader_alertReadErrorTitle"), String(detalle));
                     return;
                 }
 
@@ -653,7 +662,10 @@ export const LectorMaternidadScreen = () => {
                 ultimoCrotalAutoRef.current = null;
                 return;
             } catch {
-                Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+                Alert.alert(
+                    t("maternityReader_alertNetworkError"),
+                    t("maternityReader_alertNetworkErrorMessage")
+                );
                 return;
             } finally {
                 setEstaEnviando(false);
@@ -661,14 +673,20 @@ export const LectorMaternidadScreen = () => {
         }
 
         if (requiereCorral && !corralTxt) {
-            Alert.alert("Falta corral", "Escribe el corral antes de enviar.");
+            Alert.alert(
+                t("maternityReader_alertMissingCorralTitle"),
+                t("maternityReader_alertMissingCorralMessage")
+            );
             return;
         }
 
         const corralNum = requiereCorral ? parseNumeroSeguro(corralTxt) : null;
 
         if (requiereCorral && corralNum === null) {
-            Alert.alert("Corral inválido", "El corral debe ser un número (ej: 8).");
+            Alert.alert(
+                t("maternityReader_alertInvalidCorralTitle"),
+                t("maternityReader_alertInvalidCorralMessage")
+            );
             return;
         }
 
@@ -682,7 +700,10 @@ export const LectorMaternidadScreen = () => {
                     esSalida ? "maternity/exit" : "maternity"
                 );
             } catch (error: any) {
-                Alert.alert("Error", error?.message || "No hay IP configurada.");
+                Alert.alert(
+                    t("maternityReader_alertError"),
+                    error?.message || t("maternityReader_alertNoIpConfigured")
+                );
                 return;
             }
 
@@ -699,11 +720,11 @@ export const LectorMaternidadScreen = () => {
                     `HTTP ${r.status}`;
 
                 if (r.status === 400) {
-                    Alert.alert(String(detalle));
+                    Alert.alert(t("maternityReader_alertWarning"), String(detalle));
                     return;
                 }
 
-                Alert.alert("Error al enviar", String(detalle));
+                Alert.alert(t("maternityReader_alertSendErrorTitle"), String(detalle));
                 return;
             }
 
@@ -752,7 +773,10 @@ export const LectorMaternidadScreen = () => {
             limpiarCrotalLeido();
             ultimoCrotalAutoRef.current = null;
         } catch {
-            Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+            Alert.alert(
+                t("maternityReader_alertNetworkError"),
+                t("maternityReader_alertNetworkErrorMessage")
+            );
         } finally {
             setEstaEnviando(false);
         }
@@ -763,19 +787,28 @@ export const LectorMaternidadScreen = () => {
         const crotalTxt = crotalPendienteId.trim();
 
         if (!idManual) {
-            Alert.alert("Falta ID", "Escribe el nuevo ID antes de actualizar.");
+            Alert.alert(
+                t("maternityReader_alertMissingIdTitle"),
+                t("maternityReader_alertMissingIdMessage")
+            );
             return;
         }
 
         if (!crotalTxt) {
-            Alert.alert("Falta crotal", "No hay crotal asociado para actualizar.");
+            Alert.alert(
+                t("maternityReader_alertMissingAssociatedCrotalTitle"),
+                t("maternityReader_alertMissingAssociatedCrotalMessage")
+            );
             return;
         }
 
         const crotalNum = parseNumeroSeguro(crotalTxt);
 
         if (crotalNum === null) {
-            Alert.alert("Crotal inválido", "El crotal asociado no es válido.");
+            Alert.alert(
+                t("maternityReader_alertInvalidAssociatedCrotalTitle"),
+                t("maternityReader_alertInvalidAssociatedCrotalMessage")
+            );
             return;
         }
 
@@ -796,7 +829,7 @@ export const LectorMaternidadScreen = () => {
                     respuesta.rawText ||
                     `HTTP ${respuesta.status}`;
 
-                Alert.alert("Error al actualizar ID", String(detalle));
+                Alert.alert(t("maternityReader_alertUpdateIdErrorTitle"), String(detalle));
                 return;
             }
 
@@ -827,7 +860,10 @@ export const LectorMaternidadScreen = () => {
 
             cerrarActualizacionId();
         } catch {
-            Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+            Alert.alert(
+                t("maternityReader_alertNetworkError"),
+                t("maternityReader_alertNetworkErrorMessage")
+            );
         } finally {
             setActualizandoId(false);
         }
@@ -915,7 +951,7 @@ export const LectorMaternidadScreen = () => {
                 }}
             >
                 <Appbar.BackAction color={TEXT} onPress={volverACtiFeed} />
-                <Appbar.Content title="Lector Maternidad" titleStyle={{ color: TEXT }} />
+                <Appbar.Content title={t("maternityReader_screenTitle")} titleStyle={{ color: TEXT }} />
             </Appbar.Header>
 
             <ScrollView
@@ -949,10 +985,10 @@ export const LectorMaternidadScreen = () => {
                             }}
                         >
                             <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                                Información del animal
+                                {t("maternityReader_animalInfoTitle")}
                             </Text>
                             <Text style={{ color: MUTED, marginTop: 4 }}>
-                                Datos localizados en la búsqueda.
+                                {t("maternityReader_animalInfoDescription")}
                             </Text>
                         </View>
 
@@ -968,7 +1004,7 @@ export const LectorMaternidadScreen = () => {
                                 }}
                             >
                                 <Text style={{ color: BRAND, fontWeight: "900", fontSize: 15 }}>
-                                    Ficha Animal
+                                    {t("maternityReader_animalCardTitle")}
                                 </Text>
 
                                 <Text
@@ -978,7 +1014,7 @@ export const LectorMaternidadScreen = () => {
                                         fontWeight: "900",
                                     }}
                                 >
-                                    ID {String(animalBusqueda?.animalId ?? "—")}
+                                    {t("maternityReader_animalIdLabel")}  {String(animalBusqueda?.animalId ?? "—")}
                                 </Text>
 
                                 <Text
@@ -988,7 +1024,7 @@ export const LectorMaternidadScreen = () => {
                                         fontWeight: "700",
                                     }}
                                 >
-                                    Crotal {String(animalBusqueda?.crotal ?? "—")}
+                                    {t("maternityReader_animalCrotalLabel")} {String(animalBusqueda?.crotal ?? "—")}
                                 </Text>
                             </View>
 
@@ -1002,37 +1038,37 @@ export const LectorMaternidadScreen = () => {
                             >
                                 <FichaDatoAnimal
                                     icon="home-outline"
-                                    titulo="Corral"
+                                    titulo={t("maternityReader_fieldCorral")}
                                     valor={String(animalBusqueda?.corralName ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="business-outline"
-                                    titulo="Nave"
+                                    titulo={t("maternityReader_fieldHouse")}
                                     valor={String(animalBusqueda?.houseName ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="git-branch-outline"
-                                    titulo="Estado"
+                                    titulo={t("maternityReader_fieldState")}
                                     valor={String(animalBusqueda?.state ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="fitness-outline"
-                                    titulo="Condición corporal"
+                                    titulo={t("maternityReader_fieldBodyCondition")}
                                     valor={String(animalBusqueda?.bodyConditionCorrection ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="refresh-outline"
-                                    titulo="Ciclo"
+                                    titulo={t("maternityReader_fieldCycle")}
                                     valor={String(animalBusqueda?.cycle ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="time-outline"
-                                    titulo="Entrada en sistema"
+                                    titulo={t("maternityReader_fieldSystemEntryDate")}
                                     valor={formatearSoloFecha(animalBusqueda?.systemEntryDate)}
                                 />
                             </View>
@@ -1050,7 +1086,7 @@ export const LectorMaternidadScreen = () => {
                                 }}
                             >
                                 <Text style={{ color: TEXT, fontWeight: "900", fontSize: 15 }}>
-                                    Nueva búsqueda
+                                    {t("maternityReader_newSearch")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -1076,9 +1112,9 @@ export const LectorMaternidadScreen = () => {
                                 borderBottomColor: SOFT_BORDER,
                             }}
                         >
-                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>Resumen</Text>
+                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}> {t("maternityReader_summaryTitle")}</Text>
                             <Text style={{ color: MUTED, marginTop: 4 }}>
-                                Parámetros elegidos en Configuración
+                                {t("maternityReader_summaryDescription")}
                             </Text>
                         </View>
 
@@ -1086,13 +1122,13 @@ export const LectorMaternidadScreen = () => {
                             <View style={{ flexDirection: "row", gap: 10 }}>
                                 <MiniResumenCard
                                     icon="swap-horizontal-outline"
-                                    titulo="Modo"
+                                    titulo={t("maternityReader_mode")}
                                     valor={
                                         tipoMovimiento === "entrada"
-                                            ? "Entrada"
+                                            ? t("maternityReader_modeEntry")
                                             : tipoMovimiento === "salida"
-                                                ? "Salida"
-                                                : "Lectura"
+                                                ? t("maternityReader_modeExit")
+                                                : t("maternityReader_modeReading")
                                     }
                                 />
 
@@ -1108,14 +1144,14 @@ export const LectorMaternidadScreen = () => {
                             <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
 
                             <SwitchRowReadonly
-                                title="Identificar animales desconocidos"
-                                description="Cuando salga un animal sin ID, ofrecer asignarle un ID."
+                                title={t("maternityReader_detectUnknownTitle")}
+                                description={t("maternityReader_detectUnknownDescription")}
                                 value={detectarDesconocidos}
                             />
 
                             <SwitchRowReadonly
-                                title="Confirmar envío"
-                                description="Pedirá confirmación antes de enviar cada registro."
+                                title={t("maternityReader_confirmSendTitle")}
+                                description={t("maternityReader_confirmSendDescription")}
                                 value={confirmar}
                             />
 
@@ -1132,7 +1168,7 @@ export const LectorMaternidadScreen = () => {
                                 }}
                             >
                                 <Text style={{ color: TEXT, fontWeight: "900" }}>
-                                    Cambiar configuración
+                                    {t("maternityReader_changeSettings")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -1165,10 +1201,10 @@ export const LectorMaternidadScreen = () => {
                         >
                             <View style={{ flex: 1 }}>
                                 <Text style={{ color: TEXT, fontSize: 19, fontWeight: "900" }}>
-                                    Lectura actual
+                                    {t("maternityReader_currentReadingTitle")}
                                 </Text>
                                 <Text style={{ color: MUTED, marginTop: 4 }}>
-                                    El crotal detectado aparecerá aquí.
+                                    {t("maternityReader_currentReadingDescription")}
                                 </Text>
                             </View>
 
@@ -1191,7 +1227,7 @@ export const LectorMaternidadScreen = () => {
                                     >
                                         <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
                                         <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
-                                            AWR no conectado
+                                            {t("maternityReader_awrDisconnected")}
                                         </Text>
                                     </View>
                                 )}
@@ -1201,7 +1237,7 @@ export const LectorMaternidadScreen = () => {
                         <View style={{ padding: 14, gap: 12 }}>
                             <CajaDatoLectura
                                 icon="barcode-outline"
-                                titulo="Crotal leído"
+                                titulo={t("maternityReader_readCrotal")}
                                 valor={crotalLeido ? String(crotalLeido) : "—"}
                                 fondo="#F8FAFF"
                                 borde="#E2E8F0"
@@ -1218,7 +1254,7 @@ export const LectorMaternidadScreen = () => {
                                             : "hash"
                                 }
                                 usarFeather={estadoIdVisual === "neutro"}
-                                titulo="ID"
+                                titulo={t("maternityReader_readId")}
                                 valor={idRecibido ? String(idRecibido) : "—"}
                                 fondo={estilosCajaId.backgroundColor}
                                 borde={estilosCajaId.borderColor}
@@ -1226,9 +1262,9 @@ export const LectorMaternidadScreen = () => {
                                 colorValor={estilosCajaId.colorTexto}
                                 textoSecundario={
                                     mostrarActualizarId
-                                        ? "Animal sin ID asignado"
+                                        ? t("maternityReader_animalWithoutAssignedId")
                                         : estadoIdVisual === "error"
-                                            ? "Animal desconocido"
+                                            ? t("maternityReader_unknownAnimal")
                                             : undefined
                                 }
                             />
@@ -1256,24 +1292,24 @@ export const LectorMaternidadScreen = () => {
                             }}
                         >
                             <Text style={{ color: DANGER, fontSize: 18, fontWeight: "900" }}>
-                                Animal sin ID
+                                {t("maternityReader_animalWithoutIdTitle")}
                             </Text>
                             <Text style={{ color: "#B91C1C", marginTop: 4 }}>
-                                Escribe un ID manual para actualizar el crotal leído.
+                                {t("maternityReader_animalWithoutIdDescription")}
                             </Text>
                         </View>
 
                         <View style={{ padding: 14, gap: 12 }}>
                             <Text style={{ color: MUTED, fontWeight: "800" }}>
-                                Crotal: {crotalPendienteId || "—"}
+                                {t("maternityReader_animalCrotalLabel")}: {crotalPendienteId || "—"}
                             </Text>
 
                             <TextInput
                                 mode="outlined"
-                                label="Nuevo ID"
+                                label={t("maternityReader_newIdLabel")}
                                 value={nuevoIdManual}
                                 onChangeText={setNuevoIdManual}
-                                placeholder="Ej: A13"
+                                placeholder={t("maternityReader_newIdPlaceholder")}
                                 autoCapitalize="characters"
                                 autoCorrect={false}
                                 outlineColor={BORDER}
@@ -1293,7 +1329,9 @@ export const LectorMaternidadScreen = () => {
                                 }}
                             >
                                 <Text style={{ color: "white", fontWeight: "900", fontSize: 16 }}>
-                                    {actualizandoId ? "Actualizando..." : "Actualizar ID"}
+                                    {actualizandoId ?
+                                        t("maternityReader_updatingId")
+                                        : t("maternityReader_updateId")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -1328,7 +1366,7 @@ export const LectorMaternidadScreen = () => {
                         >
                             <View style={{ flex: 1 }}>
                                 <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                                    Registros enviados
+                                    {t("maternityReader_sentRecordsTitle")}
                                 </Text>
 
                                 {esLectura && !lectorConectado && (
@@ -1349,7 +1387,7 @@ export const LectorMaternidadScreen = () => {
                                     >
                                         <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
                                         <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
-                                            AWR no conectado
+                                            {t("maternityReader_awrDisconnected")}
                                         </Text>
                                     </View>
                                 )}
@@ -1452,7 +1490,7 @@ export const LectorMaternidadScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        Corral
+                                        {t("maternityReader_tableHeaderCorral")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
@@ -1466,7 +1504,7 @@ export const LectorMaternidadScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        ID
+                                        {t("maternityReader_tableHeaderId")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
@@ -1480,7 +1518,7 @@ export const LectorMaternidadScreen = () => {
                                             }}
                                             numberOfLines={1}
                                         >
-                                            Crotal
+                                            {t("maternityReader_tableHeaderCrotal")}
                                         </Text>
                                     </View>
                                 </View>
@@ -1505,7 +1543,7 @@ export const LectorMaternidadScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        ID
+                                        {t("maternityReader_tableHeaderId")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
@@ -1520,7 +1558,7 @@ export const LectorMaternidadScreen = () => {
                                             }}
                                             numberOfLines={1}
                                         >
-                                            Crotal
+                                            {t("maternityReader_tableHeaderCrotal")}
                                         </Text>
                                     </View>
                                 </View>
@@ -1544,7 +1582,7 @@ export const LectorMaternidadScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        Corral
+                                        {t("maternityReader_tableHeaderCorral")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
@@ -1558,7 +1596,7 @@ export const LectorMaternidadScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        ID
+                                        {t("maternityReader_tableHeaderId")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
@@ -1572,7 +1610,7 @@ export const LectorMaternidadScreen = () => {
                                             }}
                                             numberOfLines={1}
                                         >
-                                            Crotal
+                                            {t("maternityReader_tableHeaderCrotal")}
                                         </Text>
                                     </View>
                                 </View>
@@ -1580,7 +1618,7 @@ export const LectorMaternidadScreen = () => {
 
                             {registrosEnviados.length === 0 ? (
                                 <View style={{ padding: 14 }}>
-                                    <Text style={{ color: MUTED }}>No hay registros.</Text>
+                                    <Text style={{ color: MUTED }}>{t("maternityReader_noRecords")}</Text>
                                 </View>
                             ) : (
                                 pageItems.map((r, idx) =>
@@ -1777,12 +1815,12 @@ export const LectorMaternidadScreen = () => {
                         >
                             <Text style={{ color: "white", fontWeight: "900", fontSize: 16 }}>
                                 {esLectura
-                                    ? "Lectura automática activa"
+                                    ? t("maternityReader_buttonAutoReading")
                                     : !confirmar
-                                        ? "Envío automático activo"
+                                        ? t("maternityReader_buttonAutoSending")
                                         : estaEnviando
-                                            ? "Enviando..."
-                                            : "Enviar"}
+                                            ? t("maternityReader_buttonSending")
+                                            : t("maternityReader_buttonSend")}
                             </Text>
                         </TouchableOpacity>
                     </View>

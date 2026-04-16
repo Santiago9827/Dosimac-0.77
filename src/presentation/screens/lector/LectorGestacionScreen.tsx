@@ -9,6 +9,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
 import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId } from "../../routes/obtenerLecturaEspada";
 import { construirEndpointEspada } from "../../../stores/apiConfig";
+import { useTranslation } from "react-i18next";
 
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
@@ -20,15 +21,6 @@ const SOFT = "#EEF2FF";
 const SOFT_BORDER = "#C7D2FE";
 const DANGER = "#DC2626";
 const SUCCESS = "#16A34A";
-
-// const ENDPOINT_GESTATION =
-//     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation";
-
-// const ENDPOINT_GESTATION_ENTRADA =
-//     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation";
-
-// const ENDPOINT_GESTATION_SALIDA =
-//     "http://192.168.11.203:6060/CtiAlimentacionAPI/api/espada/gestation/exit";
 
 const SHADOW = {
     shadowColor: "#000",
@@ -379,6 +371,7 @@ export const LectorGestacionScreen = () => {
     const PADDING_TABLA_X = 14;
 
     const navigation = useNavigation<any>();
+    const { t } = useTranslation();
 
     // AWR store
     const lectorConectado = useAwrConn((s) => s.isConnected);
@@ -592,14 +585,20 @@ export const LectorGestacionScreen = () => {
         const crotalTxt = (crotalForzado ?? crotalLeido ?? "").trim();
 
         if (!crotalTxt) {
-            Alert.alert("Falta crotal", "Acerca el crotal al lector antes de enviar.");
+            Alert.alert(
+                t("gestationReader_alertMissingCrotalTitle"),
+                t("gestationReader_alertMissingCrotalMessage")
+            );
             return;
         }
 
         const crotalNum = parseNumeroSeguro(crotalTxt);
 
         if (crotalNum === null) {
-            Alert.alert("Crotal inválido", "El crotal debe ser numérico.");
+            Alert.alert(
+                t("gestationReader_alertInvalidCrotalTitle"),
+                t("gestationReader_alertInvalidCrotalMessage")
+            );
             return;
         }
 
@@ -622,7 +621,7 @@ export const LectorGestacionScreen = () => {
                         respuesta.rawText ||
                         `HTTP ${respuesta.status}`;
 
-                    Alert.alert("Error en lectura", String(detalle));
+                    Alert.alert(t("gestationReader_alertReadErrorTitle"), String(detalle));
                     return;
                 }
 
@@ -669,7 +668,10 @@ export const LectorGestacionScreen = () => {
                 ultimoCrotalAutoRef.current = null;
                 return;
             } catch {
-                Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+                Alert.alert(
+                    t("gestationReader_alertNetworkError"),
+                    t("gestationReader_alertNetworkErrorMessage")
+                );
                 return;
             } finally {
                 setEstaEnviando(false);
@@ -677,14 +679,20 @@ export const LectorGestacionScreen = () => {
         }
 
         if (requiereCorral && !corralTxt) {
-            Alert.alert("Falta corral", "Escribe el corral antes de enviar.");
+            Alert.alert(
+                t("gestationReader_alertNetworkError"),
+                t("gestationReader_alertNetworkErrorMessage")
+            );
             return;
         }
 
         const corralNum = requiereCorral ? parseNumeroSeguro(corralTxt) : null;
 
         if (requiereCorral && corralNum === null) {
-            Alert.alert("Corral inválido", "El corral debe ser un número.");
+            Alert.alert(
+                t("gestationReader_alertMissingCorralTitle"),
+                t("gestationReader_alertMissingCorralMessage")
+            );
             return;
         }
 
@@ -702,7 +710,10 @@ export const LectorGestacionScreen = () => {
                     esSalida ? "gestation/exit" : "gestation"
                 );
             } catch (error: any) {
-                Alert.alert("Error", error?.message || "No hay IP configurada.");
+                Alert.alert(
+                    t("gestationReader_alertError"),
+                    error?.message || t("gestationReader_alertNoIpConfigured")
+                );
                 return;
             }
 
@@ -718,11 +729,12 @@ export const LectorGestacionScreen = () => {
                     `HTTP ${respuesta.status}`;
 
                 if (respuesta.status === 400) {
-                    Alert.alert("Aviso", String(detalle));
+                    Alert.alert(t("gestationReader_alertWarning"), String(detalle));
                     return;
                 }
 
-                Alert.alert("Error al enviar", String(detalle));
+                Alert.alert(t("gestationReader_alertSendErrorTitle"), String(detalle));
+
                 return;
             }
 
@@ -765,7 +777,10 @@ export const LectorGestacionScreen = () => {
             limpiarCrotalLeido();
             ultimoCrotalAutoRef.current = null;
         } catch {
-            Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+            Alert.alert(
+                t("gestationReader_alertNetworkError"),
+                t("gestationReader_alertNetworkErrorMessage")
+            );
         } finally {
             setEstaEnviando(false);
         }
@@ -781,19 +796,26 @@ export const LectorGestacionScreen = () => {
         const crotalTxt = crotalPendienteId.trim();
 
         if (!idManual) {
-            Alert.alert("Falta ID", "Escribe el nuevo ID antes de actualizar.");
+            Alert.alert(
+                t("gestationReader_alertMissingIdTitle"),
+                t("gestationReader_alertMissingIdMessage")
+            );
             return;
         }
 
         if (!crotalTxt) {
-            Alert.alert("Falta crotal", "No hay crotal asociado para actualizar.");
+            Alert.alert(
+                t("gestationReader_alertMissingAssociatedCrotalTitle"),
+                t("gestationReader_alertMissingAssociatedCrotalMessage")
+            );
             return;
         }
 
         const crotalNum = parseNumeroSeguro(crotalTxt);
 
         if (crotalNum === null) {
-            Alert.alert("Crotal inválido", "El crotal asociado no es válido.");
+            t("gestationReader_alertInvalidAssociatedCrotalTitle"),
+                t("gestationReader_alertInvalidAssociatedCrotalMessage")
             return;
         }
 
@@ -811,7 +833,7 @@ export const LectorGestacionScreen = () => {
                     respuesta.rawText ||
                     `HTTP ${respuesta.status}`;
 
-                Alert.alert("Error al actualizar ID", String(detalle));
+                Alert.alert(t("gestationReader_alertUpdateIdErrorTitle"), String(detalle));
                 return;
             }
 
@@ -842,7 +864,10 @@ export const LectorGestacionScreen = () => {
 
             cerrarActualizacionId();
         } catch {
-            Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+            Alert.alert(
+                t("gestationReader_alertNetworkError"),
+                t("gestationReader_alertNetworkErrorMessage")
+            );
         } finally {
             setActualizandoId(false);
         }
@@ -934,7 +959,7 @@ export const LectorGestacionScreen = () => {
                 }}
             >
                 <Appbar.BackAction color={TEXT} onPress={volverACtiFeed} />
-                <Appbar.Content title="Lector Gestación" titleStyle={{ color: TEXT }} />
+                <Appbar.Content title={t("gestationReader_screenTitle")} titleStyle={{ color: TEXT }} />
             </Appbar.Header>
 
             <ScrollView
@@ -968,10 +993,10 @@ export const LectorGestacionScreen = () => {
                             }}
                         >
                             <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                                Información del animal
+                                {t("gestationReader_animalInfoTitle")}
                             </Text>
                             <Text style={{ color: MUTED, marginTop: 4 }}>
-                                Datos localizados en la búsqueda.
+                                {t("gestationReader_animalInfoDescription")}
                             </Text>
                         </View>
 
@@ -1003,7 +1028,7 @@ export const LectorGestacionScreen = () => {
                                     >
                                         {/* <Ionicons name="paw-outline" size={18} color={BRAND} /> */}
                                         <Text style={{ color: BRAND, fontWeight: "900", fontSize: 15 }}>
-                                            Ficha Animal
+                                            {t("gestationReader_animalCardTitle")}
                                         </Text>
                                     </View>
                                 </View>
@@ -1015,7 +1040,7 @@ export const LectorGestacionScreen = () => {
                                         fontWeight: "900",
                                     }}
                                 >
-                                    ID {String(animalBusqueda?.animalId ?? "—")}
+                                    {t("gestationReader_animalIdLabel")} {String(animalBusqueda?.animalId ?? "—")}
                                 </Text>
 
                                 <Text
@@ -1025,7 +1050,7 @@ export const LectorGestacionScreen = () => {
                                         fontWeight: "700",
                                     }}
                                 >
-                                    Crotal {String(animalBusqueda?.crotal ?? "—")}
+                                    {t("gestationReader_animalCrotalLabel")} {String(animalBusqueda?.crotal ?? "—")}
                                 </Text>
 
                                 {/* <View
@@ -1057,37 +1082,37 @@ export const LectorGestacionScreen = () => {
                             >
                                 <FichaDatoAnimal
                                     icon="home-outline"
-                                    titulo="Corral"
+                                    titulo={t("gestationReader_fieldCorral")}
                                     valor={String(animalBusqueda?.corralName ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="business-outline"
-                                    titulo="Nave"
+                                    titulo={t("gestationReader_fieldHouse")}
                                     valor={String(animalBusqueda?.houseName ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="git-branch-outline"
-                                    titulo="Estado"
+                                    titulo={t("gestationReader_fieldState")}
                                     valor={String(animalBusqueda?.state ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="fitness-outline"
-                                    titulo="Condición corporal"
+                                    titulo={t("gestationReader_fieldBodyCondition")}
                                     valor={String(animalBusqueda?.bodyConditionCorrection ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="refresh-outline"
-                                    titulo="Ciclo"
+                                    titulo={t("gestationReader_fieldCycle")}
                                     valor={String(animalBusqueda?.cycle ?? "—")}
                                 />
 
                                 <FichaDatoAnimal
                                     icon="time-outline"
-                                    titulo="Entrada en sistema"
+                                    titulo={t("gestationReader_fieldSystemEntryDate")}
                                     valor={formatearSoloFecha(animalBusqueda?.systemEntryDate)}
                                 />
                             </View>
@@ -1105,7 +1130,7 @@ export const LectorGestacionScreen = () => {
                                 }}
                             >
                                 <Text style={{ color: TEXT, fontWeight: "900", fontSize: 15 }}>
-                                    Nueva búsqueda
+                                    {t("gestationReader_newSearch")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -1132,9 +1157,9 @@ export const LectorGestacionScreen = () => {
                                 borderBottomColor: SOFT_BORDER,
                             }}
                         >
-                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>Resumen</Text>
+                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}> {t("gestationReader_summaryTitle")}</Text>
                             <Text style={{ color: MUTED, marginTop: 4 }}>
-                                Parámetros elegidos en Configuración
+                                {t("gestationReader_summaryDescription")}
                             </Text>
                         </View>
 
@@ -1142,21 +1167,21 @@ export const LectorGestacionScreen = () => {
                             <View style={{ flexDirection: "row", gap: 10 }}>
                                 <MiniResumenCard
                                     icon="swap-horizontal-outline"
-                                    titulo="Modo"
+                                    titulo={t("gestationReader_mode")}
                                     valor={
                                         tipoMovimiento === "entrada"
-                                            ? "Entrada"
+                                            ? t("gestationReader_modeEntry")
                                             : tipoMovimiento === "salida"
-                                                ? "Salida"
+                                                ? t("gestationReader_modeExit")
                                                 : tipoMovimiento === "lectura"
-                                                    ? "Lectura"
-                                                    : "Búsqueda"
+                                                    ? t("gestationReader_modeReading")
+                                                    : t("gestationReader_modeSearch")
                                     }
                                 />
 
                                 <MiniResumenCard
                                     icon="home-outline"
-                                    titulo="Corral"
+                                    titulo={t("gestationReader_corral")}
                                     valor={corralInput || "—"}
                                 />
                             </View>
@@ -1164,14 +1189,14 @@ export const LectorGestacionScreen = () => {
                             <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
 
                             <SwitchRowReadonly
-                                title="Identificar animales desconocidos"
-                                description="Cuando salga un animal sin ID, ofrecer asignarle un ID."
+                                title={t("gestationReader_detectUnknownTitle")}
+                                description={t("gestationReader_detectUnknownDescription")}
                                 value={detectarDesconocidos}
                             />
 
                             <SwitchRowReadonly
-                                title="Confirmar envío"
-                                description="Pedirá confirmación antes de enviar cada registro."
+                                title={t("gestationReader_confirmSendTitle")}
+                                description={t("gestationReader_confirmSendDescription")}
                                 value={confirmar}
                             />
 
@@ -1188,7 +1213,7 @@ export const LectorGestacionScreen = () => {
                                 }}
                             >
                                 <Text style={{ color: TEXT, fontWeight: "900" }}>
-                                    Cambiar configuración
+                                    {t("gestationReader_changeSettings")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -1221,10 +1246,10 @@ export const LectorGestacionScreen = () => {
                         >
                             <View style={{ flex: 1 }}>
                                 <Text style={{ color: TEXT, fontSize: 19, fontWeight: "900" }}>
-                                    Lectura actual
+                                    {t("gestationReader_currentReadingTitle")}
                                 </Text>
                                 <Text style={{ color: MUTED, marginTop: 4 }}>
-                                    El crotal detectado y el ID asociado aparecerán aquí.
+                                    {t("gestationReader_currentReadingDescription")}
                                 </Text>
                             </View>
                             <View style={{ alignSelf: "flex-start", marginTop: -2 }}>
@@ -1246,7 +1271,7 @@ export const LectorGestacionScreen = () => {
                                     >
                                         <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
                                         <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
-                                            AWR no conectado
+                                            {t("gestationReader_awrDisconnected")}
                                         </Text>
                                     </View>
                                 )}
@@ -1255,7 +1280,7 @@ export const LectorGestacionScreen = () => {
                         <View style={{ padding: 14, gap: 12 }}>
                             <CajaDatoLectura
                                 icon="barcode-outline"
-                                titulo="Crotal leído"
+                                titulo={t("gestationReader_readCrotal")}
                                 valor={crotalLeido ? String(crotalLeido) : "—"}
                                 fondo="#F8FAFF"
                                 borde="#E2E8F0"
@@ -1272,7 +1297,7 @@ export const LectorGestacionScreen = () => {
                                             : "hash"
                                 }
                                 usarFeather={estadoIdVisual === "neutro"}
-                                titulo="ID"
+                                titulo={t("gestationReader_readId")}
                                 valor={idRecibido ? String(idRecibido) : "—"}
                                 fondo={estilosCajaId.backgroundColor}
                                 borde={estilosCajaId.borderColor}
@@ -1280,9 +1305,9 @@ export const LectorGestacionScreen = () => {
                                 colorValor={estilosCajaId.colorTexto}
                                 textoSecundario={
                                     mostrarActualizarId
-                                        ? "Animal sin ID asignado"
+                                        ? t("gestationReader_animalWithoutAssignedId")
                                         : estadoIdVisual === "error"
-                                            ? "Animal desconocido"
+                                            ? t("gestationReader_unknownAnimal")
                                             : undefined
                                 } />
                         </View>
@@ -1309,24 +1334,24 @@ export const LectorGestacionScreen = () => {
                             }}
                         >
                             <Text style={{ color: DANGER, fontSize: 18, fontWeight: "900" }}>
-                                Animal sin ID
+                                {t("gestationReader_animalWithoutIdTitle")}
                             </Text>
                             <Text style={{ color: "#B91C1C", marginTop: 4 }}>
-                                Escribe un ID manual para actualizar el crotal leído.
+                                {t("gestationReader_animalWithoutIdDescription")}
                             </Text>
                         </View>
 
                         <View style={{ padding: 14, gap: 12 }}>
                             <Text style={{ color: MUTED, fontWeight: "800" }}>
-                                Crotal: {crotalPendienteId || "—"}
+                                {t("gestationReader_animalCrotalLabel")}: {crotalPendienteId || "—"}
                             </Text>
 
                             <TextInput
                                 mode="outlined"
-                                label="Nuevo ID"
+                                label={t("gestationReader_newIdLabel")}
                                 value={nuevoIdManual}
                                 onChangeText={setNuevoIdManual}
-                                placeholder="Ej: A13"
+                                placeholder={t("gestationReader_newIdPlaceholder")}
                                 autoCapitalize="characters"
                                 autoCorrect={false}
                                 outlineColor={BORDER}
@@ -1346,7 +1371,8 @@ export const LectorGestacionScreen = () => {
                                 }}
                             >
                                 <Text style={{ color: "white", fontWeight: "900", fontSize: 16 }}>
-                                    {actualizandoId ? "Actualizando..." : "Actualizar ID"}
+                                    {actualizandoId ? t("gestationReader_updatingId")
+                                        : t("gestationReader_updateId")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -1381,7 +1407,7 @@ export const LectorGestacionScreen = () => {
                         >
                             <View style={{ flex: 1 }}>
                                 <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                                    Registros enviados
+                                    {t("gestationReader_sentRecordsTitle")}
                                 </Text>
 
                                 {esLectura && !lectorConectado && (
@@ -1402,7 +1428,7 @@ export const LectorGestacionScreen = () => {
                                     >
                                         <Ionicons name="alert-circle-outline" size={16} color={DANGER} />
                                         <Text style={{ color: DANGER, fontWeight: "900", fontSize: 12 }}>
-                                            AWR no conectado
+                                            {t("gestationReader_awrDisconnected")}
                                         </Text>
                                     </View>
                                 )}
@@ -1505,7 +1531,7 @@ export const LectorGestacionScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        Corral
+                                        {t("gestationReader_tableHeaderCorral")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
@@ -1519,7 +1545,7 @@ export const LectorGestacionScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        ID
+                                        {t("gestationReader_tableHeaderId")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
@@ -1533,7 +1559,7 @@ export const LectorGestacionScreen = () => {
                                             }}
                                             numberOfLines={1}
                                         >
-                                            Crotal
+                                            {t("gestationReader_tableHeaderCrotal")}
                                         </Text>
                                     </View>
                                 </View>
@@ -1558,7 +1584,7 @@ export const LectorGestacionScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        ID
+                                        {t("gestationReader_tableHeaderId")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
@@ -1573,7 +1599,7 @@ export const LectorGestacionScreen = () => {
                                             }}
                                             numberOfLines={1}
                                         >
-                                            Crotal
+                                            {t("gestationReader_tableHeaderCrotal")}
                                         </Text>
                                     </View>
                                 </View>
@@ -1597,7 +1623,7 @@ export const LectorGestacionScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        Corral
+                                        {t("gestationReader_tableHeaderCorral")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
@@ -1611,7 +1637,7 @@ export const LectorGestacionScreen = () => {
                                         }}
                                         numberOfLines={1}
                                     >
-                                        ID
+                                        {t("gestationReader_tableHeaderId")}
                                     </Text>
 
                                     <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
@@ -1625,7 +1651,7 @@ export const LectorGestacionScreen = () => {
                                             }}
                                             numberOfLines={1}
                                         >
-                                            Crotal
+                                            {t("gestationReader_tableHeaderCrotal")}
                                         </Text>
                                     </View>
                                 </View>
@@ -1633,7 +1659,7 @@ export const LectorGestacionScreen = () => {
 
                             {registrosEnviados.length === 0 ? (
                                 <View style={{ padding: 14 }}>
-                                    <Text style={{ color: MUTED }}>No hay registros.</Text>
+                                    <Text style={{ color: MUTED }}>{t("gestationReader_noRecords")}</Text>
                                 </View>
                             ) : (
                                 itemsPagina.map((r, idx) =>
@@ -1827,12 +1853,12 @@ export const LectorGestacionScreen = () => {
                         >
                             <Text style={{ color: "white", fontWeight: "900", fontSize: 16 }}>
                                 {esLectura
-                                    ? "Lectura automática activa"
+                                    ? t("gestationReader_buttonAutoReading")
                                     : !confirmar
-                                        ? "Envío automático activo"
+                                        ? t("gestationReader_buttonAutoSending")
                                         : estaEnviando
-                                            ? "Enviando..."
-                                            : "Enviar"}
+                                            ? t("gestationReader_buttonSending")
+                                            : t("gestationReader_buttonSend")}
                             </Text>
                         </TouchableOpacity>
                     </View>
