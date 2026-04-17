@@ -99,15 +99,15 @@ export const ConfiguracionIPScreen = () => {
         }
     };
 
-    useEffect(() => {
-        (async () => {
-            const saved = await AsyncStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                setGuardado(saved);
-                setValor(saved);
-            }
-        })();
-    }, []);
+    // useEffect(() => {
+    //     (async () => {
+    //         const saved = await AsyncStorage.getItem(STORAGE_KEY);
+    //         if (saved) {
+    //             setGuardado(saved);
+    //             setValor(saved);
+    //         }
+    //     })();
+    // }, []);
 
     useEffect(() => {
         (async () => {

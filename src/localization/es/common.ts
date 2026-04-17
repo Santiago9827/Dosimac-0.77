@@ -12,6 +12,32 @@ export default {
    Tabs: 'Inicio',
 
 
+   login_title: "Iniciar sesión",
+   login_subtitle: "Introduce tus datos. Es necesario configurar la IP antes de iniciar sesión desde el menú Configuración IP.",
+   login_username: "Usuario",
+   login_password: "Contraseña",
+   login_button: "Entrar",
+   login_loading: "Entrando...",
+   login_footer: "Panel de control",
+
+   login_ipRequiredTitle: "Configuración IP requerida",
+   login_ipRequiredMessage: "No has configurado la dirección IP del servidor. Introdúcela para poder iniciar sesión.",
+   login_serverIpLabel: "IP del servidor",
+   login_cancel: "Cancelar",
+   login_accept: "Aceptar",
+
+   login_configTitle: "Configuración",
+   login_errorTitle: "Error de login",
+   login_genericErrorTitle: "Error",
+   login_networkErrorTitle: "Error de red",
+   login_networkErrorMessage: "No se pudo conectar con el servidor.",
+   login_noTokenMessage: "El backend no devolvió ningún token.",
+   login_missingDataTitle: "Faltan datos",
+   login_missingDataMessage: "Introduce usuario y contraseña.",
+   login_invalidIpTitle: "IP no válida",
+   login_invalidIpMessage: "Introduce una IP o dirección de servidor válida.",
+   login_saveIpErrorMessage: "No se pudo guardar la configuración IP.",
+
    Lista_instalaciones: 'Instalaciones',
    Maintenance: 'Mantenimiento',
    DetallesInstalacion: 'Detalles Instación',

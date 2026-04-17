@@ -12,33 +12,43 @@ import {
 	View,
 	Alert,
 } from "react-native";
+import { Button, Dialog, Portal, TextInput as PaperInput } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAuthStore } from "../../../stores/authStore";
 import { HamburgerMenu } from "../../components/shared/HamburgerMenu";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { loginEspada } from "../login/loginEspada";
+import { useTranslation } from "react-i18next";
+import {
+	obtenerBaseUrlGuardada,
+	guardarBaseUrl,
+	isValidIpOrHost,
+	toInputHost,
+} from "../../../stores/ipConfig";
+
 
 const BG = require("../../../assets/images/TecLogin.jpg");
 const LOGO = require("../../../assets/images/logo-cti.png");
 
+
+
 export const LoginScreen = () => {
+
+	const { t } = useTranslation();
+
 	const [userName, setUserName] = useState("");
 	const [pass, setPass] = useState("");
 	const [showPass, setShowPass] = useState(false);
 	const [cargando, setCargando] = useState(false);
-	const insets = useSafeAreaInsets();
 
+	const [ipModalVisible, setIpModalVisible] = useState(false);
+	const [ipTemporal, setIpTemporal] = useState("");
+	const [guardandoIp, setGuardandoIp] = useState(false);
+
+	const insets = useSafeAreaInsets();
 	const login = useAuthStore((s) => s.login);
 
-	const onSubmit = async () => {
-		const usernameLimpio = userName.trim();
-		const passwordLimpia = pass.trim();
-
-		if (!usernameLimpio || !passwordLimpia) {
-			Alert.alert("Faltan datos", "Introduce usuario y contraseña.");
-			return;
-		}
-
+	const hacerLogin = async (usernameLimpio: string, passwordLimpia: string) => {
 		try {
 			setCargando(true);
 
@@ -48,7 +58,7 @@ export const LoginScreen = () => {
 			});
 
 			if (respuesta.errorMessage) {
-				Alert.alert("Configuración", respuesta.errorMessage);
+				Alert.alert(t("login_configTitle"), respuesta.errorMessage);
 				return;
 			}
 
@@ -72,15 +82,58 @@ export const LoginScreen = () => {
 				null;
 
 			if (!token) {
-				Alert.alert("Error", "El backend no devolvió ningún token.");
+				Alert.alert(t("login_genericErrorTitle"), t("login_noTokenMessage"));
 				return;
 			}
 
 			login(token, { email: usernameLimpio });
 		} catch {
-			Alert.alert("Error de red", "No se pudo conectar con el servidor.");
+			Alert.alert(t("login_networkErrorTitle"), t("login_networkErrorMessage"));
 		} finally {
 			setCargando(false);
+		}
+	};
+
+	const onSubmit = async () => {
+		const usernameLimpio = userName.trim();
+		const passwordLimpia = pass.trim();
+
+		if (!usernameLimpio || !passwordLimpia) {
+			Alert.alert(t("login_missingDataTitle"), t("login_missingDataMessage"));
+			return;
+		}
+
+		const baseUrlGuardada = await obtenerBaseUrlGuardada();
+
+		if (!baseUrlGuardada) {
+			setIpTemporal("");
+			setIpModalVisible(true);
+			return;
+		}
+
+		await hacerLogin(usernameLimpio, passwordLimpia);
+	};
+
+	const onGuardarIpYContinuar = async () => {
+		const usernameLimpio = userName.trim();
+		const passwordLimpia = pass.trim();
+
+		if (!isValidIpOrHost(ipTemporal)) {
+			Alert.alert(
+				t("login_invalidIpTitle"),
+				t("login_invalidIpMessage")
+			); return;
+		}
+
+		try {
+			setGuardandoIp(true);
+			await guardarBaseUrl(ipTemporal);
+			setIpModalVisible(false);
+			await hacerLogin(usernameLimpio, passwordLimpia);
+		} catch {
+			Alert.alert(t("login_genericErrorTitle"), t("login_saveIpErrorMessage"));
+		} finally {
+			setGuardandoIp(false);
 		}
 	};
 
@@ -134,13 +187,13 @@ export const LoginScreen = () => {
 								</View>
 
 								<Text className="text-xl font-extrabold text-slate-900">
-									Iniciar sesión
+									{t("login_title")}
 								</Text>
 								<Text className="text-slate-500 mt-1 mb-4">
-									Introduce tus datos
+									{t("login_subtitle")}
 								</Text>
 
-								<Text className="text-slate-700 mb-2 font-semibold">Usuario</Text>
+								<Text className="text-slate-700 mb-2 font-semibold">{t("login_username")}</Text>
 								<View className="flex-row items-center h-10 rounded-lg bg-slate-50 border border-slate-200 px-3">
 									<Ionicons name="person-outline" size={14} color="#64748b" />
 									<TextInput
@@ -157,7 +210,7 @@ export const LoginScreen = () => {
 								</View>
 
 								<Text className="text-slate-700 mt-4 mb-2 font-semibold">
-									Contraseña
+									{t("login_password")}
 								</Text>
 								<View className="flex-row items-center h-10 rounded-lg bg-slate-50 border border-slate-200 px-3">
 									<Ionicons name="lock-closed-outline" size={14} color="#64748b" />
@@ -189,7 +242,7 @@ export const LoginScreen = () => {
 										}`}
 								>
 									<Text className="text-white font-bold text-base">
-										{cargando ? "Entrando..." : "Entrar"}
+										{cargando ? t("login_loading") : t("login_button")}
 									</Text>
 								</TouchableOpacity>
 
@@ -200,6 +253,36 @@ export const LoginScreen = () => {
 						</View>
 					</ScrollView>
 				</KeyboardAvoidingView>
+
+				<Portal>
+					<Dialog visible={ipModalVisible} dismissable={!guardandoIp} onDismiss={() => setIpModalVisible(false)}>
+						<Dialog.Title>{t("login_ipRequiredTitle")}</Dialog.Title>
+						<Dialog.Content>
+							<Text style={{ marginBottom: 12, color: "#111827" }}>
+								{t("login_ipRequiredMessage")}
+							</Text>
+
+							<PaperInput
+								mode="outlined"
+								label={t("login_serverIpLabel")}
+								value={ipTemporal}
+								onChangeText={(txt) => setIpTemporal(toInputHost(txt))}
+								autoCapitalize="none"
+								autoCorrect={false}
+								keyboardType="url"
+								placeholder="192.168.1.10"
+							/>
+						</Dialog.Content>
+						<Dialog.Actions>
+							<Button onPress={() => setIpModalVisible(false)} disabled={guardandoIp}>
+								{t("login_cancel")}
+							</Button>
+							<Button onPress={onGuardarIpYContinuar} loading={guardandoIp} disabled={guardandoIp}>
+								{t("login_accept")}
+							</Button>
+						</Dialog.Actions>
+					</Dialog>
+				</Portal>
 			</View>
 		</ImageBackground>
 	);

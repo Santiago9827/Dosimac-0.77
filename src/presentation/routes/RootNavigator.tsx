@@ -34,7 +34,16 @@ export const RootNavigator = () => {
                     return;
                 }
 
-                if (respuesta.status === 400 || respuesta.status === 401) {
+                if (respuesta.status === 401) {
+                    const detalle =
+                        (respuesta.data &&
+                            (respuesta.data.message ||
+                                respuesta.data.error ||
+                                respuesta.data.mensaje)) ||
+                        respuesta.rawText ||
+                        'Token no válido';
+
+                    Alert.alert('Sesión expirada', String(detalle));
                     logout();
                     setTokenValidado(false);
                     return;
@@ -48,16 +57,18 @@ export const RootNavigator = () => {
                     respuesta.rawText ||
                     `HTTP ${respuesta.status}`;
 
-                Alert.alert("Error", String(detalle));
-                logout();
-                setTokenValidado(false);
+                Alert.alert('Aviso', String(detalle));
+
+                // Mantener sesión
+                setTokenValidado(true);
             } catch {
                 Alert.alert(
-                    "Error de red",
-                    "No se pudo validar la sesión con el servidor."
+                    'Error de red',
+                    'No se pudo validar la sesión con el servidor.'
                 );
-                logout();
-                setTokenValidado(false);
+
+                // Mantener sesión
+                setTokenValidado(true);
             } finally {
                 setValidandoToken(false);
             }
@@ -65,7 +76,6 @@ export const RootNavigator = () => {
 
         comprobarToken();
     }, [token, isHydrated, logout]);
-
     if (!isHydrated || validandoToken) {
         return (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>

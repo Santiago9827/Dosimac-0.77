@@ -1176,7 +1176,7 @@ export const LectorMaternidadScreen = () => {
                             />
 
                             <TouchableOpacity
-                                onPress={() => navigation.navigate("ConfiguracionLecturaMaternidad")}
+                                onPress={() => navigation.navigate("ConfiguracionMaternidad")}
                                 activeOpacity={0.9}
                                 style={{
                                     marginTop: 6,
