@@ -63,6 +63,10 @@ export default {
     Númeromáquinanovalido: '無效的機器編號',
     configuarIntalacion: "請設定安裝以繼續",
 
+    awrStartScan_title: "AWR 設定",
+    awrStartScan_description: "用於掃描 Agrident AWR 讀取器的畫面。",
+    awrStartScan_button: "掃描 AWR",
+
     gestacionConfig_screenTitle: "妊娠設定",
     gestacionConfig_chooseOptionTitle: "選擇一個選項",
     gestacionConfig_chooseOptionDescription: "在開始使用讀取器之前，先定義流程。",
@@ -335,4 +339,27 @@ export default {
     maternityReader_buttonAutoSending: "自動送出已啟用",
     maternityReader_buttonSending: "送出中...",
     maternityReader_buttonSend: "送出",
+
+    awrScanResults_title: "AWR－掃描結果",
+    awrScanResults_searching: "正在搜尋 AWR…",
+    awrScanResults_warningTitle: "警告",
+    awrScanResults_noDevicesNearby: "找不到附近的 AWR 裝置。",
+    awrScanResults_connecting: "連線中…",
+    awrScanResults_connectErrorFallback: "無法連線",
+    awrScanResults_connectedTitle: "已連線",
+    awrScanResults_connectedMessage: "已與 {{device}} 建立連線。",
+    awrScanResults_genericDevice: "裝置",
+
+    awrSavedList_title: "已掃描的 AWR",
+    awrSavedList_connecting: "連線中…",
+    awrSavedList_empty: "沒有已儲存的 AWR。請從「Configuración AWR」掃描一個。",
+    awrSavedList_connected: "已連線",
+    awrSavedList_disconnected: "未連線",
+    awrSavedList_renameAccessibility: "重新命名",
+    awrSavedList_deleteAccessibility: "刪除",
+    awrSavedList_renameTitle: "重新命名 AWR",
+    awrSavedList_nameLabel: "名稱",
+    awrSavedList_deleteTitle: "刪除已儲存的 AWR",
+    awrSavedList_deleteMessage: "確定要將這個 AWR 從清單中刪除嗎？",
+    awrSavedList_deleteAction: "刪除",
 };

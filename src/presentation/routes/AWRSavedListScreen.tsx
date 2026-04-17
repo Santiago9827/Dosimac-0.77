@@ -16,12 +16,16 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { awrStore } from '../../stores/awrStore';
 import { useAwrConn } from '../../stores/awrConnStore';
+import { useTranslation } from 'react-i18next';
+
 
 const GAP = 16;
 const SCREEN_W = Dimensions.get('window').width;
 const CARD_W = SCREEN_W - GAP * 2; // ancho completo con márgenes laterales
 
 export const AWRSavedListScreen = ({ navigation }: any) => {
+    const { t } = useTranslation();
+
     const saved = awrStore(s => s.devices);
     const remove = awrStore(s => s.remove);
     const rename = awrStore(s => s.rename);
@@ -103,13 +107,13 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
         <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
             <Appbar.Header elevated>
                 <Appbar.BackAction onPress={navigation.goBack} />
-                <Appbar.Content title="AWR escaneados" />
+                <Appbar.Content title={t('awrSavedList_title')} />
             </Appbar.Header>
 
             {connecting && (
                 <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <ActivityIndicator />
-                    <Text>Conectando…</Text>
+                    <Text>{t('awrSavedList_connecting')}</Text>
                 </View>
             )}
             {!!error && <Text style={{ color: 'red', paddingHorizontal: 16 }}>{error}</Text>}
@@ -117,7 +121,7 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
             {data.length === 0 ? (
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
                     <Text style={{ textAlign: 'center', opacity: 0.75 }}>
-                        No hay AWR guardados. Escanea uno desde “Prueba AWR300”.
+                        {t('awrSavedList_empty')}.
                     </Text>
                 </View>
             ) : (
@@ -182,7 +186,7 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
                                                         color: connected ? '#0F766E' : '#4B5563',
                                                     }}
                                                 >
-                                                    {connected ? 'Conectado' : 'Desconectado'}
+                                                    {connected ? t('awrSavedList_connected') : t('awrSavedList_disconnected')}
                                                 </Text>
                                             </View>
 
@@ -195,7 +199,7 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
                                                         <Ionicons name="pencil-outline" size={props.size} color={props.color} />
                                                     )}
                                                     onPress={() => openRename(item.id, item.label, item.name)}
-                                                    accessibilityLabel="Renombrar"
+                                                    accessibilityLabel={t('awrSavedList_renameAccessibility')}
                                                 />
                                                 <IconButton
                                                     size={20}
@@ -204,7 +208,7 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
                                                         <Ionicons name="trash-outline" size={props.size} color={props.color} />
                                                     )}
                                                     onPress={() => openDelete(item.id)}
-                                                    accessibilityLabel="Eliminar"
+                                                    accessibilityLabel={t('awrSavedList_deleteAccessibility')}
                                                 />
                                             </View>
                                         </View>
@@ -219,19 +223,19 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
             {/* Dialogo Renombrar */}
             <Portal>
                 <Dialog visible={renameOpen} onDismiss={() => setRenameOpen(false)}>
-                    <Dialog.Title>Renombrar AWR</Dialog.Title>
+                    <Dialog.Title>{t('awrSavedList_renameTitle')}</Dialog.Title>
                     <Dialog.Content>
                         <TextInput
                             mode="outlined"
-                            label="Nombre"
+                            label={t('awrSavedList_nameLabel')}
                             value={draftName}
                             onChangeText={setDraftName}
                             autoFocus
                         />
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={() => setRenameOpen(false)}>Cancelar</Button>
-                        <Button onPress={confirmRename}>Guardar</Button>
+                        <Button onPress={() => setRenameOpen(false)}>{t('Cancelar')}</Button>
+                        <Button onPress={confirmRename}>{t('Guardar')}</Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
@@ -240,13 +244,13 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
             <Portal>
                 <Dialog visible={deleteOpen} onDismiss={() => setDeleteOpen(false)}>
                     <Dialog.Icon icon="alert" />
-                    <Dialog.Title>Eliminar AWR guardado</Dialog.Title>
+                    <Dialog.Title>{t('awrSavedList_deleteTitle')}</Dialog.Title>
                     <Dialog.Content>
-                        <Text>¿Seguro que quieres eliminar este AWR de la lista?</Text>
+                        <Text>{t('awrSavedList_deleteMessage')}</Text>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={() => setDeleteOpen(false)}>Cancelar</Button>
-                        <Button onPress={confirmDelete}>Eliminar</Button>
+                        <Button onPress={() => setDeleteOpen(false)}>{t('Cancelar')}</Button>
+                        <Button onPress={confirmDelete}>{t('awrSavedList_deleteAction')}</Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>

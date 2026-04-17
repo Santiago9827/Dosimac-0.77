@@ -4,7 +4,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, 
 import { Appbar, Switch, TextInput } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
-import { useRoute, RouteProp, useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useRoute, RouteProp, useFocusEffect, useNavigation, useIsFocused } from "@react-navigation/native";
 import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../../presentation/components/shared/IndicadorConexionAnimado";
 import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId } from "../../routes/obtenerLecturaEspada";
@@ -392,7 +392,8 @@ export const LectorMaternidadScreen = () => {
 
     const navigation = useNavigation<any>();
     const { t } = useTranslation();
-
+    const pantallaEnfocada = useIsFocused();
+    const pantallaActivaRef = useRef(false);
 
     const lectorConectado = useAwrConn((s) => s.isConnected);
     const idLector = useAwrConn((s) => s.currentId);
@@ -449,7 +450,7 @@ export const LectorMaternidadScreen = () => {
     }, [registrosEnviados, pagina]);
 
     const requiereCorral = esEntrada;
-    const usaEnvioAutomatico = esLectura || !confirmar;
+    const usaEnvioAutomatico = !esBusqueda && (esLectura || !confirmar);
     const tiempoAutoEnvioMs = esLectura ? 300 : 1000;
 
     const abrirActualizacionId = React.useCallback((crotal: string, corral: string) => {
@@ -489,6 +490,15 @@ export const LectorMaternidadScreen = () => {
     };
 
     useEffect(() => {
+        pantallaActivaRef.current = pantallaEnfocada;
+
+        if (!pantallaEnfocada) {
+            limpiarAutoEnvioTimer();
+            ultimoCrotalAutoRef.current = null;
+        }
+    }, [pantallaEnfocada, limpiarAutoEnvioTimer]);
+
+    useEffect(() => {
         return () => {
             if (timerIdRef.current) {
                 clearTimeout(timerIdRef.current);
@@ -503,6 +513,7 @@ export const LectorMaternidadScreen = () => {
         const maxPagina = Math.max(0, Math.ceil(registrosEnviados.length / TAM_PAGINA) - 1);
         if (pagina > maxPagina) setPagina(maxPagina);
     }, [registrosEnviados.length, pagina]);
+
 
     useFocusEffect(
         React.useCallback(() => {
@@ -574,9 +585,10 @@ export const LectorMaternidadScreen = () => {
         else navigation.navigate("Tabs");
     };
     const onEnviar = React.useCallback(async (crotalForzado?: string) => {
+        if (!pantallaActivaRef.current) return;
+
         const corralTxt = corralInput.trim();
         const crotalTxt = (crotalForzado ?? crotalLeido ?? "").trim();
-
         if (!crotalTxt) {
             Alert.alert(
                 t("maternityReader_alertMissingCrotalTitle"),
@@ -872,6 +884,12 @@ export const LectorMaternidadScreen = () => {
     useEffect(() => {
         const crotalActual = (crotalLeido ?? "").trim();
 
+        if (!pantallaEnfocada) {
+            limpiarAutoEnvioTimer();
+            ultimoCrotalAutoRef.current = null;
+            return;
+        }
+
         if (!usaEnvioAutomatico) {
             limpiarAutoEnvioTimer();
             ultimoCrotalAutoRef.current = null;
@@ -892,6 +910,7 @@ export const LectorMaternidadScreen = () => {
         ultimoCrotalAutoRef.current = crotalActual;
 
         autoEnvioTimerRef.current = setTimeout(() => {
+            if (!pantallaActivaRef.current) return;
             onEnviar(crotalActual);
         }, tiempoAutoEnvioMs);
 
@@ -899,6 +918,7 @@ export const LectorMaternidadScreen = () => {
             limpiarAutoEnvioTimer();
         };
     }, [
+        pantallaEnfocada,
         usaEnvioAutomatico,
         tiempoAutoEnvioMs,
         crotalLeido,

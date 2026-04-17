@@ -63,6 +63,10 @@ export default {
     Númeromáquinanovalido: 'Невірний номер машини',
     configuarIntalacion: "Налаштуйте установку, щоб продовжити",
 
+    awrStartScan_title: "Налаштування AWR",
+    awrStartScan_description: "Екран для сканування зчитувачів Agrident AWR.",
+    awrStartScan_button: "Сканувати AWR",
+
     gestacionConfig_screenTitle: "Налаштування гестації",
     gestacionConfig_chooseOptionTitle: "Оберіть варіант",
     gestacionConfig_chooseOptionDescription: "Визначте потік перед початком роботи зі зчитувачем.",
@@ -337,4 +341,27 @@ export default {
     maternityReader_buttonAutoSending: "Автоматичне надсилання активне",
     maternityReader_buttonSending: "Надсилання...",
     maternityReader_buttonSend: "Надіслати",
+
+    awrScanResults_title: "AWR – Результати сканування",
+    awrScanResults_searching: "Пошук AWR…",
+    awrScanResults_warningTitle: "Попередження",
+    awrScanResults_noDevicesNearby: "Поруч не знайдено AWR.",
+    awrScanResults_connecting: "Підключення…",
+    awrScanResults_connectErrorFallback: "Не вдалося підключитися",
+    awrScanResults_connectedTitle: "Підключено",
+    awrScanResults_connectedMessage: "З’єднання встановлено з {{device}}.",
+    awrScanResults_genericDevice: "пристроєм",
+
+    awrSavedList_title: "Відскановані AWR",
+    awrSavedList_connecting: "Підключення…",
+    awrSavedList_empty: "Немає збережених AWR. Відскануйте один у розділі «Configuración AWR».",
+    awrSavedList_connected: "Підключено",
+    awrSavedList_disconnected: "Відключено",
+    awrSavedList_renameAccessibility: "Перейменувати",
+    awrSavedList_deleteAccessibility: "Видалити",
+    awrSavedList_renameTitle: "Перейменувати AWR",
+    awrSavedList_nameLabel: "Назва",
+    awrSavedList_deleteTitle: "Видалити збережений AWR",
+    awrSavedList_deleteMessage: "Ви впевнені, що хочете видалити цей AWR зі списку?",
+    awrSavedList_deleteAction: "Видалити",
 };

@@ -63,6 +63,10 @@ export default {
     Númeromáquinanovalido: 'Nieprawidłowy numer maszyny',
     configuarIntalacion: 'Należy skonfigurować co najmniej jedną instalację',
 
+    awrStartScan_title: "Ustawienia AWR",
+    awrStartScan_description: "Ekran do skanowania czytników Agrident AWR.",
+    awrStartScan_button: "Skanuj AWR",
+
     gestacionConfig_screenTitle: "Konfiguracja ciąży",
     gestacionConfig_chooseOptionTitle: "Wybierz opcję",
     gestacionConfig_chooseOptionDescription: "Zdefiniuj przepływ przed rozpoczęciem pracy z czytnikiem.",
@@ -335,5 +339,28 @@ export default {
     maternityReader_buttonAutoSending: "Automatyczne wysyłanie aktywne",
     maternityReader_buttonSending: "Wysyłanie...",
     maternityReader_buttonSend: "Wyślij",
+
+    awrScanResults_title: "AWR – Wyniki skanowania",
+    awrScanResults_searching: "Wyszukiwanie AWR…",
+    awrScanResults_warningTitle: "Ostrzeżenie",
+    awrScanResults_noDevicesNearby: "Nie znaleziono pobliskich urządzeń AWR.",
+    awrScanResults_connecting: "Łączenie…",
+    awrScanResults_connectErrorFallback: "Nie udało się połączyć",
+    awrScanResults_connectedTitle: "Połączono",
+    awrScanResults_connectedMessage: "Połączenie nawiązano z {{device}}.",
+    awrScanResults_genericDevice: "urządzeniem",
+
+    awrSavedList_title: "Zeskanowane AWR",
+    awrSavedList_connecting: "Łączenie…",
+    awrSavedList_empty: "Brak zapisanych AWR. Zeskanuj jeden w sekcji „Configuración AWR”.",
+    awrSavedList_connected: "Połączono",
+    awrSavedList_disconnected: "Rozłączono",
+    awrSavedList_renameAccessibility: "Zmień nazwę",
+    awrSavedList_deleteAccessibility: "Usuń",
+    awrSavedList_renameTitle: "Zmień nazwę AWR",
+    awrSavedList_nameLabel: "Nazwa",
+    awrSavedList_deleteTitle: "Usuń zapisany AWR",
+    awrSavedList_deleteMessage: "Czy na pewno chcesz usunąć ten AWR z listy?",
+    awrSavedList_deleteAction: "Usuń",
 
 };

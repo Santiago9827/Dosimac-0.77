@@ -63,6 +63,10 @@ export default {
     Númeromáquinanovalido: "Número de màquina no vàlid",
     configuarIntalacion: "Cal configurar almenys una instal·lació",
 
+    awrStartScan_title: "Configuració AWR",
+    awrStartScan_description: "Pantalla per escanejar lectors Agrident AWR.",
+    awrStartScan_button: "Escanejar AWR",
+
     gestacionConfig_screenTitle: "Configuració Gestació",
     gestacionConfig_chooseOptionTitle: "Tria una opció",
     gestacionConfig_chooseOptionDescription: "Defineix el flux abans de començar amb el lector.",
@@ -335,4 +339,27 @@ export default {
     maternityReader_buttonAutoSending: "Enviament automàtic actiu",
     maternityReader_buttonSending: "Enviant...",
     maternityReader_buttonSend: "Enviar",
+
+    awrScanResults_title: "AWR – Resultats de l'escaneig",
+    awrScanResults_searching: "Cercant AWR…",
+    awrScanResults_warningTitle: "Avís",
+    awrScanResults_noDevicesNearby: "No s'han trobat AWR propers.",
+    awrScanResults_connecting: "Connectant…",
+    awrScanResults_connectErrorFallback: "No s'ha pogut connectar",
+    awrScanResults_connectedTitle: "Connectat",
+    awrScanResults_connectedMessage: "Connexió establerta amb {{device}}.",
+    awrScanResults_genericDevice: "el dispositiu",
+
+    awrSavedList_title: "AWR escanejats",
+    awrSavedList_connecting: "Connectant…",
+    awrSavedList_empty: "No hi ha AWR desats. Escaneja'n un des de “Configuració AWR”.",
+    awrSavedList_connected: "Connectat",
+    awrSavedList_disconnected: "Desconnectat",
+    awrSavedList_renameAccessibility: "Canviar el nom",
+    awrSavedList_deleteAccessibility: "Eliminar",
+    awrSavedList_renameTitle: "Canviar el nom de l'AWR",
+    awrSavedList_nameLabel: "Nom",
+    awrSavedList_deleteTitle: "Eliminar AWR desat",
+    awrSavedList_deleteMessage: "Segur que vols eliminar aquest AWR de la llista?",
+    awrSavedList_deleteAction: "Eliminar",
 };

@@ -66,6 +66,10 @@ export default {
     gestacionConfig_chooseOptionTitle: "옵션 선택",
     gestacionConfig_chooseOptionDescription: "리더기를 시작하기 전에 작업 흐름을 정의하세요.",
 
+    awrStartScan_title: "AWR 설정",
+    awrStartScan_description: "Agrident AWR 리더기를 스캔하는 화면입니다.",
+    awrStartScan_button: "AWR 스캔",
+
     gestacionConfig_entry: "입력",
     gestacionConfig_exit: "출력",
     gestacionConfig_reading: "읽기",
@@ -334,5 +338,28 @@ export default {
     maternityReader_buttonAutoSending: "자동 전송 활성화",
     maternityReader_buttonSending: "전송 중...",
     maternityReader_buttonSend: "전송",
+
+    awrScanResults_title: "AWR – 스캔 결과",
+    awrScanResults_searching: "AWR 검색 중…",
+    awrScanResults_warningTitle: "경고",
+    awrScanResults_noDevicesNearby: "근처에서 AWR을 찾을 수 없습니다.",
+    awrScanResults_connecting: "연결 중…",
+    awrScanResults_connectErrorFallback: "연결할 수 없습니다",
+    awrScanResults_connectedTitle: "연결됨",
+    awrScanResults_connectedMessage: "{{device}}에 연결되었습니다.",
+    awrScanResults_genericDevice: "장치",
+
+    awrSavedList_title: "스캔된 AWR",
+    awrSavedList_connecting: "연결 중…",
+    awrSavedList_empty: "저장된 AWR가 없습니다. “Configuración AWR”에서 하나를 스캔하세요.",
+    awrSavedList_connected: "연결됨",
+    awrSavedList_disconnected: "연결 안 됨",
+    awrSavedList_renameAccessibility: "이름 변경",
+    awrSavedList_deleteAccessibility: "삭제",
+    awrSavedList_renameTitle: "AWR 이름 변경",
+    awrSavedList_nameLabel: "이름",
+    awrSavedList_deleteTitle: "저장된 AWR 삭제",
+    awrSavedList_deleteMessage: "이 AWR를 목록에서 삭제하시겠습니까?",
+    awrSavedList_deleteAction: "삭제",
 
 };

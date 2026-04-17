@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
-import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { Appbar, Switch, TextInput } from "react-native-paper";
 import Feather from '@expo/vector-icons/Feather';
 import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
@@ -372,6 +372,8 @@ export const LectorGestacionScreen = () => {
 
     const navigation = useNavigation<any>();
     const { t } = useTranslation();
+    const pantallaEnfocada = useIsFocused();
+    const pantallaActivaRef = useRef(false);
 
     // AWR store
     const lectorConectado = useAwrConn((s) => s.isConnected);
@@ -474,6 +476,15 @@ export const LectorGestacionScreen = () => {
         setCrotalPendienteId("");
         setCorralPendienteId("—");
     }, []);
+
+    useEffect(() => {
+        pantallaActivaRef.current = pantallaEnfocada;
+
+        if (!pantallaEnfocada) {
+            limpiarAutoEnvioTimer();
+            ultimoCrotalAutoRef.current = null;
+        }
+    }, [pantallaEnfocada, limpiarAutoEnvioTimer]);
 
 
     useEffect(() => {
@@ -580,6 +591,8 @@ export const LectorGestacionScreen = () => {
     };
 
     const enviarRegistro = React.useCallback(async (crotalForzado?: string) => {
+        if (!pantallaActivaRef.current) return;
+
         const requiereCorral = esEntrada;
         const corralTxt = corralInput.trim();
         const crotalTxt = (crotalForzado ?? crotalLeido ?? "").trim();
@@ -677,11 +690,10 @@ export const LectorGestacionScreen = () => {
                 setEstaEnviando(false);
             }
         }
-
         if (requiereCorral && !corralTxt) {
             Alert.alert(
-                t("gestationReader_alertNetworkError"),
-                t("gestationReader_alertNetworkErrorMessage")
+                t("gestationReader_alertMissingCorralTitle"),
+                t("gestationReader_alertMissingCorralMessage")
             );
             return;
         }
@@ -814,8 +826,10 @@ export const LectorGestacionScreen = () => {
         const crotalNum = parseNumeroSeguro(crotalTxt);
 
         if (crotalNum === null) {
-            t("gestationReader_alertInvalidAssociatedCrotalTitle"),
+            Alert.alert(
+                t("gestationReader_alertInvalidAssociatedCrotalTitle"),
                 t("gestationReader_alertInvalidAssociatedCrotalMessage")
+            );
             return;
         }
 
@@ -877,6 +891,12 @@ export const LectorGestacionScreen = () => {
     useEffect(() => {
         const crotalActual = (crotalLeido ?? "").trim();
 
+        if (!pantallaEnfocada) {
+            limpiarAutoEnvioTimer();
+            ultimoCrotalAutoRef.current = null;
+            return;
+        }
+
         if (!usaEnvioAutomatico) {
             limpiarAutoEnvioTimer();
             ultimoCrotalAutoRef.current = null;
@@ -897,6 +917,7 @@ export const LectorGestacionScreen = () => {
         ultimoCrotalAutoRef.current = crotalActual;
 
         autoEnvioTimerRef.current = setTimeout(() => {
+            if (!pantallaActivaRef.current) return;
             enviarRegistro(crotalActual);
         }, tiempoAutoEnvioMs);
 
@@ -904,6 +925,7 @@ export const LectorGestacionScreen = () => {
             limpiarAutoEnvioTimer();
         };
     }, [
+        pantallaEnfocada,
         usaEnvioAutomatico,
         tiempoAutoEnvioMs,
         crotalLeido,

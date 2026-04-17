@@ -66,6 +66,10 @@ export default {
     gestacionConfig_chooseOptionTitle: "Escolhe uma opção",
     gestacionConfig_chooseOptionDescription: "Define o fluxo antes de começar com o leitor.",
 
+    awrStartScan_title: "Configuração AWR",
+    awrStartScan_description: "Ecrã para digitalizar leitores Agrident AWR.",
+    awrStartScan_button: "Digitalizar AWR",
+
     gestacionConfig_entry: "Entrada",
     gestacionConfig_exit: "Saída",
     gestacionConfig_reading: "Leitura",
@@ -334,5 +338,28 @@ export default {
     maternityReader_buttonAutoSending: "Envio automático ativo",
     maternityReader_buttonSending: "Enviando...",
     maternityReader_buttonSend: "Enviar",
+
+    awrScanResults_title: "AWR – Resultados da digitalização",
+    awrScanResults_searching: "A procurar AWR…",
+    awrScanResults_warningTitle: "Aviso",
+    awrScanResults_noDevicesNearby: "Não foram encontrados dispositivos AWR próximos.",
+    awrScanResults_connecting: "A ligar…",
+    awrScanResults_connectErrorFallback: "Não foi possível ligar",
+    awrScanResults_connectedTitle: "Ligado",
+    awrScanResults_connectedMessage: "Ligação estabelecida com {{device}}.",
+    awrScanResults_genericDevice: "o dispositivo",
+
+    awrSavedList_title: "AWR digitalizados",
+    awrSavedList_connecting: "A ligar…",
+    awrSavedList_empty: "Não há AWR guardados. Digitalize um em “Configuración AWR”.",
+    awrSavedList_connected: "Ligado",
+    awrSavedList_disconnected: "Desligado",
+    awrSavedList_renameAccessibility: "Renomear",
+    awrSavedList_deleteAccessibility: "Eliminar",
+    awrSavedList_renameTitle: "Renomear AWR",
+    awrSavedList_nameLabel: "Nome",
+    awrSavedList_deleteTitle: "Eliminar AWR guardado",
+    awrSavedList_deleteMessage: "Tem a certeza de que quer eliminar este AWR da lista?",
+    awrSavedList_deleteAction: "Eliminar",
 
 }

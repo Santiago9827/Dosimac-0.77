@@ -12,14 +12,22 @@ export const AWRStartScanningScreen = ({ navigation }) => {
         <View>
             <Appbar.Header elevated>
                 <Appbar.BackAction onPress={navigation.goBack} />
-                <Appbar.Content title="AWR300 Test" />
+                <Appbar.Content title={t('awrStartScan_title')} />
             </Appbar.Header>
 
-            <View style={{ marginHorizontal: 30, marginTop: 40, borderWidth: 1, borderRadius: 10, borderColor: 'lightgrey' }}>
+            <View
+                style={{
+                    marginHorizontal: 30,
+                    marginTop: 40,
+                    borderWidth: 1,
+                    borderRadius: 10,
+                    borderColor: 'lightgrey',
+                }}
+            >
                 <Card mode="contained">
                     <Card.Content>
                         <Text style={{ fontSize: 18, textAlign: 'center' }}>
-                            Pantalla  para escanear lectores Agrident AWR300.
+                            {t('awrStartScan_description')}
                         </Text>
                     </Card.Content>
                 </Card>
@@ -27,11 +35,19 @@ export const AWRStartScanningScreen = ({ navigation }) => {
 
             <View style={{ alignItems: 'center', marginTop: 32 }}>
                 <Pressable onPress={() => navigation.navigate('AWR-SCANRESULTS' as never)}>
-                    <View style={{
-                        width: 180, height: 180, borderRadius: 9999, alignItems: 'center', justifyContent: 'center',
-                        backgroundColor: '#4f46e5'
-                    }}>
-                        <Text style={{ color: 'white', fontSize: 20, fontWeight: '700' }}>Escanear AWR300</Text>
+                    <View
+                        style={{
+                            width: 180,
+                            height: 180,
+                            borderRadius: 9999,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: '#4f46e5',
+                        }}
+                    >
+                        <Text style={{ color: 'white', fontSize: 20, fontWeight: '700', textAlign: 'center' }}>
+                            {t('awrStartScan_button')}
+                        </Text>
                     </View>
                 </Pressable>
             </View>
