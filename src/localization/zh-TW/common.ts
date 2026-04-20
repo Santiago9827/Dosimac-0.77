@@ -387,4 +387,16 @@ export default {
     awrSavedList_deleteTitle: "刪除已儲存的 AWR",
     awrSavedList_deleteMessage: "確定要將這個 AWR 從清單中刪除嗎？",
     awrSavedList_deleteAction: "刪除",
+
+    ipConfig_title: "IP 設定",
+    ipConfig_cardTitle: "CTIFEED 伺服器",
+    ipConfig_cardDescription: "請輸入將開啟入口網站的伺服器 IP。",
+    ipConfig_inputLabel: "IP（僅 IP）",
+    ipConfig_saved: "已儲存",
+    ipConfig_alertSuccessTitle: "正確",
+    ipConfig_alertSuccessMessage: "IP 正確",
+    ipConfig_alertWarningTitle: "警告",
+    ipConfig_alertServerNotUpdated: "伺服器未更新",
+    ipConfig_alertErrorTitle: "錯誤",
+    ipConfig_alertInvalidIp: "IP 無效",
 };

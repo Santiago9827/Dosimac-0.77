@@ -401,5 +401,16 @@ export default {
    awrSavedList_deleteMessage: "Are you sure you want to remove this AWR from the list?",
    awrSavedList_deleteAction: "Delete",
 
+   ipConfig_title: "IP Settings",
+   ipConfig_cardTitle: "CTIFEED Server",
+   ipConfig_cardDescription: "Enter the server IP where the portal will be opened.",
+   ipConfig_inputLabel: "IP (IP only)",
+   ipConfig_saved: "Saved",
+   ipConfig_alertSuccessTitle: "Correct",
+   ipConfig_alertSuccessMessage: "Correct IP",
+   ipConfig_alertWarningTitle: "Warning",
+   ipConfig_alertServerNotUpdated: "Server not updated",
+   ipConfig_alertErrorTitle: "Error",
+   ipConfig_alertInvalidIp: "Invalid IP",
 
 };

@@ -1,14 +1,19 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useState } from "react";
-import { View, KeyboardAvoidingView, Platform } from "react-native";
+import { View, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { Appbar, Button, Divider, Text, TextInput, useTheme } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useAuthStore } from "../../../stores/authStore";
+import { validarServidorPorIp } from "../../../stores/validarServidorIp";
+import { useTranslation } from "react-i18next";
+
+
 
 const STORAGE_KEY = "@cti_portal_base_url";
 const DEFAULT_PATH = "/CtiAlimentacion/";
 const DEFAULT_PORT = "6060";
+
 
 function stripDefaultPort(host: string) {
     // si es host:8080 -> mostrar solo host
@@ -77,7 +82,34 @@ function isValidIpOrHost(inputRaw: string) {
     return true;
 }
 
+function interpretarRespuestaValidacionIp(status: number) {
+    if (status === 401) {
+        return {
+            guardar: true,
+            titulo: "Correcto",
+            mensaje: "IP correcta",
+        };
+    }
+
+    if (status === 404) {
+        return {
+            guardar: false,
+            titulo: "Aviso",
+            mensaje: "Servidor no actualizado",
+        };
+    }
+
+    return {
+        guardar: false,
+        titulo: "Error",
+        mensaje: "IP no válida",
+    };
+}
+
 export const ConfiguracionIPScreen = () => {
+
+    const { t } = useTranslation();
+
     const navigation = useNavigation<any>();
     const token = useAuthStore((s) => s.token);
     const theme = useTheme();
@@ -121,17 +153,23 @@ export const ConfiguracionIPScreen = () => {
 
     const onGuardar = async () => {
         if (!valor.trim() || invalido) return;
-        const finalUrl = normalizeToUrl(valor);
 
         try {
             setLoading(true);
-            await AsyncStorage.setItem(STORAGE_KEY, finalUrl);
-            setGuardado(finalUrl);
+
+            const respuesta = await validarServidorPorIp(valor);
+            const resultado = interpretarRespuestaValidacionIp(respuesta.status);
+
+            if (resultado.guardar) {
+                await AsyncStorage.setItem(STORAGE_KEY, respuesta.baseUrl);
+                setGuardado(respuesta.baseUrl);
+            }
+
+            Alert.alert(resultado.titulo, resultado.mensaje);
         } finally {
             setLoading(false);
         }
     };
-
     const onReset = async () => {
         try {
             setLoading(true);
@@ -152,7 +190,7 @@ export const ConfiguracionIPScreen = () => {
         <View style={{ flex: 1, backgroundColor: "#F6F7FB" }}>
             <Appbar.Header elevated>
                 <Appbar.BackAction onPress={goBackCorrecto} />
-                <Appbar.Content title="Configuración IP" />
+                <Appbar.Content title={t("ipConfig_title")} />
             </Appbar.Header>
 
             <KeyboardAvoidingView
@@ -177,10 +215,10 @@ export const ConfiguracionIPScreen = () => {
                     {/* HEADER COLOR DENTRO DE LA CARD */}
                     <View style={{ backgroundColor: soft, padding: 14, borderBottomWidth: 1, borderBottomColor: softBorder }}>
                         <Text style={{ fontSize: 18, fontWeight: "900", color: "#111827" }}>
-                            Servidor CTIFEED
+                            {t("ipConfig_cardTitle")}
                         </Text>
                         <Text style={{ marginTop: 4, color: "#4B5563" }}>
-                            Introduce la IP del servidor donde se abrirá el portal.
+                            {t("ipConfig_cardDescription")}
                         </Text>
                     </View>
 
@@ -223,7 +261,7 @@ export const ConfiguracionIPScreen = () => {
                         {/* GUARDADO */}
                         {guardado && (
                             <View style={{ marginTop: 12 }}>
-                                <Text style={{ color: "#10B981", fontWeight: "900" }}>Guardado </Text>
+                                <Text style={{ color: "#10B981", fontWeight: "900" }}> {t("ipConfig_saved")} </Text>
                                 <Text style={{ color: "#374151", marginTop: 4 }}>{guardado}</Text>
                             </View>
                         )}
@@ -238,7 +276,7 @@ export const ConfiguracionIPScreen = () => {
                             style={{ borderRadius: 14 }}
                             contentStyle={{ paddingVertical: 2 }}
                         >
-                            Guardar
+                            {t("Guardar")}
                         </Button>
 
                         {/* <Button

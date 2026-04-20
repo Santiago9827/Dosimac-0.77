@@ -390,4 +390,16 @@ export default {
     awrSavedList_deleteTitle: "Видалити збережений AWR",
     awrSavedList_deleteMessage: "Ви впевнені, що хочете видалити цей AWR зі списку?",
     awrSavedList_deleteAction: "Видалити",
+
+    ipConfig_title: "Налаштування IP",
+    ipConfig_cardTitle: "Сервер CTIFEED",
+    ipConfig_cardDescription: "Введіть IP сервера, на якому буде відкрито портал.",
+    ipConfig_inputLabel: "IP (лише IP)",
+    ipConfig_saved: "Збережено",
+    ipConfig_alertSuccessTitle: "Успішно",
+    ipConfig_alertSuccessMessage: "IP правильний",
+    ipConfig_alertWarningTitle: "Попередження",
+    ipConfig_alertServerNotUpdated: "Сервер не оновлено",
+    ipConfig_alertErrorTitle: "Помилка",
+    ipConfig_alertInvalidIp: "Неправильний IP",
 };

@@ -387,4 +387,16 @@ export default {
     awrSavedList_deleteMessage: "이 AWR를 목록에서 삭제하시겠습니까?",
     awrSavedList_deleteAction: "삭제",
 
+    ipConfig_title: "IP 설정",
+    ipConfig_cardTitle: "CTIFEED 서버",
+    ipConfig_cardDescription: "포털이 열릴 서버의 IP를 입력하세요.",
+    ipConfig_inputLabel: "IP (IP만)",
+    ipConfig_saved: "저장됨",
+    ipConfig_alertSuccessTitle: "정상",
+    ipConfig_alertSuccessMessage: "올바른 IP입니다",
+    ipConfig_alertWarningTitle: "경고",
+    ipConfig_alertServerNotUpdated: "서버가 업데이트되지 않았습니다",
+    ipConfig_alertErrorTitle: "오류",
+    ipConfig_alertInvalidIp: "유효하지 않은 IP",
+
 };

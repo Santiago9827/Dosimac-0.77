@@ -388,4 +388,16 @@ export default {
     awrSavedList_deleteTitle: "Eliminar AWR desat",
     awrSavedList_deleteMessage: "Segur que vols eliminar aquest AWR de la llista?",
     awrSavedList_deleteAction: "Eliminar",
+
+    ipConfig_title: "Configuració IP",
+    ipConfig_cardTitle: "Servidor CTIFEED",
+    ipConfig_cardDescription: "Introdueix la IP del servidor on s'obrirà el portal.",
+    ipConfig_inputLabel: "IP (només la IP)",
+    ipConfig_saved: "Desat",
+    ipConfig_alertSuccessTitle: "Correcte",
+    ipConfig_alertSuccessMessage: "IP correcta",
+    ipConfig_alertWarningTitle: "Avís",
+    ipConfig_alertServerNotUpdated: "Servidor no actualitzat",
+    ipConfig_alertErrorTitle: "Error",
+    ipConfig_alertInvalidIp: "IP no vàlida",
 };

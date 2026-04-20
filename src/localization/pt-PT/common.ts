@@ -387,4 +387,16 @@ export default {
     awrSavedList_deleteMessage: "Tem a certeza de que quer eliminar este AWR da lista?",
     awrSavedList_deleteAction: "Eliminar",
 
+    ipConfig_title: "Configuração IP",
+    ipConfig_cardTitle: "Servidor CTIFEED",
+    ipConfig_cardDescription: "Introduza o IP do servidor onde o portal será aberto.",
+    ipConfig_inputLabel: "IP (apenas o IP)",
+    ipConfig_saved: "Guardado",
+    ipConfig_alertSuccessTitle: "Correto",
+    ipConfig_alertSuccessMessage: "IP correto",
+    ipConfig_alertWarningTitle: "Aviso",
+    ipConfig_alertServerNotUpdated: "Servidor não atualizado",
+    ipConfig_alertErrorTitle: "Erro",
+    ipConfig_alertInvalidIp: "IP inválido",
+
 }
