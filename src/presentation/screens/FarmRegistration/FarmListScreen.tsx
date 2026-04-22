@@ -4,7 +4,7 @@
 /* eslint-disable prettier/prettier */
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View, BackHandler } from 'react-native';
 import { Appbar, Button, Caption, Divider, List, RadioButton, Switch } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native-gesture-handler';
@@ -104,6 +104,22 @@ export const FarmListScreen = ({ navigation, route }) => {
       setValue('');
     }
   }, [sfarm?.id, farms, UseSetNewFarm]);
+
+  //!Prueba
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        goToHome();
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () => subscription.remove();
+    }, [token, navigation])
+  );
+  //!
 
 
 

@@ -93,9 +93,9 @@ function interpretarRespuestaValidacionIp(status: number) {
 
     if (status === 404) {
         return {
-            guardar: false,
+            guardar: true,
             titulo: "Aviso",
-            mensaje: "Servidor no actualizado",
+            mensaje: "Para poder iniciar sesión, primero tiene que actualizar el portal. Después verifique la IP aquí de nuevo.",
         };
     }
 

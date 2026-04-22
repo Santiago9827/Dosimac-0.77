@@ -270,7 +270,7 @@ export const LoginScreen = () => {
 								autoCapitalize="none"
 								autoCorrect={false}
 								keyboardType="url"
-								placeholder="192.168.1.10"
+								placeholder=""
 							/>
 						</Dialog.Content>
 						<Dialog.Actions>
