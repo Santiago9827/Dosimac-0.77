@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler, } from "react-native";
 import { Appbar, Switch, TextInput } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
@@ -517,6 +517,22 @@ export const LectorMaternidadScreen = () => {
 
     useFocusEffect(
         React.useCallback(() => {
+            const onBackPress = () => {
+                navigation.navigate("ConfiguracionLectura");
+                return true;
+            };
+
+            const subscription = BackHandler.addEventListener(
+                "hardwareBackPress",
+                onBackPress
+            );
+
+            return () => subscription.remove();
+        }, [navigation])
+    );
+
+    useFocusEffect(
+        React.useCallback(() => {
             const modoInicial: TipoMovimiento =
                 params.modo === "salida"
                     ? "salida"
@@ -578,11 +594,8 @@ export const LectorMaternidadScreen = () => {
             cerrarActualizacionId,
         ])
     );
-
-    const volverACtiFeed = () => {
-        const parent = navigation.getParent?.();
-        if (parent?.navigate) parent.navigate("Tabs");
-        else navigation.navigate("Tabs");
+    const volverAConfiguracionMaternidad = () => {
+        navigation.navigate("ConfiguracionLectura");
     };
     const onEnviar = React.useCallback(async (crotalForzado?: string) => {
         if (!pantallaActivaRef.current) return;
@@ -970,7 +983,7 @@ export const LectorMaternidadScreen = () => {
                     borderBottomColor: BORDER,
                 }}
             >
-                <Appbar.BackAction color={TEXT} onPress={volverACtiFeed} />
+                <Appbar.BackAction color={TEXT} onPress={volverAConfiguracionMaternidad} />
                 <Appbar.Content title={t("maternityReader_screenTitle")} titleStyle={{ color: TEXT }} />
             </Appbar.Header>
 

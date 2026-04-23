@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
 import { useFocusEffect, useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
@@ -516,6 +516,22 @@ export const LectorGestacionScreen = () => {
         }, 3000);
     };
 
+    useFocusEffect(
+    React.useCallback(() => {
+        const onBackPress = () => {
+            navigation.navigate("ConfiguracionGestacion");
+            return true;
+        };
+
+        const subscription = BackHandler.addEventListener(
+            "hardwareBackPress",
+            onBackPress
+        );
+
+        return () => subscription.remove();
+    }, [navigation])
+);
+
     // al entrar/salir
     useFocusEffect(
         React.useCallback(() => {
@@ -584,12 +600,9 @@ export const LectorGestacionScreen = () => {
             cerrarActualizacionId,
         ])
     );
-    const volverACtiFeed = () => {
-        const parent = navigation.getParent?.();
-        if (parent?.navigate) parent.navigate("Tabs");
-        else navigation.navigate("Tabs");
+    const volverAConfiguracionGestacion = () => {
+        navigation.navigate("ConfiguracionGestacion");
     };
-
     const enviarRegistro = React.useCallback(async (crotalForzado?: string) => {
         if (!pantallaActivaRef.current) return;
 
@@ -980,7 +993,7 @@ export const LectorGestacionScreen = () => {
                     borderBottomColor: BORDER,
                 }}
             >
-                <Appbar.BackAction color={TEXT} onPress={volverACtiFeed} />
+                <Appbar.BackAction color={TEXT} onPress={volverAConfiguracionGestacion} />
                 <Appbar.Content title={t("gestationReader_screenTitle")} titleStyle={{ color: TEXT }} />
             </Appbar.Header>
 
