@@ -425,4 +425,8 @@ export default {
     AWREscaneados: "Отсканированные AWR",
     CerrarSesion: "Выйти",
 
+    gestacionConfig_lastReadMismatchTitle: "Считанное животное не совпадает с результатом поиска",
+    gestacionConfig_lastReadMismatchCrotal: "Ушная бирка",
+    gestacionConfig_lastReadMismatchId: "ID",
+
 };

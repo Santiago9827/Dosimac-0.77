@@ -425,4 +425,8 @@ export default {
     AWREscaneados: "AWR scansionati",
     CerrarSesion: "Disconnettersi",
 
+
+    gestacionConfig_lastReadMismatchTitle: "L'animale letto non corrisponde alla ricerca",
+    gestacionConfig_lastReadMismatchCrotal: "Marchio auricolare",
+    gestacionConfig_lastReadMismatchId: "ID",
 };

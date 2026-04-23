@@ -421,4 +421,7 @@ export default {
     AWREscaneados: "스캔된 AWR",
     CerrarSesion: "로그아웃",
 
+    gestacionConfig_lastReadMismatchTitle: "읽은 동물이 검색 결과와 일치하지 않습니다",
+    gestacionConfig_lastReadMismatchCrotal: "귀표",
+    gestacionConfig_lastReadMismatchId: "ID",
 };

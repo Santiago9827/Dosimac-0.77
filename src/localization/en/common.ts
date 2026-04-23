@@ -435,4 +435,8 @@ export default {
    AWREscaneados: "Scanned AWRs",
    CerrarSesion: "Log out",
 
+
+   gestacionConfig_lastReadMismatchTitle: "The scanned animal does not match the search",
+   gestacionConfig_lastReadMismatchCrotal: "Ear tag",
+   gestacionConfig_lastReadMismatchId: "ID",
 };

@@ -441,4 +441,8 @@ export default {
    DarDeAltaAWR: "Dar de Alta AWR",
    AWREscaneados: "AWR escaneados",
    CerrarSesion: "Cerrar sesión",
+
+   Config_lastReadMismatchTitle: "El animal leído no coincide con la búsqueda",
+   Config_lastReadMismatchCrotal: "Crotal",
+   Config_lastReadMismatchId: "ID",
 };

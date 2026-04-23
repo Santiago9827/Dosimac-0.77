@@ -425,4 +425,9 @@ export default {
     CerrarSesion: "Se déconnecter",
 
 
+    gestacionConfig_lastReadMismatchTitle: "L'animal lu ne correspond pas à la recherche",
+    gestacionConfig_lastReadMismatchCrotal: "Boucle",
+    gestacionConfig_lastReadMismatchId: "ID",
+
+
 };

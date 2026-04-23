@@ -424,4 +424,8 @@ export default {
     DarDeAltaAWR: "Зареєструвати AWR",
     AWREscaneados: "Скановані AWR",
     CerrarSesion: "Вийти",
+
+    gestacionConfig_lastReadMismatchTitle: "Зчитана тварина не відповідає пошуку",
+    gestacionConfig_lastReadMismatchCrotal: "Вушна бірка",
+    gestacionConfig_lastReadMismatchId: "ID",
 };

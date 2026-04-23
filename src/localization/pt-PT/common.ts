@@ -421,4 +421,9 @@ export default {
     AWREscaneados: "AWR digitalizados",
     CerrarSesion: "Terminar sessão",
 
+    gestacionConfig_lastReadMismatchTitle: "O animal lido não corresponde à pesquisa",
+    gestacionConfig_lastReadMismatchCrotal: "Brinco",
+    gestacionConfig_lastReadMismatchId: "ID",
+
+
 }

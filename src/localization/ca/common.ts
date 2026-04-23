@@ -413,4 +413,8 @@ export default {
     portal_httpError: "No s’ha pogut obrir el portal. Error HTTP {{status}}.",
     portal_retry: "Torna-ho a provar",
     portal_loading: "Carregant el portal...",
+
+    gestacionConfig_lastReadMismatchTitle: "L'animal llegit no coincideix amb la cerca",
+    gestacionConfig_lastReadMismatchCrotal: "Crotal",
+    gestacionConfig_lastReadMismatchId: "ID",
 };

@@ -421,4 +421,9 @@ export default {
     DarDeAltaAWR: "註冊 AWR",
     AWREscaneados: "已掃描的 AWR",
     CerrarSesion: "登出",
+
+    gestacionConfig_lastReadMismatchTitle: "讀取到的動物與搜尋結果不符",
+    gestacionConfig_lastReadMismatchCrotal: "耳標",
+    gestacionConfig_lastReadMismatchId: "ID",
+
 };

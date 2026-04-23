@@ -423,4 +423,8 @@ export default {
     AWREscaneados: "Zeskanowane AWR",
     CerrarSesion: "Wyloguj się",
 
+    gestacionConfig_lastReadMismatchTitle: "Odczytane zwierzę nie pasuje do wyszukiwania",
+    gestacionConfig_lastReadMismatchCrotal: "Kolczyk",
+    gestacionConfig_lastReadMismatchId: "ID",
+
 };
