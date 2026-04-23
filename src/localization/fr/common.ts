@@ -401,4 +401,28 @@ export default {
     ipConfig_alertServerNotUpdated: "Serveur non mis à jour",
     ipConfig_alertErrorTitle: "Erreur",
     ipConfig_alertInvalidIp: "IP invalide",
+
+    portal_preparing: "Préparation du portail...",
+    portal_noSessionToken: "Aucun jeton de session n’est disponible. Veuillez vous reconnecter.",
+    portal_noIpConfigured: "Aucune IP n’est configurée. Configurez d’abord l’IP du serveur.",
+    portal_prepareUrlError: "Impossible de préparer l’URL du portail.",
+    portal_loadError: "Impossible de charger le portail.",
+    portal_checkingConnection: "Vérification de la connexion au portail...",
+    portal_noConnectionTitle: "Pas de connexion",
+    portal_connectionTimeout: "Impossible de se connecter au portail. Vérifiez que vous êtes connecté au bon réseau.",
+    portal_connectionError: "Impossible de se connecter au portail. Vérifiez le réseau ou l’IP configurée.",
+    portal_httpError: "Impossible d’ouvrir le portail. Erreur HTTP {{status}}.",
+    portal_retry: "Réessayer",
+    portal_loading: "Chargement du portail...",
+
+    AltaDispositivos: "Enregistrement des appareils",
+    LectorMaternidad: "Lecteur Maternité",
+    LectorGestacion: "Lecteur Gestation",
+    ConfiguracionIP: "Configuration IP",
+    ConfiguracionAWR: "Configuration AWR",
+    DarDeAltaAWR: "Enregistrer AWR",
+    AWREscaneados: "AWR scannés",
+    CerrarSesion: "Se déconnecter",
+
+
 };

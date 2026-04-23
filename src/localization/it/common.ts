@@ -403,6 +403,26 @@ export default {
     ipConfig_alertErrorTitle: "Errore",
     ipConfig_alertInvalidIp: "IP non valido",
 
+    portal_preparing: "Preparazione del portale...",
+    portal_noSessionToken: "Nessun token di sessione disponibile. Accedi di nuovo.",
+    portal_noIpConfigured: "Nessun IP configurato. Configura prima l’IP del server.",
+    portal_prepareUrlError: "Non è stato possibile preparare l’URL del portale.",
+    portal_loadError: "Non è stato possibile caricare il portale.",
+    portal_checkingConnection: "Verifica della connessione al portale...",
+    portal_noConnectionTitle: "Nessuna connessione",
+    portal_connectionTimeout: "Non è stato possibile connettersi al portale. Verifica di essere connesso alla rete corretta.",
+    portal_connectionError: "Non è stato possibile connettersi al portale. Verifica la rete o l’IP configurato.",
+    portal_httpError: "Non è stato possibile aprire il portale. Errore HTTP {{status}}.",
+    portal_retry: "Riprova",
+    portal_loading: "Caricamento del portale...",
 
+    AltaDispositivos: "Registrazione dispositivi",
+    LectorMaternidad: "Lettore Maternità",
+    LectorGestacion: "Lettore Gestazione",
+    ConfiguracionIP: "Configurazione IP",
+    ConfiguracionAWR: "Configurazione AWR",
+    DarDeAltaAWR: "Registrare AWR",
+    AWREscaneados: "AWR scansionati",
+    CerrarSesion: "Disconnettersi",
 
 };

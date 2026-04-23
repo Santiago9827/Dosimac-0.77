@@ -401,4 +401,26 @@ export default {
     ipConfig_alertErrorTitle: "Błąd",
     ipConfig_alertInvalidIp: "Nieprawidłowy adres IP",
 
+    portal_preparing: "Przygotowywanie portalu...",
+    portal_noSessionToken: "Brak tokenu sesji. Zaloguj się ponownie.",
+    portal_noIpConfigured: "Nie skonfigurowano adresu IP. Najpierw skonfiguruj adres IP serwera.",
+    portal_prepareUrlError: "Nie udało się przygotować adresu URL portalu.",
+    portal_loadError: "Nie udało się załadować portalu.",
+    portal_checkingConnection: "Sprawdzanie połączenia z portalem...",
+    portal_noConnectionTitle: "Brak połączenia",
+    portal_connectionTimeout: "Nie udało się połączyć z portalem. Sprawdź, czy jesteś połączony z właściwą siecią.",
+    portal_connectionError: "Nie udało się połączyć z portalem. Sprawdź sieć lub skonfigurowany adres IP.",
+    portal_httpError: "Nie udało się otworzyć portalu. Błąd HTTP {{status}}.",
+    portal_retry: "Spróbuj ponownie",
+    portal_loading: "Ładowanie portalu...",
+
+    AltaDispositivos: "Rejestracja urządzeń",
+    LectorMaternidad: "Czytnik porodówki",
+    LectorGestacion: "Czytnik ciąży",
+    ConfiguracionIP: "Konfiguracja IP",
+    ConfiguracionAWR: "Konfiguracja AWR",
+    DarDeAltaAWR: "Zarejestruj AWR",
+    AWREscaneados: "Zeskanowane AWR",
+    CerrarSesion: "Wyloguj się",
+
 };

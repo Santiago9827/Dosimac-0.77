@@ -456,7 +456,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
       {/*  Alta dispositivos justo debajo */}
       <DrawerItem
-        label={t("common:AltaDispositivos", { defaultValue: "Alta Dispositivos" })}
+        label={t("AltaDispositivos", { defaultValue: "Alta Dispositivos" })}
         icon={() => <IonIcon name="folder-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}
@@ -464,7 +464,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       />
 
       <DrawerItem
-        label="Lector Maternidad"
+         label={t("common:LectorMaternidad")}
         icon={() => <IonIcon name="barcode-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}
@@ -472,7 +472,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       />
 
       <DrawerItem
-        label="Lector Gestación"
+       label={t("common:LectorGestacion")}
         icon={() => <IonIcon name="barcode-outline" color={inactiveTint} />}
         labelStyle={labelStyle(false)}
         style={itemStyle(false)}
@@ -519,7 +519,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         onPress={() => go("ConfigIP")}
       /> */}
       <DrawerItem
-        label="Configuracion AWR"
+       label={t("common:ConfiguracionAWR")}
         icon={() => (
           <IonIcon
             name={awrOpen ? "chevron-down-outline" : "chevron-forward-outline"}
@@ -533,7 +533,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       {awrOpen && (
         <View style={{ marginLeft: 10, marginTop: 4 }}>
           <DrawerItem
-            label="Dar de Alta AWR"
+            label={t("common:DarDeAltaAWR")}
             icon={() => <IonIcon name="search-outline" color={inactiveTint} />}
             labelStyle={labelStyle(false)}
             style={{ marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 }}
@@ -541,7 +541,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
           />
 
           <DrawerItem
-            label="AWR escaneados"
+             label={t("common:AWREscaneados")}
             icon={() => <IonIcon name="radio-outline" color={inactiveTint} />}
             labelStyle={labelStyle(false)}
             style={{ marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 }}
@@ -582,7 +582,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         />
 
         <DrawerItem
-          label="Configuración IP"
+           label={t("common:ConfiguracionIP")}
           icon={() => <IonIcon name="wifi-outline" color={inactiveTint} />}
           labelStyle={labelStyle(false)}
           style={itemStyle(false)}
@@ -590,7 +590,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         />
 
         <DrawerItem
-          label="Cerrar sesión"
+         label={t("common:CerrarSesion")}
           icon={() => <IonIcon name="log-out-outline" color={inactiveTint} />}
           labelStyle={labelStyle(false)}
           style={itemStyle(false)}

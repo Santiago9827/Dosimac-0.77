@@ -403,4 +403,26 @@ export default {
     ipConfig_alertErrorTitle: "Ошибка",
     ipConfig_alertInvalidIp: "Неверный IP",
 
+    portal_preparing: "Подготовка портала...",
+    portal_noSessionToken: "Нет токена сессии. Войдите в систему снова.",
+    portal_noIpConfigured: "IP-адрес не настроен. Сначала настройте IP-адрес сервера.",
+    portal_prepareUrlError: "Не удалось подготовить URL портала.",
+    portal_loadError: "Не удалось загрузить портал.",
+    portal_checkingConnection: "Проверка подключения к порталу...",
+    portal_noConnectionTitle: "Нет подключения",
+    portal_connectionTimeout: "Не удалось подключиться к порталу. Проверьте, подключены ли вы к правильной сети.",
+    portal_connectionError: "Не удалось подключиться к порталу. Проверьте сеть или настроенный IP-адрес.",
+    portal_httpError: "Не удалось открыть портал. Ошибка HTTP {{status}}.",
+    portal_retry: "Повторить",
+    portal_loading: "Загрузка портала...",
+
+    AltaDispositivos: "Регистрация устройств",
+    LectorMaternidad: "Считыватель материнского отделения",
+    LectorGestacion: "Считыватель гестации",
+    ConfiguracionIP: "Настройки IP",
+    ConfiguracionAWR: "Настройки AWR",
+    DarDeAltaAWR: "Зарегистрировать AWR",
+    AWREscaneados: "Отсканированные AWR",
+    CerrarSesion: "Выйти",
+
 };

@@ -400,4 +400,17 @@ export default {
     ipConfig_alertServerNotUpdated: "Servidor no actualitzat",
     ipConfig_alertErrorTitle: "Error",
     ipConfig_alertInvalidIp: "IP no vàlida",
+
+    portal_preparing: "Preparant el portal...",
+    portal_noSessionToken: "No hi ha cap token de sessió. Torna a iniciar sessió.",
+    portal_noIpConfigured: "No hi ha cap IP configurada. Configura primer la IP del servidor.",
+    portal_prepareUrlError: "No s’ha pogut preparar l’URL del portal.",
+    portal_loadError: "No s’ha pogut carregar el portal.",
+    portal_checkingConnection: "Comprovant la connexió amb el portal...",
+    portal_noConnectionTitle: "Sense connexió",
+    portal_connectionTimeout: "No s’ha pogut connectar amb el portal. Verifica que estiguis connectat a la xarxa correcta.",
+    portal_connectionError: "No s’ha pogut connectar amb el portal. Verifica la xarxa o la IP configurada.",
+    portal_httpError: "No s’ha pogut obrir el portal. Error HTTP {{status}}.",
+    portal_retry: "Torna-ho a provar",
+    portal_loading: "Carregant el portal...",
 };

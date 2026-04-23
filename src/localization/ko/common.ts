@@ -399,4 +399,26 @@ export default {
     ipConfig_alertErrorTitle: "오류",
     ipConfig_alertInvalidIp: "유효하지 않은 IP",
 
+    portal_preparing: "포털 준비 중...",
+    portal_noSessionToken: "세션 토큰이 없습니다. 다시 로그인해 주세요.",
+    portal_noIpConfigured: "설정된 IP가 없습니다. 먼저 서버 IP를 설정해 주세요.",
+    portal_prepareUrlError: "포털 URL을 준비할 수 없습니다.",
+    portal_loadError: "포털을 불러올 수 없습니다.",
+    portal_checkingConnection: "포털 연결을 확인하는 중...",
+    portal_noConnectionTitle: "연결 없음",
+    portal_connectionTimeout: "포털에 연결할 수 없습니다. 올바른 네트워크에 연결되어 있는지 확인해 주세요.",
+    portal_connectionError: "포털에 연결할 수 없습니다. 네트워크 또는 설정된 IP를 확인해 주세요.",
+    portal_httpError: "포털을 열 수 없습니다. HTTP 오류 {{status}}.",
+    portal_retry: "다시 시도",
+    portal_loading: "포털 불러오는 중...",
+
+    AltaDispositivos: "장치 등록",
+    LectorMaternidad: "모성 리더기",
+    LectorGestacion: "임신 리더기",
+    ConfiguracionIP: "IP 설정",
+    ConfiguracionAWR: "AWR 설정",
+    DarDeAltaAWR: "AWR 등록",
+    AWREscaneados: "스캔된 AWR",
+    CerrarSesion: "로그아웃",
+
 };
