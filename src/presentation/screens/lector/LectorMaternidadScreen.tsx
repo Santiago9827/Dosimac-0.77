@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler, } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler, Modal } from "react-native";
 import { Appbar, Switch, TextInput } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
@@ -361,6 +361,11 @@ const FichaDatoAnimal = ({
     </View>
 );
 
+const limpiarMensajeBackend = (mensaje?: string) => {
+    if (!mensaje) return "";
+    return mensaje.replace(/^Error:\s*/i, "").trim();
+};
+
 // ---------- componente ----------
 export const LectorMaternidadScreen = () => {
     const ANCHO_CORRAL = 60;
@@ -410,6 +415,11 @@ export const LectorMaternidadScreen = () => {
     const [crotalPendienteId, setCrotalPendienteId] = useState("");
     const [corralPendienteId, setCorralPendienteId] = useState("—");
     const [actualizandoId, setActualizandoId] = useState(false);
+
+    const [avisoVisible, setAvisoVisible] = useState(false);
+    const [avisoTitulo, setAvisoTitulo] = useState("");
+    const [avisoMensaje, setAvisoMensaje] = useState("");
+    const [avisoTipo, setAvisoTipo] = useState<"warning" | "error" | "info">("info");
 
     const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const autoEnvioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -474,6 +484,25 @@ export const LectorMaternidadScreen = () => {
             autoEnvioTimerRef.current = null;
         }
     }, []);
+
+
+
+    const mostrarAviso = (
+        titulo: string,
+        mensaje: string,
+        tipo: "warning" | "error" | "info" = "info"
+    ) => {
+        setAvisoTitulo(titulo);
+        setAvisoMensaje(mensaje);
+        setAvisoTipo(tipo);
+        setAvisoVisible(true);
+    };
+
+    const cerrarAviso = () => {
+        setAvisoVisible(false);
+        setAvisoTitulo("");
+        setAvisoMensaje("");
+    };
 
     const mostrarIdTemporal = (valor: string, estado: "neutro" | "success" | "error") => {
         if (timerIdRef.current) {
@@ -640,8 +669,11 @@ export const LectorMaternidadScreen = () => {
                         respuesta.rawText ||
                         `HTTP ${respuesta.status}`;
 
-                    Alert.alert(t("maternityReader_alertReadErrorTitle"), String(detalle));
-                    return;
+                    mostrarAviso(
+                        t("maternityReader_alertReadErrorTitle"),
+                        String(detalle),
+                        "error"
+                    ); return;
                 }
 
                 const animal = respuesta.data ?? {};
@@ -687,9 +719,10 @@ export const LectorMaternidadScreen = () => {
                 ultimoCrotalAutoRef.current = null;
                 return;
             } catch {
-                Alert.alert(
+                mostrarAviso(
                     t("maternityReader_alertNetworkError"),
-                    t("maternityReader_alertNetworkErrorMessage")
+                    t("maternityReader_alertNetworkErrorMessage"),
+                    "error"
                 );
                 return;
             } finally {
@@ -745,11 +778,19 @@ export const LectorMaternidadScreen = () => {
                     `HTTP ${r.status}`;
 
                 if (r.status === 400) {
-                    Alert.alert(t("maternityReader_alertWarning"), String(detalle));
+                    mostrarAviso(
+                        t("maternityReader_alertWarning"),
+                        limpiarMensajeBackend(String(detalle)),
+                        "warning"
+                    );
                     return;
                 }
 
-                Alert.alert(t("maternityReader_alertSendErrorTitle"), String(detalle));
+                mostrarAviso(
+                    t("maternityReader_alertSendErrorTitle"),
+                    String(detalle),
+                    "error"
+                );
                 return;
             }
 
@@ -854,8 +895,11 @@ export const LectorMaternidadScreen = () => {
                     respuesta.rawText ||
                     `HTTP ${respuesta.status}`;
 
-                Alert.alert(t("maternityReader_alertUpdateIdErrorTitle"), String(detalle));
-                return;
+                mostrarAviso(
+                    t("maternityReader_alertUpdateIdErrorTitle"),
+                    String(detalle),
+                    "error"
+                ); return;
             }
 
             const idActualizado =
@@ -1859,6 +1903,118 @@ export const LectorMaternidadScreen = () => {
                     </View>
                 )}
             </ScrollView>
+            <Modal
+                visible={avisoVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={cerrarAviso}
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "rgba(15, 23, 42, 0.45)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        paddingHorizontal: 24,
+                    }}
+                >
+                    <View
+                        style={{
+                            width: "100%",
+                            maxWidth: 420,
+                            backgroundColor: "#FFFFFF",
+                            borderRadius: 24,
+                            padding: 22,
+                            ...SHADOW,
+                        }}
+                    >
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                gap: 10,
+                                marginBottom: 16,
+                            }}
+                        >
+                            <View
+                                style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 24,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    backgroundColor:
+                                        avisoTipo === "error"
+                                            ? "#FEF2F2"
+                                            : avisoTipo === "warning"
+                                                ? "#FFF7ED"
+                                                : "#EEF2FF",
+                                }}
+                            >
+                                <Ionicons
+                                    name={
+                                        avisoTipo === "error"
+                                            ? "alert-circle-outline"
+                                            : avisoTipo === "warning"
+                                                ? "warning-outline"
+                                                : "information-circle-outline"
+                                    }
+                                    size={24}
+                                    color={
+                                        avisoTipo === "error"
+                                            ? "#DC2626"
+                                            : avisoTipo === "warning"
+                                                ? "#EA580C"
+                                                : BRAND
+                                    }
+                                />
+                            </View>
+
+                            <Text
+                                style={{
+                                    fontSize: 24,
+                                    fontWeight: "900",
+                                    color: TEXT,
+                                }}
+                            >
+                                {avisoTitulo}
+                            </Text>
+                        </View>
+
+                        <Text
+                            style={{
+                                fontSize: 16,
+                                lineHeight: 24,
+                                color: MUTED,
+                                textAlign: "center",
+                            }}
+                        >
+                            {avisoMensaje}
+                        </Text>
+
+                        <TouchableOpacity
+                            onPress={cerrarAviso}
+                            activeOpacity={0.9}
+                            style={{
+                                marginTop: 22,
+                                height: 44,
+                                borderRadius: 14,
+                                backgroundColor: BRAND,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                alignSelf: "center",
+                                paddingHorizontal: 36,
+                                minWidth: 140,
+                            }}
+                        >
+                            <Text style={{ color: "white", fontWeight: "900", fontSize: 15 }}>
+                                {t("Aceptar")}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </KeyboardAvoidingView>
     );
 };
