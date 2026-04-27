@@ -439,4 +439,10 @@ export default {
    gestacionConfig_lastReadMismatchTitle: "The scanned animal does not match the search",
    gestacionConfig_lastReadMismatchCrotal: "Ear tag",
    gestacionConfig_lastReadMismatchId: "ID",
+    animalState: {
+    gestation: "Gestation",
+    maternity: "Maternity",
+    out_of_gestation: "Out of gestation",
+    out_of_maternity: "Out of maternity"
+  }
 };

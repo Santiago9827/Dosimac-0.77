@@ -429,4 +429,11 @@ export default {
     gestacionConfig_lastReadMismatchCrotal: "Ушная бирка",
     gestacionConfig_lastReadMismatchId: "ID",
 
+     animalState: {
+    gestation: "Гестация",
+    maternity: "Материнство",
+    out_of_gestation: "Вне гестации",
+    out_of_maternity: "Вне материнства"
+  }
+
 };

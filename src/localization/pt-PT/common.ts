@@ -425,5 +425,12 @@ export default {
     gestacionConfig_lastReadMismatchCrotal: "Brinco",
     gestacionConfig_lastReadMismatchId: "ID",
 
+    animalState: {
+    gestation: "Gestação",
+    maternity: "Maternidade",
+    out_of_gestation: "Fora da gestação",
+    out_of_maternity: "Fora da maternidade"
+  }
+
 
 }

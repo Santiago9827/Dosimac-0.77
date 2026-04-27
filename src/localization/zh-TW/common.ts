@@ -426,4 +426,11 @@ export default {
     gestacionConfig_lastReadMismatchCrotal: "耳標",
     gestacionConfig_lastReadMismatchId: "ID",
 
+     animalState: {
+    gestation: "妊娠",
+    maternity: "哺乳期",
+    out_of_gestation: "非妊娠期",
+    out_of_maternity: "非哺乳期"
+  }
+
 };

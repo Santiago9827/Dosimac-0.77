@@ -427,4 +427,11 @@ export default {
     gestacionConfig_lastReadMismatchCrotal: "Kolczyk",
     gestacionConfig_lastReadMismatchId: "ID",
 
+    animalState: {
+    gestation: "Ciąża",
+    maternity: "Macierzyństwo",
+    out_of_gestation: "Poza ciążą",
+    out_of_maternity: "Poza macierzyństwem"
+  }
+
 };

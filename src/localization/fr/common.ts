@@ -429,5 +429,12 @@ export default {
     gestacionConfig_lastReadMismatchCrotal: "Boucle",
     gestacionConfig_lastReadMismatchId: "ID",
 
+      animalState: {
+    gestation: "Gestation",
+    maternity: "Maternité",
+    out_of_gestation: "Hors gestation",
+    out_of_maternity: "Hors maternité"
+  }
+
 
 };

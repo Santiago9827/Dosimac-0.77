@@ -417,4 +417,11 @@ export default {
     gestacionConfig_lastReadMismatchTitle: "L'animal llegit no coincideix amb la cerca",
     gestacionConfig_lastReadMismatchCrotal: "Crotal",
     gestacionConfig_lastReadMismatchId: "ID",
+
+     animalState: {
+    gestation: "Gestació",
+    maternity: "Maternitat",
+    out_of_gestation: "Fora de gestació",
+    out_of_maternity: "Fora de maternitat"
+  }
 };

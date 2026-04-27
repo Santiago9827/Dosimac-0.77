@@ -424,4 +424,11 @@ export default {
     gestacionConfig_lastReadMismatchTitle: "읽은 동물이 검색 결과와 일치하지 않습니다",
     gestacionConfig_lastReadMismatchCrotal: "귀표",
     gestacionConfig_lastReadMismatchId: "ID",
+
+    animalState: {
+    gestation: "임신",
+    maternity: "분만",
+    out_of_gestation: "임신 아님",
+    out_of_maternity: "분만 종료"
+  }
 };

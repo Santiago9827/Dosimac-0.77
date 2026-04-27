@@ -429,4 +429,12 @@ export default {
     gestacionConfig_lastReadMismatchTitle: "L'animale letto non corrisponde alla ricerca",
     gestacionConfig_lastReadMismatchCrotal: "Marchio auricolare",
     gestacionConfig_lastReadMismatchId: "ID",
+
+      animalState: {
+    gestation: "Gestazione",
+    maternity: "Maternità",
+    out_of_gestation: "Fuori gestazione",
+    out_of_maternity: "Fuori maternità"
+  }
+
 };

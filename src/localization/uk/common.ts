@@ -428,4 +428,11 @@ export default {
     gestacionConfig_lastReadMismatchTitle: "Зчитана тварина не відповідає пошуку",
     gestacionConfig_lastReadMismatchCrotal: "Вушна бірка",
     gestacionConfig_lastReadMismatchId: "ID",
+
+    animalState: {
+    gestation: "Гестація",
+    maternity: "Материнство",
+    out_of_gestation: "Поза гестацією",
+    out_of_maternity: "Поза материнством"
+  }
 };

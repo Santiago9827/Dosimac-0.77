@@ -445,4 +445,11 @@ export default {
    Config_lastReadMismatchTitle: "El animal leído no coincide con la búsqueda",
    Config_lastReadMismatchCrotal: "Crotal",
    Config_lastReadMismatchId: "ID",
+
+   animalState: {
+      gestation: "Gestación",
+      maternity: "Maternidad",
+      out_of_gestation: "Fuera de gestación",
+      out_of_maternity: "Fuera de maternidad"
+   }
 };
