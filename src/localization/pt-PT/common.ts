@@ -430,7 +430,16 @@ export default {
     maternity: "Maternidade",
     out_of_gestation: "Fora da gestação",
     out_of_maternity: "Fora da maternidade"
-  }
+  },
+
+  
+Reader_readingTitle: "Leitura de brincos",
+Reader_labelId: "ID",
+Reader_labelCrotal: "Brinco",
+Reader_labelCorral: "Curral",
+Reader_labelHouse: "Pavilhão",
+Reader_labelState: "Estado",
+Reader_autoReadingBadge: "Leitura automática",
 
 
 }

@@ -382,43 +382,73 @@ const RegistroLecturaCard = ({
     registro: RegistroEnviado;
     estadoTraducido: string;
 }) => {
+    const { t } = useTranslation();
+
     const idEsError = registro.idBackend === "—" || registro.idBackend === "0";
+
+    const coloresCard = idEsError
+        ? {
+            fondoCard: "#FFF7F7",
+            bordeCard: "#FECACA",
+            fondoHeader: "#FEF2F2",
+            bordeSeparador: "#FECACA",
+            colorEtiqueta: "#991B1B",
+            colorValorId: DANGER,
+            fondoEstado: "#FEE2E2",
+            colorEstado: "#991B1B",
+            fondoNave: "#FFF1F2",
+            colorNave: "#9F1239",
+        }
+        : {
+            fondoCard: "#F8FAFF",
+            bordeCard: "#C7D2FE",
+            fondoHeader: "#EEF2FF",
+            bordeSeparador: "#D7DEFF",
+            colorEtiqueta: "#4F46E5",
+            colorValorId: TEXT,
+            fondoEstado: "#EEF2FF",
+            colorEstado: "#4338CA",
+            fondoNave: "#EEF2FF",
+            colorNave: "#4338CA",
+        };
 
     return (
         <View
             style={{
-                backgroundColor: "#FFFFFF",
-                borderWidth: 1,
-                borderColor: BORDER,
+                backgroundColor: coloresCard.fondoCard,
+                borderWidth: 1.5,
+                borderColor: coloresCard.bordeCard,
                 borderRadius: 18,
                 padding: 14,
                 gap: 12,
                 ...SHADOW,
             }}
         >
-            {/* Header */}
             <View
                 style={{
                     flexDirection: "row",
                     alignItems: "flex-start",
                     gap: 18,
+                    backgroundColor: coloresCard.fondoHeader,
+                    borderRadius: 14,
+                    padding: 12,
                 }}
             >
                 <View style={{ width: 82 }}>
                     <Text
                         style={{
-                            color: MUTED,
+                            color: coloresCard.colorEtiqueta,
                             fontSize: 11,
                             fontWeight: "800",
                             marginBottom: 4,
                         }}
                     >
-                        ID
+                        {t("Reader_labelId")}
                     </Text>
 
                     <Text
                         style={{
-                            color: idEsError ? DANGER : TEXT,
+                            color: idEsError ? DANGER : coloresCard.colorValorId,
                             fontSize: 22,
                             fontWeight: "900",
                         }}
@@ -430,13 +460,13 @@ const RegistroLecturaCard = ({
                 <View style={{ flex: 1 }}>
                     <Text
                         style={{
-                            color: MUTED,
+                            color: coloresCard.colorEtiqueta,
                             fontSize: 11,
                             fontWeight: "800",
                             marginBottom: 4,
                         }}
                     >
-                        Crotal
+                        {t("Reader_labelCrotal")}
                     </Text>
 
                     <Text
@@ -455,13 +485,12 @@ const RegistroLecturaCard = ({
                 </View>
             </View>
 
-            {/* Body */}
             <View
                 style={{
                     flexDirection: "row",
                     alignItems: "stretch",
                     borderTopWidth: 1,
-                    borderTopColor: "#E2E8F0",
+                    borderTopColor: coloresCard.bordeSeparador,
                     paddingTop: 12,
                 }}
             >
@@ -474,8 +503,9 @@ const RegistroLecturaCard = ({
                             marginBottom: 4,
                         }}
                     >
-                        Corral
+                        {t("Reader_labelCorral")}
                     </Text>
+
                     <Text
                         style={{
                             color: TEXT,
@@ -490,7 +520,7 @@ const RegistroLecturaCard = ({
                 <View
                     style={{
                         width: 1,
-                        backgroundColor: "#E2E8F0",
+                        backgroundColor: coloresCard.bordeSeparador,
                         marginHorizontal: 10,
                     }}
                 />
@@ -504,25 +534,38 @@ const RegistroLecturaCard = ({
                             marginBottom: 4,
                         }}
                     >
-                        Nave
+                        {t("Reader_labelHouse")}
                     </Text>
-                    <Text
+
+                    <View
                         style={{
-                            color: TEXT,
-                            fontSize: 15,
-                            fontWeight: "900",
-                            lineHeight: 19,
+                            alignSelf: "flex-start",
+                            backgroundColor: coloresCard.fondoNave,
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: 10,
+                            marginTop: 2,
+                            maxWidth: "100%",
                         }}
-                        numberOfLines={2}
                     >
-                        {registro.nave}
-                    </Text>
+                        <Text
+                            style={{
+                                color: coloresCard.colorNave,
+                                fontSize: 15,
+                                fontWeight: "900",
+                                lineHeight: 19,
+                            }}
+                            numberOfLines={2}
+                        >
+                            {registro.nave}
+                        </Text>
+                    </View>
                 </View>
 
                 <View
                     style={{
                         width: 1,
-                        backgroundColor: "#E2E8F0",
+                        backgroundColor: coloresCard.bordeSeparador,
                         marginHorizontal: 10,
                     }}
                 />
@@ -536,19 +579,32 @@ const RegistroLecturaCard = ({
                             marginBottom: 4,
                         }}
                     >
-                        Estado
+                        {t("Reader_labelState")}
                     </Text>
-                    <Text
+
+                    <View
                         style={{
-                            color: TEXT,
-                            fontSize: 15,
-                            fontWeight: "900",
-                            lineHeight: 19,
+                            alignSelf: "flex-start",
+                            backgroundColor: coloresCard.fondoEstado,
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: 10,
+                            marginTop: 2,
+                            maxWidth: "100%",
                         }}
-                        numberOfLines={2}
                     >
-                        {estadoTraducido}
-                    </Text>
+                        <Text
+                            style={{
+                                color: coloresCard.colorEstado,
+                                fontSize: 15,
+                                fontWeight: "900",
+                                lineHeight: 19,
+                            }}
+                            numberOfLines={2}
+                        >
+                            {estadoTraducido}
+                        </Text>
+                    </View>
                 </View>
             </View>
         </View>
@@ -638,7 +694,7 @@ export const LectorMaternidadScreen = () => {
 
     const tituloHeader =
         params.modo === "lectura"
-            ? "Lectura Crotales"
+            ? t("Reader_readingTitle")
             : t("maternityReader_screenTitle");
 
 
@@ -1705,7 +1761,7 @@ export const LectorMaternidadScreen = () => {
                                             fontSize: 12,
                                         }}
                                     >
-                                        Lectura automática
+                                       {t("Reader_autoReadingBadge")}
                                     </Text>
                                 </View>
                             ) : registrosEnviados.length > TAM_PAGINA && (

@@ -431,6 +431,15 @@ export default {
     maternity: "哺乳期",
     out_of_gestation: "非妊娠期",
     out_of_maternity: "非哺乳期"
-  }
+  },
+
+
+gestationReader_readingTitle: "耳標讀取",
+gestationReader_labelId: "ID",
+gestationReader_labelCrotal: "耳標",
+gestationReader_labelCorral: "欄舍",
+gestationReader_labelHouse: "棟舍",
+gestationReader_labelState: "狀態",
+gestationReader_autoReadingBadge: "自動讀取",
 
 };

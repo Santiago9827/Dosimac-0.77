@@ -434,6 +434,15 @@ export default {
     maternity: "Материнство",
     out_of_gestation: "Вне гестации",
     out_of_maternity: "Вне материнства"
-  }
+  },
+
+  
+Reader_readingTitle: "Считывание бирок",
+Reader_labelId: "ID",
+Reader_labelCrotal: "Бирка",
+Reader_labelCorral: "Загон",
+Reader_labelHouse: "Корпус",
+Reader_labelState: "Состояние",
+Reader_autoReadingBadge: "Автоматическое считывание",
 
 };

@@ -423,5 +423,14 @@ export default {
     maternity: "Maternitat",
     out_of_gestation: "Fora de gestació",
     out_of_maternity: "Fora de maternitat"
-  }
+  },
+
+  
+Reader_readingTitle: "Lectura de crotals",
+Reader_labelId: "ID",
+Reader_labelCrotal: "Crotal",
+Reader_labelCorral: "Corral",
+Reader_labelHouse: "Nau",
+Reader_labelState: "Estat",
+Reader_autoReadingBadge: "Lectura automàtica",
 };

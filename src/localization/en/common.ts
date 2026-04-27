@@ -444,5 +444,13 @@ export default {
     maternity: "Maternity",
     out_of_gestation: "Out of gestation",
     out_of_maternity: "Out of maternity"
-  }
+  },
+
+Reader_readingTitle: "Ear Tag Reading",
+Reader_labelId: "ID",
+Reader_labelCrotal: "Ear Tag",
+Reader_labelCorral: "Pen",
+Reader_labelHouse: "House",
+Reader_labelState: "State",
+Reader_autoReadingBadge: "Automatic reading",
 };

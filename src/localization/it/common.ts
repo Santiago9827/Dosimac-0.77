@@ -435,6 +435,15 @@ export default {
     maternity: "Maternità",
     out_of_gestation: "Fuori gestazione",
     out_of_maternity: "Fuori maternità"
-  }
+  },
+
+  
+Reader_readingTitle: "Lettura dei marchi auricolari",
+Reader_labelId: "ID",
+Reader_labelCrotal: "Marchio auricolare",
+Reader_labelCorral: "Recinto",
+Reader_labelHouse: "Capannone",
+Reader_labelState: "Stato",
+Reader_autoReadingBadge: "Lettura automatica",
 
 };
