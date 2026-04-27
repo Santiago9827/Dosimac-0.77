@@ -433,6 +433,7 @@ const RegistroLecturaCard = ({
             </View>
 
             {/* Body */}
+            {/* Body */}
             <View
                 style={{
                     flexDirection: "row",
@@ -442,7 +443,7 @@ const RegistroLecturaCard = ({
                     paddingTop: 12,
                 }}
             >
-                <View style={{ flex: 1, paddingHorizontal: 4 }}>
+                <View style={{ flex: 0.8, paddingHorizontal: 4 }}>
                     <Text
                         style={{
                             color: MUTED,
@@ -472,7 +473,7 @@ const RegistroLecturaCard = ({
                     }}
                 />
 
-                <View style={{ flex: 1, paddingHorizontal: 4 }}>
+                <View style={{ flex: 1.5, paddingHorizontal: 4 }}>
                     <Text
                         style={{
                             color: MUTED,
@@ -488,8 +489,9 @@ const RegistroLecturaCard = ({
                             color: TEXT,
                             fontSize: 15,
                             fontWeight: "900",
+                            lineHeight: 19,
                         }}
-                        numberOfLines={1}
+                        numberOfLines={2}
                     >
                         {registro.nave}
                     </Text>
@@ -503,7 +505,7 @@ const RegistroLecturaCard = ({
                     }}
                 />
 
-                <View style={{ flex: 1, paddingHorizontal: 4 }}>
+                <View style={{ flex: 1.5, paddingHorizontal: 4 }}>
                     <Text
                         style={{
                             color: MUTED,
@@ -519,8 +521,9 @@ const RegistroLecturaCard = ({
                             color: TEXT,
                             fontSize: 15,
                             fontWeight: "900",
+                            lineHeight: 19,
                         }}
-                        numberOfLines={1}
+                        numberOfLines={2}
                     >
                         {estadoTraducido}
                     </Text>
