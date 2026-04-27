@@ -178,7 +178,7 @@ const PublicDrawerContent = (props: DrawerContentComponentProps) => {
             {isSimpleMenu ? (
                 <>
                     <DrawerItem
-                         label={t("login")}
+                         label="Dosimac Server"
                         icon={() => <IonIcon name="log-in-outline" color={iconColor(activeRoute === "Login")} />}
                         labelStyle={labelStyle(activeRoute === "Login")}
                         style={itemStyle(activeRoute === "Login")}
