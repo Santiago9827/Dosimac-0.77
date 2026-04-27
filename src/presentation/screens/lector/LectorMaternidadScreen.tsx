@@ -434,7 +434,6 @@ export const LectorMaternidadScreen = () => {
 
     const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
     const [confirmar, setConfirmar] = useState(true);
-
     const esEntrada = tipoMovimiento === "entrada";
     const esSalida = tipoMovimiento === "salida";
     const esLectura = tipoMovimiento === "lectura";
