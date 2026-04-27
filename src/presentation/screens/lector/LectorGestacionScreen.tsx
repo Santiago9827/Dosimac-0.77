@@ -757,9 +757,24 @@ export const LectorGestacionScreen = () => {
         setAvisoVisible(false);
         setAvisoTitulo("");
         setAvisoMensaje("");
-    };
+        setAvisoTipo("info");
 
+        limpiarCrotalLeido();
+        ultimoCrotalAutoRef.current = null;
+    };
     //------Fin abrirlo y cerrarlo-------------------
+
+    const traducirEstadosEnMensaje = (
+        mensaje: string,
+        t: (clave: string) => string
+    ) => {
+        if (!mensaje) return "";
+
+        return mensaje.replace(
+            /\b(gestation|out_of_gestation|maternity|out_of_maternity)\b/g,
+            (estado) => traducirEstadoAnimal(estado, t)
+        );
+    };
 
     useEffect(() => {
         pantallaActivaRef.current = pantallaEnfocada;
@@ -1063,9 +1078,12 @@ export const LectorGestacionScreen = () => {
                     `HTTP ${respuesta.status}`;
 
                 if (respuesta.status === 400) {
+                    const mensajeLimpio = limpiarMensajeBackend(String(detalle));
+                    const mensajeTraducido = traducirEstadosEnMensaje(mensajeLimpio, t);
+
                     mostrarAviso(
                         t("gestationReader_alertWarning"),
-                        limpiarMensajeBackend(String(detalle)),
+                        mensajeTraducido,
                         "warning"
                     );
                     return;
@@ -1806,7 +1824,7 @@ export const LectorGestacionScreen = () => {
                                             fontSize: 12,
                                         }}
                                     >
-                                       {t("Reader_autoReadingBadge")}
+                                        {t("Reader_autoReadingBadge")}
                                     </Text>
                                 </View>
                             ) : registrosEnviados.length > TAM_PAGINA && (

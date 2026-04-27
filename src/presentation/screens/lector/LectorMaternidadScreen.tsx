@@ -739,6 +739,20 @@ export const LectorMaternidadScreen = () => {
         }
     }, []);
 
+    //!------Para traducir-------- 
+    const traducirEstadosEnMensaje = (
+        mensaje: string,
+        t: (clave: string) => string
+    ) => {
+        if (!mensaje) return "";
+
+        return mensaje.replace(
+            /\b(gestation|out_of_gestation|maternity|out_of_maternity)\b/g,
+            (estado) => traducirEstadoAnimal(estado, t)
+        );
+    };
+    //!-----Fin traduccion--------
+
 
 
     const mostrarAviso = (
@@ -756,6 +770,10 @@ export const LectorMaternidadScreen = () => {
         setAvisoVisible(false);
         setAvisoTitulo("");
         setAvisoMensaje("");
+        setAvisoTipo("info");
+
+        limpiarCrotalLeido();
+        ultimoCrotalAutoRef.current = null;
     };
 
     const mostrarIdTemporal = (valor: string, estado: "neutro" | "success" | "error") => {
@@ -1053,9 +1071,12 @@ export const LectorMaternidadScreen = () => {
                     `HTTP ${r.status}`;
 
                 if (r.status === 400) {
+                    const mensajeLimpio = limpiarMensajeBackend(String(detalle));
+                    const mensajeTraducido = traducirEstadosEnMensaje(mensajeLimpio, t);
+
                     mostrarAviso(
                         t("maternityReader_alertWarning"),
-                        limpiarMensajeBackend(String(detalle)),
+                        mensajeTraducido,
                         "warning"
                     );
                     return;
@@ -1761,7 +1782,7 @@ export const LectorMaternidadScreen = () => {
                                             fontSize: 12,
                                         }}
                                     >
-                                       {t("Reader_autoReadingBadge")}
+                                        {t("Reader_autoReadingBadge")}
                                     </Text>
                                 </View>
                             ) : registrosEnviados.length > TAM_PAGINA && (
