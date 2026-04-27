@@ -11,6 +11,7 @@ import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId } from "../.
 import { construirEndpointEspada } from "../../../stores/apiConfig";
 import { useTranslation } from "react-i18next";
 import { traducirEstadoAnimal } from "../../hooks/traducirEstadoAnimal";
+import { formatearCrotalVisual } from "../../hooks/formatearCrotalVisual";
 
 const BG = "#F6F7FB";
 const CARD = "#FFFFFF";
@@ -419,21 +420,20 @@ const RegistroLecturaCard = ({
                     <Text
                         style={{
                             color: TEXT,
-                            fontSize: 15,
+                            fontSize: 18,
                             fontWeight: "900",
                             textAlign: "left",
                         }}
                         numberOfLines={1}
                         adjustsFontSizeToFit
-                        minimumFontScale={0.75}
+                        minimumFontScale={0.8}
                     >
-                        {registro.crotal}
+                        {formatearCrotalVisual(registro.crotal)}
                     </Text>
                 </View>
             </View>
 
-            {/* Body */}
-            {/* Body */}
+
             <View
                 style={{
                     flexDirection: "row",
@@ -1348,7 +1348,7 @@ export const LectorGestacionScreen = () => {
                                         fontWeight: "700",
                                     }}
                                 >
-                                    {t("gestationReader_animalCrotalLabel")} {String(animalBusqueda?.crotal ?? "—")}
+                                    {t("gestationReader_animalCrotalLabel")} {formatearCrotalVisual(animalBusqueda?.crotal)}
                                 </Text>
 
                                 {/* <View
@@ -1579,7 +1579,7 @@ export const LectorGestacionScreen = () => {
                             <CajaDatoLectura
                                 icon="barcode-outline"
                                 titulo={t("gestationReader_readCrotal")}
-                                valor={crotalLeido ? String(crotalLeido) : "—"}
+                                valor={crotalLeido ? formatearCrotalVisual(crotalLeido) : "—"}
                                 fondo="#F8FAFF"
                                 borde="#E2E8F0"
                                 colorTitulo="#64748B"
