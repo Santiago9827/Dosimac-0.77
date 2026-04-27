@@ -204,7 +204,7 @@ const PublicDrawerContent = (props: DrawerContentComponentProps) => {
             ) : (
                 <>
                     <DrawerItem
-                        label="Login"
+                        label="Dosimac Server"
                         icon={() => <IonIcon name="log-in-outline" color={iconColor(false)} />}
                         labelStyle={labelStyle(false)}
                         style={itemStyle(false)}

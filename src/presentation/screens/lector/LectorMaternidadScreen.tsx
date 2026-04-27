@@ -443,6 +443,11 @@ export const LectorMaternidadScreen = () => {
     const route = useRoute<RouteProp<Record<string, LectorMaternidadParams>, string>>();
     const params = route.params ?? {};
 
+    const tituloHeader =
+        params.modo === "lectura"
+            ? "Lectura Crotales"
+            : t("maternityReader_screenTitle");
+
 
 
     const valorBusquedaParam = params.valorBusqueda ?? "";
@@ -1028,9 +1033,8 @@ export const LectorMaternidadScreen = () => {
                 }}
             >
                 <Appbar.BackAction color={TEXT} onPress={volverAConfiguracionMaternidad} />
-                <Appbar.Content title={t("maternityReader_screenTitle")} titleStyle={{ color: TEXT }} />
+                <Appbar.Content title={tituloHeader} titleStyle={{ color: TEXT }} />
             </Appbar.Header>
-
             <ScrollView
                 ref={scrollRef}
                 contentContainerStyle={{

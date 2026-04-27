@@ -35,6 +35,8 @@ type RegistroEnviado = {
     corral: string;
     idBackend: string;
     crotal: string;
+    estado: string;
+    nave: string;
 };
 
 type TipoMovimiento = "entrada" | "salida" | "lectura" | "busqueda";
@@ -85,7 +87,9 @@ function upsertRegistroPorCrotal(
     prev: RegistroEnviado[],
     corralValor: string,
     crotalValor: string,
-    idBackend: string
+    idBackend: string,
+    estadoValor?: string,
+    naveValor?: string
 ) {
     const key = normalizarClave(String(crotalValor));
     const idx = prev.findIndex((x) => normalizarClave(x.crotal) === key);
@@ -94,12 +98,17 @@ function upsertRegistroPorCrotal(
 
     if (idx >= 0) {
         const copia = [...prev];
+        const previo = copia[idx];
+
         const actualizado: RegistroEnviado = {
-            ...copia[idx],
+            ...previo,
             corral: corralTexto,
             crotal: String(crotalValor),
             idBackend: idBackend || "—",
+            estado: estadoValor?.trim() ? estadoValor : previo.estado || "—",
+            nave: naveValor?.trim() ? naveValor : previo.nave || "—",
         };
+
         copia.splice(idx, 1);
         return [actualizado, ...copia];
     }
@@ -110,6 +119,8 @@ function upsertRegistroPorCrotal(
             corral: corralTexto,
             idBackend: idBackend || "—",
             crotal: String(crotalValor),
+            estado: estadoValor?.trim() ? estadoValor : "—",
+            nave: naveValor?.trim() ? naveValor : "—",
         },
         ...prev,
     ];
@@ -367,6 +378,10 @@ export const LectorGestacionScreen = () => {
     const ANCHO_CORRAL = 60;
     const ANCHO_ID = 56;
     const ANCHO_CROTAL_SALIDA = 150;
+    const ANCHO_ESTADO = 110;
+    const ANCHO_NAVE = 170;
+    const ANCHO_CROTAL_LECTURA = 170;
+    const ESPACIO_TABLA_LECTURA = 20;
 
     const ESPACIO_CORRAL_ID_ENTRADA = 30;
     const ESPACIO_ID_CROTAL_ENTRADA = 70;
@@ -412,6 +427,10 @@ export const LectorGestacionScreen = () => {
 
     const route = useRoute<any>();
     const modoParam = route.params?.modo ?? "entrada";
+    const tituloHeader =
+        modoParam === "lectura"
+            ? "Lectura Crotales"
+            : t("gestationReader_screenTitle");
     const corralParam = route.params?.corral ?? "";
     const detectarParam = route.params?.detectarDesconocidos ?? true;
     const confirmarParam = route.params?.confirmar ?? true;
@@ -668,7 +687,7 @@ export const LectorGestacionScreen = () => {
                     if (respuesta.status === 404) {
                         mostrarIdTemporal("—", "error");
                         setRegistrosEnviados((prev) =>
-                            upsertRegistroPorCrotal(prev, "—", String(crotalNum), "—")
+                            upsertRegistroPorCrotal(prev, "—", String(crotalNum), "—", "—", "—")
                         );
                         return;
                     }
@@ -709,6 +728,20 @@ export const LectorGestacionScreen = () => {
                         ? String(animal.corralName)
                         : "—";
 
+                const estadoTexto =
+                    animal?.state !== null &&
+                        animal?.state !== undefined &&
+                        String(animal.state).trim() !== ""
+                        ? String(animal.state)
+                        : "—";
+
+                const naveTexto =
+                    animal?.houseName !== null &&
+                        animal?.houseName !== undefined &&
+                        String(animal.houseName).trim() !== ""
+                        ? String(animal.houseName)
+                        : "—";
+
                 if (esIdDesconocido) {
                     mostrarIdTemporal("0", "error");
                     abrirActualizacionId(crotalTexto, corralTexto);
@@ -720,7 +753,14 @@ export const LectorGestacionScreen = () => {
                 }
 
                 setRegistrosEnviados((prev) =>
-                    upsertRegistroPorCrotal(prev, corralTexto, crotalTexto, idBackendTexto)
+                    upsertRegistroPorCrotal(
+                        prev,
+                        corralTexto,
+                        crotalTexto,
+                        idBackendTexto,
+                        estadoTexto,
+                        naveTexto
+                    )
                 );
 
                 setPagina(0);
@@ -1039,7 +1079,7 @@ export const LectorGestacionScreen = () => {
                 }}
             >
                 <Appbar.BackAction color={TEXT} onPress={volverAConfiguracionGestacion} />
-                <Appbar.Content title={t("gestationReader_screenTitle")} titleStyle={{ color: TEXT }} />
+                <Appbar.Content title={tituloHeader} titleStyle={{ color: TEXT }} />
             </Appbar.Header>
 
             <ScrollView
@@ -1592,312 +1632,380 @@ export const LectorGestacionScreen = () => {
                             )}
 
                             {esLectura ? (
-                                <View
-                                    style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        paddingVertical: 10,
-                                        paddingHorizontal: 14,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: BORDER,
-                                        backgroundColor: "#FFFFFF",
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            width: ANCHO_CORRAL,
-                                            color: MUTED,
-                                            fontWeight: "900",
-                                        }}
-                                        numberOfLines={1}
-                                    >
-                                        {t("gestationReader_tableHeaderCorral")}
-                                    </Text>
-
-                                    <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
-
-                                    <Text
-                                        style={{
-                                            width: ANCHO_ID,
-                                            color: MUTED,
-                                            fontWeight: "900",
-                                            textAlign: "center",
-                                        }}
-                                        numberOfLines={1}
-                                    >
-                                        {t("gestationReader_tableHeaderId")}
-                                    </Text>
-
-                                    <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
-
-                                    <View style={{ flex: 1, alignItems: "flex-start" }}>
-                                        <Text
-                                            style={{
-                                                color: MUTED,
-                                                fontWeight: "900",
-                                                textAlign: "left",
-                                            }}
-                                            numberOfLines={1}
-                                        >
-                                            {t("gestationReader_tableHeaderCrotal")}
-                                        </Text>
-                                    </View>
-                                </View>
-                            ) : esSalida ? (
-                                <View
-                                    style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        paddingVertical: 10,
-                                        paddingHorizontal: 14,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: BORDER,
-                                        backgroundColor: "#FFFFFF",
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            width: ANCHO_ID,
-                                            color: MUTED,
-                                            fontWeight: "900",
-                                            textAlign: "center",
-                                        }}
-                                        numberOfLines={1}
-                                    >
-                                        {t("gestationReader_tableHeaderId")}
-                                    </Text>
-
-                                    <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
-
-                                    <View style={{ flex: 1, alignItems: "flex-end" }}>
-                                        <Text
-                                            style={{
-                                                width: ANCHO_CROTAL_SALIDA,
-                                                color: MUTED,
-                                                fontWeight: "900",
-                                                textAlign: "left",
-                                            }}
-                                            numberOfLines={1}
-                                        >
-                                            {t("gestationReader_tableHeaderCrotal")}
-                                        </Text>
-                                    </View>
-                                </View>
-                            ) : (
-                                <View
-                                    style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        paddingVertical: 10,
-                                        paddingHorizontal: 14,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: BORDER,
-                                        backgroundColor: "#FFFFFF",
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            width: ANCHO_CORRAL,
-                                            color: MUTED,
-                                            fontWeight: "900",
-                                        }}
-                                        numberOfLines={1}
-                                    >
-                                        {t("gestationReader_tableHeaderCorral")}
-                                    </Text>
-
-                                    <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
-
-                                    <Text
-                                        style={{
-                                            width: ANCHO_ID,
-                                            color: MUTED,
-                                            fontWeight: "900",
-                                            textAlign: "center",
-                                        }}
-                                        numberOfLines={1}
-                                    >
-                                        {t("gestationReader_tableHeaderId")}
-                                    </Text>
-
-                                    <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
-
-                                    <View style={{ flex: 1, alignItems: "flex-start" }}>
-                                        <Text
-                                            style={{
-                                                color: MUTED,
-                                                fontWeight: "900",
-                                                textAlign: "left",
-                                            }}
-                                            numberOfLines={1}
-                                        >
-                                            {t("gestationReader_tableHeaderCrotal")}
-                                        </Text>
-                                    </View>
-                                </View>
-                            )}
-
-                            {registrosEnviados.length === 0 ? (
-                                <View style={{ padding: 14 }}>
-                                    <Text style={{ color: MUTED }}>{t("gestationReader_noRecords")}</Text>
-                                </View>
-                            ) : (
-                                itemsPagina.map((r, idx) =>
-                                    esLectura ? (
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                    <View>
                                         <View
-                                            key={r.localId}
-                                            style={{
-                                                flexDirection: "row",
-                                                alignItems: "flex-start",
-                                                paddingVertical: 12,
-                                                paddingHorizontal: 14,
-                                                borderTopWidth: 1,
-                                                borderTopColor: "#F1F5F9",
-                                                backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
-                                            }}
-                                        >
-                                            <Text
-                                                style={{
-                                                    width: ANCHO_CORRAL,
-                                                    color: TEXT,
-                                                    fontWeight: "700",
-                                                }}
-                                                numberOfLines={1}
-                                            >
-                                                {r.corral}
-                                            </Text>
-
-                                            <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
-
-                                            <Text
-                                                style={{
-                                                    width: ANCHO_ID,
-                                                    color: r.idBackend === "—" || r.idBackend === "0" ? DANGER : TEXT,
-                                                    fontWeight: "700",
-                                                    textAlign: "center",
-                                                }}
-                                                numberOfLines={1}
-                                            >
-                                                {r.idBackend}
-                                            </Text>
-
-                                            <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
-
-                                            <View style={{ flex: 1, alignItems: "flex-start" }}>
-                                                <Text
-                                                    style={{
-                                                        color: TEXT,
-                                                        fontWeight: "700",
-                                                        textAlign: "left",
-                                                        fontSize: 14,
-                                                        flexShrink: 1,
-                                                    }}
-                                                    numberOfLines={1}
-                                                    ellipsizeMode="middle"
-                                                >
-                                                    {r.crotal}
-                                                </Text>
-                                            </View>
-                                        </View>
-                                    ) : esSalida ? (
-                                        <View
-                                            key={r.localId}
                                             style={{
                                                 flexDirection: "row",
                                                 alignItems: "center",
-                                                paddingVertical: 12,
+                                                paddingVertical: 10,
                                                 paddingHorizontal: 14,
-                                                borderTopWidth: 1,
-                                                borderTopColor: "#F1F5F9",
-                                                backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
-                                            }}
-                                        >
-                                            <Text
-                                                style={{
-                                                    width: ANCHO_ID,
-                                                    color: r.idBackend === "—" ? DANGER : TEXT,
-                                                    fontWeight: "700",
-                                                    textAlign: "center",
-                                                }}
-                                                numberOfLines={1}
-                                            >
-                                                {r.idBackend}
-                                            </Text>
-
-                                            <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
-
-                                            <View style={{ flex: 1, alignItems: "flex-end" }}>
-                                                <Text
-                                                    style={{
-                                                        width: ANCHO_CROTAL_SALIDA,
-                                                        color: TEXT,
-                                                        fontWeight: "700",
-                                                        textAlign: "left",
-                                                        fontSize: 15,
-                                                    }}
-                                                    numberOfLines={1}
-                                                    ellipsizeMode="middle"
-                                                >
-                                                    {r.crotal}
-                                                </Text>
-                                            </View>
-                                        </View>
-                                    ) : (
-                                        <View
-                                            key={r.localId}
-                                            style={{
-                                                flexDirection: "row",
-                                                alignItems: "flex-start",
-                                                paddingVertical: 12,
-                                                paddingHorizontal: 14,
-                                                borderTopWidth: 1,
-                                                borderTopColor: "#F1F5F9",
-                                                backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                                borderBottomWidth: 1,
+                                                borderBottomColor: BORDER,
+                                                backgroundColor: "#FFFFFF",
                                             }}
                                         >
                                             <Text
                                                 style={{
                                                     width: ANCHO_CORRAL,
-                                                    color: TEXT,
-                                                    fontWeight: "700",
+                                                    color: MUTED,
+                                                    fontWeight: "900",
                                                 }}
                                                 numberOfLines={1}
                                             >
-                                                {r.corral}
+                                                {t("gestationReader_tableHeaderCorral")}
                                             </Text>
 
-                                            <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
+                                            <View style={{ width: ESPACIO_TABLA_LECTURA }} />
 
                                             <Text
                                                 style={{
                                                     width: ANCHO_ID,
-                                                    color: r.idBackend === "—" ? DANGER : TEXT,
-                                                    fontWeight: "700",
+                                                    color: MUTED,
+                                                    fontWeight: "900",
                                                     textAlign: "center",
                                                 }}
                                                 numberOfLines={1}
                                             >
-                                                {r.idBackend}
+                                                {t("gestationReader_tableHeaderId")}
                                             </Text>
 
-                                            <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+                                            <View style={{ width: ESPACIO_TABLA_LECTURA }} />
 
-                                            <View style={{ flex: 1, alignItems: "flex-start" }}>
-                                                <Text
+                                            <Text
+                                                style={{
+                                                    width: ANCHO_ESTADO,
+                                                    color: MUTED,
+                                                    fontWeight: "900",
+                                                }}
+                                                numberOfLines={1}
+                                            >
+                                                Estado
+                                            </Text>
+
+                                            <View style={{ width: ESPACIO_TABLA_LECTURA }} />
+
+                                            <Text
+                                                style={{
+                                                    width: ANCHO_NAVE,
+                                                    color: MUTED,
+                                                    fontWeight: "900",
+                                                }}
+                                                numberOfLines={1}
+                                            >
+                                                Nave
+                                            </Text>
+
+                                            <View style={{ width: ESPACIO_TABLA_LECTURA }} />
+
+                                            <Text
+                                                style={{
+                                                    width: ANCHO_CROTAL_LECTURA,
+                                                    color: MUTED,
+                                                    fontWeight: "900",
+                                                }}
+                                                numberOfLines={1}
+                                            >
+                                                {t("gestationReader_tableHeaderCrotal")}
+                                            </Text>
+                                        </View>
+
+                                        {registrosEnviados.length === 0 ? (
+                                            <View style={{ padding: 14 }}>
+                                                <Text style={{ color: MUTED }}>{t("gestationReader_noRecords")}</Text>
+                                            </View>
+                                        ) : (
+                                            itemsPagina.map((r, idx) => (
+                                                <View
+                                                    key={r.localId}
                                                     style={{
-                                                        color: TEXT,
-                                                        fontWeight: "700",
-                                                        textAlign: "left",
-                                                        fontSize: 14,
-                                                        flexShrink: 1,
+                                                        flexDirection: "row",
+                                                        alignItems: "flex-start",
+                                                        paddingVertical: 12,
+                                                        paddingHorizontal: 14,
+                                                        borderTopWidth: 1,
+                                                        borderTopColor: "#F1F5F9",
+                                                        backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
                                                     }}
                                                 >
-                                                    {r.crotal}
-                                                </Text>
-                                            </View>
+                                                    <Text
+                                                        style={{
+                                                            width: ANCHO_CORRAL,
+                                                            color: TEXT,
+                                                            fontWeight: "700",
+                                                        }}
+                                                        numberOfLines={1}
+                                                    >
+                                                        {r.corral}
+                                                    </Text>
+
+                                                    <View style={{ width: ESPACIO_TABLA_LECTURA }} />
+
+                                                    <Text
+                                                        style={{
+                                                            width: ANCHO_ID,
+                                                            color: r.idBackend === "—" || r.idBackend === "0" ? DANGER : TEXT,
+                                                            fontWeight: "700",
+                                                            textAlign: "center",
+                                                        }}
+                                                        numberOfLines={1}
+                                                    >
+                                                        {r.idBackend}
+                                                    </Text>
+
+                                                    <View style={{ width: ESPACIO_TABLA_LECTURA }} />
+
+                                                    <Text
+                                                        style={{
+                                                            width: ANCHO_ESTADO,
+                                                            color: TEXT,
+                                                            fontWeight: "700",
+                                                        }}
+                                                        numberOfLines={1}
+                                                    >
+                                                        {r.estado}
+                                                    </Text>
+
+                                                    <View style={{ width: ESPACIO_TABLA_LECTURA }} />
+
+                                                    <Text
+                                                        style={{
+                                                            width: ANCHO_NAVE,
+                                                            color: TEXT,
+                                                            fontWeight: "700",
+                                                        }}
+                                                        numberOfLines={1}
+                                                    >
+                                                        {r.nave}
+                                                    </Text>
+
+                                                    <View style={{ width: ESPACIO_TABLA_LECTURA }} />
+
+                                                    <Text
+                                                        style={{
+                                                            width: ANCHO_CROTAL_LECTURA,
+                                                            color: TEXT,
+                                                            fontWeight: "700",
+                                                        }}
+                                                        numberOfLines={1}
+                                                        ellipsizeMode="middle"
+                                                    >
+                                                        {r.crotal}
+                                                    </Text>
+                                                </View>
+                                            ))
+                                        )}
+                                    </View>
+                                </ScrollView>
+                            ) : esSalida ? (
+                                <>
+                                    <View
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            paddingVertical: 10,
+                                            paddingHorizontal: 14,
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: BORDER,
+                                            backgroundColor: "#FFFFFF",
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: ANCHO_ID,
+                                                color: MUTED,
+                                                fontWeight: "900",
+                                                textAlign: "center",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {t("gestationReader_tableHeaderId")}
+                                        </Text>
+
+                                        <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
+
+                                        <View style={{ flex: 1, alignItems: "flex-end" }}>
+                                            <Text
+                                                style={{
+                                                    width: ANCHO_CROTAL_SALIDA,
+                                                    color: MUTED,
+                                                    fontWeight: "900",
+                                                    textAlign: "left",
+                                                }}
+                                                numberOfLines={1}
+                                            >
+                                                {t("gestationReader_tableHeaderCrotal")}
+                                            </Text>
                                         </View>
-                                    )
-                                )
+                                    </View>
+
+                                    {registrosEnviados.length === 0 ? (
+                                        <View style={{ padding: 14 }}>
+                                            <Text style={{ color: MUTED }}>{t("gestationReader_noRecords")}</Text>
+                                        </View>
+                                    ) : (
+                                        itemsPagina.map((r, idx) => (
+                                            <View
+                                                key={r.localId}
+                                                style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    paddingVertical: 12,
+                                                    paddingHorizontal: 14,
+                                                    borderTopWidth: 1,
+                                                    borderTopColor: "#F1F5F9",
+                                                    backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                                }}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        width: ANCHO_ID,
+                                                        color: r.idBackend === "—" ? DANGER : TEXT,
+                                                        fontWeight: "700",
+                                                        textAlign: "center",
+                                                    }}
+                                                    numberOfLines={1}
+                                                >
+                                                    {r.idBackend}
+                                                </Text>
+
+                                                <View style={{ width: ESPACIO_ID_CROTAL_SALIDA }} />
+
+                                                <View style={{ flex: 1, alignItems: "flex-end" }}>
+                                                    <Text
+                                                        style={{
+                                                            width: ANCHO_CROTAL_SALIDA,
+                                                            color: TEXT,
+                                                            fontWeight: "700",
+                                                            textAlign: "left",
+                                                            fontSize: 15,
+                                                        }}
+                                                        numberOfLines={1}
+                                                        ellipsizeMode="middle"
+                                                    >
+                                                        {r.crotal}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        ))
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <View
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            paddingVertical: 10,
+                                            paddingHorizontal: 14,
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: BORDER,
+                                            backgroundColor: "#FFFFFF",
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: ANCHO_CORRAL,
+                                                color: MUTED,
+                                                fontWeight: "900",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {t("gestationReader_tableHeaderCorral")}
+                                        </Text>
+
+                                        <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
+
+                                        <Text
+                                            style={{
+                                                width: ANCHO_ID,
+                                                color: MUTED,
+                                                fontWeight: "900",
+                                                textAlign: "center",
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {t("gestationReader_tableHeaderId")}
+                                        </Text>
+
+                                        <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                        <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                            <Text
+                                                style={{
+                                                    color: MUTED,
+                                                    fontWeight: "900",
+                                                    textAlign: "left",
+                                                }}
+                                                numberOfLines={1}
+                                            >
+                                                {t("gestationReader_tableHeaderCrotal")}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    {registrosEnviados.length === 0 ? (
+                                        <View style={{ padding: 14 }}>
+                                            <Text style={{ color: MUTED }}>{t("gestationReader_noRecords")}</Text>
+                                        </View>
+                                    ) : (
+                                        itemsPagina.map((r, idx) => (
+                                            <View
+                                                key={r.localId}
+                                                style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "flex-start",
+                                                    paddingVertical: 12,
+                                                    paddingHorizontal: 14,
+                                                    borderTopWidth: 1,
+                                                    borderTopColor: "#F1F5F9",
+                                                    backgroundColor: idx % 2 === 0 ? "#FFFFFF" : "#F8FAFF",
+                                                }}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        width: ANCHO_CORRAL,
+                                                        color: TEXT,
+                                                        fontWeight: "700",
+                                                    }}
+                                                    numberOfLines={1}
+                                                >
+                                                    {r.corral}
+                                                </Text>
+
+                                                <View style={{ width: ESPACIO_CORRAL_ID_ENTRADA }} />
+
+                                                <Text
+                                                    style={{
+                                                        width: ANCHO_ID,
+                                                        color: r.idBackend === "—" ? DANGER : TEXT,
+                                                        fontWeight: "700",
+                                                        textAlign: "center",
+                                                    }}
+                                                    numberOfLines={1}
+                                                >
+                                                    {r.idBackend}
+                                                </Text>
+
+                                                <View style={{ width: ESPACIO_ID_CROTAL_ENTRADA }} />
+
+                                                <View style={{ flex: 1, alignItems: "flex-start" }}>
+                                                    <Text
+                                                        style={{
+                                                            color: TEXT,
+                                                            fontWeight: "700",
+                                                            textAlign: "left",
+                                                            fontSize: 14,
+                                                            flexShrink: 1,
+                                                        }}
+                                                    >
+                                                        {r.crotal}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        ))
+                                    )}
+                                </>
                             )}
                         </View>
                     </View>
