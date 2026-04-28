@@ -692,11 +692,12 @@ export const LectorMaternidadScreen = () => {
     const route = useRoute<RouteProp<Record<string, LectorMaternidadParams>, string>>();
     const params = route.params ?? {};
 
-    const tituloHeader =
-        params.modo === "lectura"
-            ? t("Reader_readingTitle")
-            : t("maternityReader_screenTitle");
+    const esTituloLectura =
+        params.modo === "lectura" || params.modo === "busqueda";
 
+    const tituloHeader = esTituloLectura
+        ? t("Reader_readingTitle")
+        : t("maternityReader_screenTitle");
 
 
     const valorBusquedaParam = params.valorBusqueda ?? "";

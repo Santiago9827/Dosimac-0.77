@@ -1,4 +1,3 @@
-// screens/awr/AWRSavedListScreen.tsx
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, FlatList, Dimensions, Pressable } from 'react-native';
@@ -18,17 +17,16 @@ import { awrStore } from '../../stores/awrStore';
 import { useAwrConn } from '../../stores/awrConnStore';
 import { useTranslation } from 'react-i18next';
 
-
 const GAP = 16;
 const SCREEN_W = Dimensions.get('window').width;
-const CARD_W = SCREEN_W - GAP * 2; // ancho completo con márgenes laterales
+const CARD_W = SCREEN_W - GAP * 2;
 
 export const AWRSavedListScreen = ({ navigation }: any) => {
     const { t } = useTranslation();
 
-    const saved = awrStore(s => s.devices);
-    const remove = awrStore(s => s.remove);
-    const rename = awrStore(s => s.rename);
+    const saved = awrStore((s) => s.devices);
+    const remove = awrStore((s) => s.remove);
+    const rename = awrStore((s) => s.rename);
 
     const {
         ensureBle,
@@ -41,13 +39,14 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
         error,
     } = useAwrConn();
 
-    // dialogs
     const [renameOpen, setRenameOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [draftName, setDraftName] = useState('');
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
-    useEffect(() => { ensureBle(); }, []);
+    useEffect(() => {
+        ensureBle();
+    }, []);
 
     const handleConnect = async (id: string) => {
         try {
@@ -63,8 +62,8 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
     };
 
     const confirmRename = () => {
-        const name = draftName.trim();
-        if (selectedId && name) rename(selectedId, name);
+        const nombre = draftName.trim();
+        if (selectedId && nombre) rename(selectedId, nombre);
         setRenameOpen(false);
         setSelectedId(null);
     };
@@ -77,60 +76,108 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
     const confirmDelete = async () => {
         const id = selectedId;
         if (!id) return;
+
         if (currentId && currentId.toLowerCase() === id.toLowerCase() && isConnected) {
-            try { await disconnect(); } catch { }
+            try {
+                await disconnect();
+            } catch { }
         }
+
         remove(id);
         setDeleteOpen(false);
         setSelectedId(null);
     };
 
-    const renderStatusChip = (label: string, kind: 'ok' | 'off') => (
-        <View
-            style={{
-                alignSelf: 'flex-start',
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: 999,
-                backgroundColor: kind === 'ok' ? '#D1FAE5' : '#E5E7EB',
-            }}
-        >
-            <Text style={{ fontSize: 12, fontWeight: '600', color: kind === 'ok' ? '#0F766E' : '#4B5563' }}>
-                {label}
-            </Text>
-        </View>
-    );
-
     const data = useMemo(() => saved, [saved]);
 
     return (
         <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-            <Appbar.Header elevated>
+            <Appbar.Header
+                elevated
+                style={{
+                    backgroundColor: '#FFFFFF',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E7EB',
+                }}
+            >
                 <Appbar.BackAction onPress={navigation.goBack} />
-                <Appbar.Content title={t('awrSavedList_title')} />
+                <Appbar.Content
+                    title={t('awrSavedList_title')}
+                    titleStyle={{
+                        color: '#0F172A',
+                        fontWeight: '800',
+                    }}
+                />
             </Appbar.Header>
 
             {connecting && (
-                <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View
+                    style={{
+                        paddingHorizontal: 16,
+                        paddingTop: 12,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                    }}
+                >
                     <ActivityIndicator />
-                    <Text>{t('awrSavedList_connecting')}</Text>
+                    <Text style={{ color: '#475569', fontWeight: '700' }}>
+                        {t('awrSavedList_connecting')}
+                    </Text>
                 </View>
             )}
-            {!!error && <Text style={{ color: 'red', paddingHorizontal: 16 }}>{error}</Text>}
+
+            {!!error && (
+                <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+                    <Text style={{ color: '#DC2626', fontWeight: '700' }}>{error}</Text>
+                </View>
+            )}
 
             {data.length === 0 ? (
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-                    <Text style={{ textAlign: 'center', opacity: 0.75 }}>
-                        {t('awrSavedList_empty')}.
+                <View
+                    style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 24,
+                    }}
+                >
+                    <View
+                        style={{
+                            width: 76,
+                            height: 76,
+                            borderRadius: 38,
+                            backgroundColor: '#EEF2FF',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: 14,
+                        }}
+                    >
+                        <Ionicons name="bluetooth-outline" size={34} color="#4F46E5" />
+                    </View>
+
+                    <Text
+                        style={{
+                            fontSize: 18,
+                            fontWeight: '900',
+                            color: '#0F172A',
+                            marginBottom: 6,
+                            textAlign: 'center',
+                        }}
+                    >
+                        {t('awrSavedList_empty')}
                     </Text>
                 </View>
             ) : (
                 <FlatList
-                    contentContainerStyle={{ padding: GAP, paddingBottom: GAP + 8 }}
+                    contentContainerStyle={{
+                        padding: GAP,
+                        paddingBottom: GAP + 8,
+                    }}
                     data={data}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => {
-                        const title = item.name || item.label || item.id;
+                        const titulo = item.name || item.label || item.id;
                         const isThis = currentId && currentId.toLowerCase() === item.id.toLowerCase();
                         const connected = isThis && isConnected;
 
@@ -139,77 +186,197 @@ export const AWRSavedListScreen = ({ navigation }: any) => {
                                 mode="elevated"
                                 style={{
                                     width: CARD_W,
-                                    borderRadius: 18,
+                                    borderRadius: 24,
                                     marginBottom: GAP,
-                                    backgroundColor: connected ? '#ECFDF5' : '#FFFFFF',
-                                    borderWidth: connected ? 1 : 0,
-                                    borderColor: connected ? '#10B981' : 'transparent',
+                                    backgroundColor: '#FFFFFF',
+                                    borderWidth: connected ? 1.5 : 1,
+                                    borderColor: connected ? '#86EFAC' : '#E5E7EB',
+                                    shadowColor: '#000',
+                                    shadowOpacity: 0.06,
+                                    shadowRadius: 12,
+                                    shadowOffset: { width: 0, height: 4 },
+                                    elevation: 3,
                                 }}
                             >
                                 <Pressable
-                                    android_ripple={{ color: '#e5e7eb' }}
+                                    android_ripple={{ color: '#E5E7EB' }}
                                     onPress={() => handleConnect(item.id)}
-                                    style={{ borderRadius: 18, overflow: 'hidden' }}
+                                    style={{
+                                        borderRadius: 24,
+                                        overflow: 'hidden',
+                                    }}
                                 >
-                                    <View style={{ paddingHorizontal: 14, paddingTop: 12, paddingBottom: 10 }}>
-                                        {/* Fila: icono + título */}
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                                            <Ionicons
-                                                name={connected ? 'checkmark-circle' : 'bluetooth-outline'}
-                                                size={20}
-                                                color={connected ? '#10B981' : '#374151'}
-                                            />
-                                            <Text style={{ fontSize: 17, fontWeight: '800', color: '#0F172A' }} numberOfLines={1}>
-                                                {title}
+                                    <View style={{ paddingHorizontal: 18, paddingVertical: 16 }}>
+                                        {/* Cabecera */}
+                                        <View
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'flex-start',
+                                                justifyContent: 'space-between',
+                                                gap: 12,
+                                            }}
+                                        >
+                                            <View style={{ flex: 1 }}>
+                                                <View
+                                                    style={{
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        gap: 10,
+                                                    }}
+                                                >
+                                                    <View
+                                                        style={{
+                                                            width: 42,
+                                                            height: 42,
+                                                            borderRadius: 21,
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            backgroundColor: connected ? '#ECFDF5' : '#F1F5F9',
+                                                        }}
+                                                    >
+                                                        <Ionicons
+                                                            name={connected ? 'bluetooth' : 'bluetooth-outline'}
+                                                            size={22}
+                                                            color={connected ? '#10B981' : '#475569'}
+                                                        />
+                                                    </View>
+
+                                                    <View style={{ flex: 1 }}>
+                                                        <Text
+                                                            style={{
+                                                                fontSize: 20,
+                                                                fontWeight: '900',
+                                                                color: '#0F172A',
+                                                            }}
+                                                            numberOfLines={1}
+                                                        >
+                                                            {titulo}
+                                                        </Text>
+
+                                                        <Text
+                                                            style={{
+                                                                fontSize: 12,
+                                                                color: '#64748B',
+                                                                marginTop: 3,
+                                                                fontWeight: '700',
+                                                            }}
+                                                        >
+                                                            {connected
+                                                                ? t('awrSavedList_connected')
+                                                                : t('awrSavedList_disconnected')}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                            </View>
+
+                                            <View style={{ flexDirection: 'row', gap: 4 }}>
+                                                <IconButton
+                                                    size={22}
+                                                    containerColor="#F8FAFC"
+                                                    icon={(props) => (
+                                                        <Ionicons
+                                                            name="pencil-outline"
+                                                            size={props.size}
+                                                            color="#475569"
+                                                        />
+                                                    )}
+                                                    onPress={() =>
+                                                        openRename(item.id, item.label, item.name)
+                                                    }
+                                                    accessibilityLabel={t('awrSavedList_renameAccessibility')}
+                                                />
+
+                                                <IconButton
+                                                    size={22}
+                                                    containerColor="#FFF1F2"
+                                                    icon={(props) => (
+                                                        <Ionicons
+                                                            name="trash-outline"
+                                                            size={props.size}
+                                                            color="#DC2626"
+                                                        />
+                                                    )}
+                                                    onPress={() => openDelete(item.id)}
+                                                    accessibilityLabel={t('awrSavedList_deleteAccessibility')}
+                                                />
+                                            </View>
+                                        </View>
+
+                                        {/* Separador */}
+                                        <View
+                                            style={{
+                                                height: 1,
+                                                backgroundColor: '#F1F5F9',
+                                                marginVertical: 14,
+                                            }}
+                                        />
+
+                                        {/* MAC */}
+                                        <Text
+                                            style={{
+                                                fontSize: 11,
+                                                fontWeight: '800',
+                                                color: '#64748B',
+                                                letterSpacing: 0.6,
+                                                marginBottom: 6,
+                                            }}
+                                        >
+                                            MAC
+                                        </Text>
+
+                                        <View
+                                            style={{
+                                                backgroundColor: connected ? '#F0FDF4' : '#F8FAFC',
+                                                borderWidth: 1,
+                                                borderColor: connected ? '#BBF7D0' : '#E2E8F0',
+                                                borderRadius: 16,
+                                                paddingHorizontal: 14,
+                                                paddingVertical: 10,
+                                            }}
+                                        >
+                                            <Text
+                                                style={{
+                                                    fontSize: 16,
+                                                    fontWeight: '900',
+                                                    color: '#111827',
+                                                    letterSpacing: 0.3,
+                                                }}
+                                                numberOfLines={1}
+                                                adjustsFontSizeToFit
+                                                minimumFontScale={0.8}
+                                            >
+                                                {item.id}
                                             </Text>
                                         </View>
 
-                                        {/* MAC */}
-                                        <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 4 }} numberOfLines={1}>
-                                            {item.id}
-                                        </Text>
-
-                                        {/* Fila: chip de estado a la izq + acciones a la dcha */}
-                                        <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
+                                        {/* Pie */}
+                                        <View
+                                            style={{
+                                                marginTop: 14,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                            }}
+                                        >
                                             <View
                                                 style={{
-                                                    paddingHorizontal: 10,
-                                                    paddingVertical: 3,
+                                                    paddingHorizontal: 12,
+                                                    paddingVertical: 6,
                                                     borderRadius: 999,
-                                                    backgroundColor: connected ? '#D1FAE5' : '#E5E7EB',
+                                                    backgroundColor: connected ? '#DCFCE7' : '#E5E7EB',
                                                 }}
                                             >
                                                 <Text
                                                     style={{
                                                         fontSize: 12,
-                                                        fontWeight: '600',
-                                                        color: connected ? '#0F766E' : '#4B5563',
+                                                        fontWeight: '800',
+                                                        color: connected ? '#166534' : '#4B5563',
                                                     }}
                                                 >
-                                                    {connected ? t('awrSavedList_connected') : t('awrSavedList_disconnected')}
+                                                    {connected
+                                                        ? t('awrSavedList_connected')
+                                                        : t('awrSavedList_disconnected')}
                                                 </Text>
-                                            </View>
-
-                                            {/* Empujar acciones a la derecha */}
-                                            <View style={{ marginLeft: 'auto', flexDirection: 'row' }}>
-                                                <IconButton
-                                                    size={20}
-                                                    style={{ margin: 0 }}
-                                                    icon={(props) => (
-                                                        <Ionicons name="pencil-outline" size={props.size} color={props.color} />
-                                                    )}
-                                                    onPress={() => openRename(item.id, item.label, item.name)}
-                                                    accessibilityLabel={t('awrSavedList_renameAccessibility')}
-                                                />
-                                                <IconButton
-                                                    size={20}
-                                                    style={{ margin: 0 }}
-                                                    icon={(props) => (
-                                                        <Ionicons name="trash-outline" size={props.size} color={props.color} />
-                                                    )}
-                                                    onPress={() => openDelete(item.id)}
-                                                    accessibilityLabel={t('awrSavedList_deleteAccessibility')}
-                                                />
                                             </View>
                                         </View>
                                     </View>

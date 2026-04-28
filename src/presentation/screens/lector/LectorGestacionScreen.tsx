@@ -661,10 +661,12 @@ export const LectorGestacionScreen = () => {
 
     const route = useRoute<any>();
     const modoParam = route.params?.modo ?? "entrada";
-    const tituloHeader =
-        modoParam === "lectura"
-            ? t("Reader_readingTitle")
-            : t("gestationReader_screenTitle");
+    const esTituloLectura =
+        modoParam === "lectura" || modoParam === "busqueda";
+
+    const tituloHeader = esTituloLectura
+        ? t("Reader_readingTitle")
+        : t("gestationReader_screenTitle");
     const corralParam = route.params?.corral ?? "";
     const detectarParam = route.params?.detectarDesconocidos ?? true;
     const confirmarParam = route.params?.confirmar ?? true;
