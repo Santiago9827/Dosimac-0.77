@@ -1,640 +1,58 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler, Modal } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useAwrConn } from "../../../stores/awrConnStore";
+import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler, Modal,} from "react-native";
 import { useFocusEffect, useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { Appbar, Switch, TextInput } from "react-native-paper";
-import Feather from '@expo/vector-icons/Feather';
-import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
-import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId } from "../../routes/obtenerLecturaEspada";
-import { construirEndpointEspada } from "../../../stores/apiConfig";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTranslation } from "react-i18next";
+
+import { useAwrConn } from "../../../stores/awrConnStore";
+import { construirEndpointEspada } from "../../../stores/apiConfig";
+import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
+import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId, formatearFecha, limpiarMensajeBackend, traducirEstadosEnMensaje,} from "../../routes/obtenerLecturaEspada";
 import { traducirEstadoAnimal } from "../../hooks/traducirEstadoAnimal";
 import { formatearCrotalVisual } from "../../hooks/formatearCrotalVisual";
-
-const BG = "#F6F7FB";
-const CARD = "#FFFFFF";
-const BORDER = "#E5E7EB";
-const TEXT = "#0F172A";
-const MUTED = "#64748B";
-const BRAND = "#4F46E5";
-const SOFT = "#EEF2FF";
-const SOFT_BORDER = "#C7D2FE";
-const DANGER = "#DC2626";
-const SUCCESS = "#16A34A";
-
-const SHADOW = {
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-};
-
-type RegistroEnviado = {
-    localId: string;
-    corral: string;
-    idBackend: string;
-    crotal: string;
-    estado: string;
-    nave: string;
-};
-
-type TipoMovimiento = "entrada" | "salida" | "lectura" | "busqueda";
-type EstadoIdVisual = "neutro" | "success" | "error";
-
-// ---------- helpers ----------
-const normalizarClave = (valor: string) =>
-    valor.trim().toUpperCase().replace(/\s+/g, "");
-
-const parseNumeroSeguro = (txt: string) => {
-    const n = Number(txt);
-    return Number.isFinite(n) ? n : null;
-};
+import { CajaDatoLectura, FichaDatoAnimal, MiniResumenCard, RegistroLecturaCard, SwitchRowReadonly , 
+ BG, CARD, BORDER, TEXT, MUTED, BRAND, SOFT, SOFT_BORDER, DANGER, SUCCESS, SHADOW, normalizarClave, parseNumeroSeguro,
+ RegistroEnviado, TipoMovimiento, EstadoIdVisual, upsertRegistroPorCrotal, postGestation, } from "../../components/shared/Card";
 
 
-
-async function postGestation(
-    endpoint: string,
-    payload: { corral?: number; crotal: number }
-) {
-    const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-    });
-
-    let data: any = null;
-    let rawText = "";
-
-    try {
-        rawText = await res.text();
-
-        if (rawText) {
-            try {
-                data = JSON.parse(rawText);
-            } catch {
-                data = null;
-            }
-        }
-    } catch {
-        rawText = "";
-        data = null;
-    }
-
-    return { ok: res.ok, status: res.status, data, rawText };
-}
-function upsertRegistroPorCrotal(
-    prev: RegistroEnviado[],
-    corralValor: string,
-    crotalValor: string,
-    idBackend: string,
-    estadoValor?: string,
-    naveValor?: string
-) {
-    const key = normalizarClave(String(crotalValor));
-    const idx = prev.findIndex((x) => normalizarClave(x.crotal) === key);
-
-    const corralTexto = corralValor?.trim() ? corralValor : "—";
-
-    if (idx >= 0) {
-        const copia = [...prev];
-        const previo = copia[idx];
-
-        const actualizado: RegistroEnviado = {
-            ...previo,
-            corral: corralTexto,
-            crotal: String(crotalValor),
-            idBackend: idBackend || "—",
-            estado: estadoValor?.trim() ? estadoValor : previo.estado || "—",
-            nave: naveValor?.trim() ? naveValor : previo.nave || "—",
-        };
-
-        copia.splice(idx, 1);
-        return [actualizado, ...copia];
-    }
-
-    return [
-        {
-            localId: String(Date.now()),
-            corral: corralTexto,
-            idBackend: idBackend || "—",
-            crotal: String(crotalValor),
-            estado: estadoValor?.trim() ? estadoValor : "—",
-            nave: naveValor?.trim() ? naveValor : "—",
-        },
-        ...prev,
-    ];
-}
-// ---------- UI helpers ----------
-// const InfoRow = ({
-//     icon,
-//     label,
-//     value,
-// }: {
-//     icon: any;
-//     label: string;
-//     value: string;
-// }) => (
-//     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-//         <Ionicons name={icon} size={18} color={MUTED} />
-//         <Text style={{ color: MUTED, fontWeight: "800", width: 160 }}>{label}</Text>
-//         <Text style={{ color: TEXT, fontWeight: "900", flex: 1, textAlign: "right" }}>{value}</Text>
-//     </View>
-// );
-
-const SwitchRowReadonly = ({
-    title,
-    description,
-    value,
-}: {
-    title: string;
-    description: string;
-    value: boolean;
-}) => (
-    <View
-        style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-        }}
-    >
-        <View style={{ flex: 1, paddingRight: 10 }}>
-            <Text style={{ color: TEXT, fontWeight: "800" }}>{title}</Text>
-            <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
-                {description}
-            </Text>
-        </View>
-
-        <View pointerEvents="none">
-            <Switch value={value} onValueChange={() => { }} />
-        </View>
-    </View>
-);
-
-const MiniResumenCard = ({
-    icon,
-    titulo,
-    valor,
-}: {
-    icon: any;
-    titulo: string;
-    valor: string;
-}) => (
-    <View
-        style={{
-            flex: 1,
-            backgroundColor: "#F8FAFF",
-            borderWidth: 1,
-            borderColor: "#E0E7FF",
-            borderRadius: 14,
-            padding: 12,
-            gap: 8,
-        }}
-    >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Ionicons name={icon} size={16} color={BRAND} />
-            <Text style={{ color: MUTED, fontWeight: "800", fontSize: 12 }}>
-                {titulo}
-            </Text>
-        </View>
-
-        <Text
-            style={{
-                color: TEXT,
-                fontWeight: "900",
-                fontSize: 16,
-            }}
-            numberOfLines={1}
-        >
-            {valor}
-        </Text>
-    </View>
-);
-
-const CajaDatoLectura = ({
-    icon,
-    usarFeather = false,
-    titulo,
-    valor,
-    fondo,
-    borde,
-    colorTitulo,
-    colorValor,
-    textoSecundario,
-}: {
-    icon?: string;
-    usarFeather?: boolean;
-    titulo: string;
-    valor: string;
-    fondo: string;
-    borde: string;
-    colorTitulo: string;
-    colorValor: string;
-    textoSecundario?: string;
-}) => (
-    <View
-        style={{
-            borderRadius: 18,
-            borderWidth: 1,
-            borderColor: borde,
-            backgroundColor: fondo,
-            paddingVertical: 18,
-            paddingHorizontal: 16,
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: 130,
-        }}
-    >
-        <View
-            style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 10,
-            }}
-        >
-            {icon ? (
-                usarFeather ? (
-                    <Feather name={icon as any} size={16} color={colorTitulo} />
-                ) : (
-                    <Ionicons name={icon as any} size={18} color={colorTitulo} />
-                )
-            ) : null}
-
-            <Text style={{ color: colorTitulo, fontWeight: "800", fontSize: 16 }}>
-                {titulo}
-            </Text>
-        </View>
-
-        <Text
-            style={{
-                color: colorValor,
-                fontSize: 30,
-                fontWeight: "900",
-                letterSpacing: 1,
-            }}
-            numberOfLines={1}
-            ellipsizeMode="middle"
-        >
-            {valor}
-        </Text>
-
-        {!!textoSecundario && (
-            <Text
-                style={{
-                    marginTop: 8,
-                    color: colorTitulo,
-                    fontSize: 13,
-                    fontWeight: "700",
-                    textAlign: "center",
-                }}
-            >
-                {textoSecundario}
-            </Text>
-        )}
-    </View>
-);
-
-const FichaDatoAnimal = ({
-    icon,
-    titulo,
-    valor,
-    anchoCompleto = false,
-}: {
-    icon: any;
-    titulo: string;
-    valor: string;
-    anchoCompleto?: boolean;
-}) => (
-    <View
-        style={{
-            width: anchoCompleto ? "100%" : "48%",
-            backgroundColor: "#F8FAFF",
-            borderWidth: 1.5,
-            borderColor: "#CBD5E1",
-            borderRadius: 16,
-            padding: 14,
-        }}
-    >
-        <View
-            style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 8,
-            }}
-        >
-            <Ionicons name={icon} size={16} color={BRAND} />
-            <Text
-                style={{
-                    color: MUTED,
-                    fontWeight: "800",
-                    fontSize: 12,
-                }}
-            >
-                {titulo}
-            </Text>
-        </View>
-
-        <Text
-            style={{
-                color: TEXT,
-                fontWeight: "900",
-                fontSize: 16,
-            }}
-            numberOfLines={anchoCompleto ? 2 : 1}
-            ellipsizeMode="tail"
-        >
-            {valor}
-        </Text>
-    </View>
-);
-
-const RegistroLecturaCard = ({
-    registro,
-    estadoTraducido,
-}: {
-    registro: RegistroEnviado;
-    estadoTraducido: string;
-}) => {
-    const { t } = useTranslation();
-
-    const idEsError = registro.idBackend === "—" || registro.idBackend === "0";
-
-    const coloresCard = idEsError
-        ? {
-            fondoCard: "#FFF7F7",
-            bordeCard: "#FECACA",
-            fondoHeader: "#FEF2F2",
-            bordeSeparador: "#FECACA",
-            colorEtiqueta: "#991B1B",
-            colorValorId: DANGER,
-            fondoEstado: "#FEE2E2",
-            colorEstado: "#991B1B",
-            fondoNave: "#FFF1F2",
-            colorNave: "#9F1239",
-        }
-        : {
-            fondoCard: "#F8FAFF",
-            bordeCard: "#C7D2FE",
-            fondoHeader: "#EEF2FF",
-            bordeSeparador: "#D7DEFF",
-            colorEtiqueta: "#4F46E5",
-            colorValorId: TEXT,
-            fondoEstado: "#EEF2FF",
-            colorEstado: "#4338CA",
-            fondoNave: "#EEF2FF",
-            colorNave: "#4338CA",
-        };
-
-    return (
-        <View
-            style={{
-                backgroundColor: coloresCard.fondoCard,
-                borderWidth: 1.5,
-                borderColor: coloresCard.bordeCard,
-                borderRadius: 18,
-                padding: 14,
-                gap: 12,
-                ...SHADOW,
-            }}
-        >
-            <View
-                style={{
-                    flexDirection: "row",
-                    alignItems: "flex-start",
-                    gap: 18,
-                    backgroundColor: coloresCard.fondoHeader,
-                    borderRadius: 14,
-                    padding: 12,
-                }}
-            >
-                <View style={{ width: 82 }}>
-                    <Text
-                        style={{
-                            color: coloresCard.colorEtiqueta,
-                            fontSize: 11,
-                            fontWeight: "800",
-                            marginBottom: 4,
-                        }}
-                    >
-                        {t("Reader_labelId")}
-                    </Text>
-
-                    <Text
-                        style={{
-                            color: idEsError ? DANGER : coloresCard.colorValorId,
-                            fontSize: 22,
-                            fontWeight: "900",
-                        }}
-                    >
-                        {registro.idBackend}
-                    </Text>
-                </View>
-
-                <View style={{ flex: 1 }}>
-                    <Text
-                        style={{
-                            color: coloresCard.colorEtiqueta,
-                            fontSize: 11,
-                            fontWeight: "800",
-                            marginBottom: 4,
-                        }}
-                    >
-                        {t("Reader_labelCrotal")}
-                    </Text>
-
-                    <Text
-                        style={{
-                            color: TEXT,
-                            fontSize: 18,
-                            fontWeight: "900",
-                            textAlign: "left",
-                        }}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                        minimumFontScale={0.8}
-                    >
-                        {formatearCrotalVisual(registro.crotal)}
-                    </Text>
-                </View>
-            </View>
-
-            <View
-                style={{
-                    flexDirection: "row",
-                    alignItems: "stretch",
-                    borderTopWidth: 1,
-                    borderTopColor: coloresCard.bordeSeparador,
-                    paddingTop: 12,
-                }}
-            >
-                <View style={{ flex: 0.8, paddingHorizontal: 4 }}>
-                    <Text
-                        style={{
-                            color: MUTED,
-                            fontSize: 12,
-                            fontWeight: "800",
-                            marginBottom: 4,
-                        }}
-                    >
-                        {t("Reader_labelCorral")}
-                    </Text>
-
-                    <Text
-                        style={{
-                            color: TEXT,
-                            fontSize: 15,
-                            fontWeight: "900",
-                        }}
-                    >
-                        {registro.corral}
-                    </Text>
-                </View>
-
-                <View
-                    style={{
-                        width: 1,
-                        backgroundColor: coloresCard.bordeSeparador,
-                        marginHorizontal: 10,
-                    }}
-                />
-
-                <View style={{ flex: 1.5, paddingHorizontal: 4 }}>
-                    <Text
-                        style={{
-                            color: MUTED,
-                            fontSize: 12,
-                            fontWeight: "800",
-                            marginBottom: 4,
-                        }}
-                    >
-                        {t("Reader_labelHouse")}
-                    </Text>
-
-                    <View
-                        style={{
-                            alignSelf: "flex-start",
-                            backgroundColor: coloresCard.fondoNave,
-                            paddingHorizontal: 10,
-                            paddingVertical: 6,
-                            borderRadius: 10,
-                            marginTop: 2,
-                            maxWidth: "100%",
-                        }}
-                    >
-                        <Text
-                            style={{
-                                color: coloresCard.colorNave,
-                                fontSize: 15,
-                                fontWeight: "900",
-                                lineHeight: 19,
-                            }}
-                            numberOfLines={2}
-                        >
-                            {registro.nave}
-                        </Text>
-                    </View>
-                </View>
-
-                <View
-                    style={{
-                        width: 1,
-                        backgroundColor: coloresCard.bordeSeparador,
-                        marginHorizontal: 10,
-                    }}
-                />
-
-                <View style={{ flex: 1.5, paddingHorizontal: 4 }}>
-                    <Text
-                        style={{
-                            color: MUTED,
-                            fontSize: 12,
-                            fontWeight: "800",
-                            marginBottom: 4,
-                        }}
-                    >
-                        {t("Reader_labelState")}
-                    </Text>
-
-                    <View
-                        style={{
-                            alignSelf: "flex-start",
-                            backgroundColor: coloresCard.fondoEstado,
-                            paddingHorizontal: 10,
-                            paddingVertical: 6,
-                            borderRadius: 10,
-                            marginTop: 2,
-                            maxWidth: "100%",
-                        }}
-                    >
-                        <Text
-                            style={{
-                                color: coloresCard.colorEstado,
-                                fontSize: 15,
-                                fontWeight: "900",
-                                lineHeight: 19,
-                            }}
-                            numberOfLines={2}
-                        >
-                            {estadoTraducido}
-                        </Text>
-                    </View>
-                </View>
-            </View>
-        </View>
-    );
-};
-
-
-const formatearFecha = (fecha?: string) => {
-    if (!fecha) return "—";
-
-    try {
-        const fechaLimpia = fecha.replace("[UTC]", "");
-        const d = new Date(fechaLimpia);
-
-        if (Number.isNaN(d.getTime())) return fecha;
-
-        return d.toLocaleString("es-ES");
-    } catch {
-        return fecha;
-    }
-};
-
-const limpiarMensajeBackend = (mensaje?: string) => {
-    if (!mensaje) return "";
-    return mensaje.replace(/^Error:\s*/i, "").trim();
-};
-
-// ---------- componente ----------
 export const LectorGestacionScreen = () => {
-
+    // ------------------------
+    // Constantes locales
+    // ------------------------
     const ANCHO_CORRAL = 60;
     const ANCHO_ID = 56;
     const ANCHO_CROTAL_SALIDA = 150;
 
     const ESPACIO_CORRAL_ID_ENTRADA = 30;
     const ESPACIO_ID_CROTAL_ENTRADA = 70;
-
     const ESPACIO_ID_CROTAL_SALIDA = 24;
+
     const COLOR_LINEA_COLUMNA = "#E2E8F0";
     const PADDING_TABLA_X = 14;
+    const TAM_PAGINA = 10;
 
+    // ------------------------
+    // Hooks base
+    // ------------------------
     const navigation = useNavigation<any>();
     const { t } = useTranslation();
+    const route = useRoute<any>();
     const pantallaEnfocada = useIsFocused();
+
+    // ------------------------
+    // Refs
+    // ------------------------
     const pantallaActivaRef = useRef(false);
+    const scrollRef = useRef<ScrollView | null>(null);
+    const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const autoEnvioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const ultimoCrotalAutoRef = useRef<string | null>(null);
 
-    const [avisoVisible, setAvisoVisible] = useState(false);
-    const [avisoTitulo, setAvisoTitulo] = useState("");
-    const [avisoMensaje, setAvisoMensaje] = useState("");
-    const [avisoTipo, setAvisoTipo] = useState<"warning" | "error" | "info">("info");
-
-    // AWR store
+    // ------------------------
+    // Store AWR
+    // ------------------------
     const lectorConectado = useAwrConn((s) => s.isConnected);
     const idLector = useAwrConn((s) => s.currentId);
     const crotalLeido = useAwrConn((s) => s.lastTag);
@@ -642,11 +60,31 @@ export const LectorGestacionScreen = () => {
     const detenerLectura = useAwrConn((s) => s.stopReading);
     const limpiarCrotalLeido = useAwrConn((s) => s.clearLastTag);
 
+    // ------------------------
+    // Params route
+    // ------------------------
+    const modoParam = route.params?.modo ?? "entrada";
+    const corralParam = route.params?.corral ?? "";
+    const detectarParam = route.params?.detectarDesconocidos ?? true;
+    const confirmarParam = route.params?.confirmar ?? true;
+    const valorBusquedaParam = route.params?.valorBusqueda ?? "";
+    const animalEncontradoParam = route.params?.animalEncontrado ?? null;
+    const animalBusqueda = animalEncontradoParam ?? null;
+
+    // const fechaCambioEstado = formatearFecha(animalBusqueda?.stateChangeDate);
+    // const fechaEntradaSistema = formatearFecha(animalBusqueda?.systemEntryDate);
+
+    // ------------------------
+    // Estados
+    // ------------------------
+    const [avisoVisible, setAvisoVisible] = useState(false);
+    const [avisoTitulo, setAvisoTitulo] = useState("");
+    const [avisoMensaje, setAvisoMensaje] = useState("");
+    const [avisoTipo, setAvisoTipo] = useState<"warning" | "error" | "info">("info");
+
     const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
     const [confirmar, setConfirmar] = useState(true);
 
-
-    // UI state
     const [corralInput, setCorralInput] = useState("");
     const [tipoMovimiento, setTipoMovimiento] = useState<TipoMovimiento>("entrada");
     const [registrosEnviados, setRegistrosEnviados] = useState<RegistroEnviado[]>([]);
@@ -655,31 +93,6 @@ export const LectorGestacionScreen = () => {
     const [idRecibido, setIdRecibido] = useState("");
     const [estadoIdVisual, setEstadoIdVisual] = useState<EstadoIdVisual>("neutro");
 
-    const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const autoEnvioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const ultimoCrotalAutoRef = useRef<string | null>(null);
-
-    const route = useRoute<any>();
-    const modoParam = route.params?.modo ?? "entrada";
-    const esTituloLectura =
-        modoParam === "lectura" || modoParam === "busqueda";
-
-    const tituloHeader = esTituloLectura
-        ? t("Reader_readingTitle")
-        : t("gestationReader_screenTitle");
-    const corralParam = route.params?.corral ?? "";
-    const detectarParam = route.params?.detectarDesconocidos ?? true;
-    const confirmarParam = route.params?.confirmar ?? true;
-    const valorBusquedaParam = route.params?.valorBusqueda ?? "";
-    const animalEncontradoParam = route.params?.animalEncontrado ?? null;
-    const animalBusqueda = animalEncontradoParam ?? null;
-    // const tipoBusquedaParam = route.params?.tipoBusqueda ?? "crotal";
-
-    const fechaCambioEstado = formatearFecha(animalBusqueda?.stateChangeDate);
-    const fechaEntradaSistema = formatearFecha(animalBusqueda?.systemEntryDate);
-
-    // paginación
-    const TAM_PAGINA = 10;
     const [pagina, setPagina] = useState(0);
 
     const [mostrarActualizarId, setMostrarActualizarId] = useState(false);
@@ -688,29 +101,72 @@ export const LectorGestacionScreen = () => {
     const [corralPendienteId, setCorralPendienteId] = useState("—");
     const [actualizandoId, setActualizandoId] = useState(false);
 
-    const totalPaginas = Math.max(1, Math.ceil(registrosEnviados.length / TAM_PAGINA));
-
-
+    // ------------------------
+    // Valores derivados
+    // ------------------------
     const esEntrada = tipoMovimiento === "entrada";
     const esSalida = tipoMovimiento === "salida";
     const esLectura = tipoMovimiento === "lectura";
     const esBusqueda = tipoMovimiento === "busqueda";
-    const scrollRef = useRef<ScrollView | null>(null);
+
+    const esTituloLectura =
+        modoParam === "lectura" || modoParam === "busqueda";
+
+    const tituloHeader = esTituloLectura
+        ? t("Reader_readingTitle")
+        : t("gestationReader_screenTitle");
 
     const requiereCorral = esEntrada;
     const usaEnvioAutomatico = !esBusqueda && (esLectura || !confirmar);
     const tiempoAutoEnvioMs = esLectura ? 300 : 1000;
 
+    const totalPaginas = Math.max(1, Math.ceil(registrosEnviados.length / TAM_PAGINA));
+
     const itemsPagina = useMemo(() => {
         const start = pagina * TAM_PAGINA;
         return registrosEnviados.slice(start, start + TAM_PAGINA);
     }, [registrosEnviados, pagina]);
+
+    const estilosCajaId = useMemo(() => {
+        if (estadoIdVisual === "success") {
+            return {
+                backgroundColor: "#ECFDF5",
+                borderColor: "#BBF7D0",
+                colorTexto: SUCCESS,
+                colorSubtexto: "#15803D",
+                icono: "checkmark-circle-outline" as const,
+            };
+        }
+
+        if (estadoIdVisual === "error") {
+            return {
+                backgroundColor: "#FEF2F2",
+                borderColor: "#FECACA",
+                colorTexto: DANGER,
+                colorSubtexto: "#B91C1C",
+                icono: "close-circle-outline" as const,
+            };
+        }
+
+        return {
+            backgroundColor: "#F1F5F9",
+            borderColor: BORDER,
+            colorTexto: TEXT,
+            colorSubtexto: MUTED,
+            icono: "id-card-outline" as const,
+        };
+    }, [estadoIdVisual]);
+
+    // ------------------------
+    // Helpers internos
+    // ------------------------
     const limpiarAutoEnvioTimer = React.useCallback(() => {
         if (autoEnvioTimerRef.current) {
             clearTimeout(autoEnvioTimerRef.current);
             autoEnvioTimerRef.current = null;
         }
     }, []);
+
     const LineaVerticalTabla = ({ left }: { left: number }) => (
         <View
             pointerEvents="none"
@@ -742,8 +198,6 @@ export const LectorGestacionScreen = () => {
         setCorralPendienteId("—");
     }, []);
 
-
-    //--------------Dailog para abrirlo y cerrarlo----------
     const mostrarAviso = (
         titulo: string,
         mensaje: string,
@@ -764,45 +218,7 @@ export const LectorGestacionScreen = () => {
         limpiarCrotalLeido();
         ultimoCrotalAutoRef.current = null;
     };
-    //------Fin abrirlo y cerrarlo-------------------
 
-    const traducirEstadosEnMensaje = (
-        mensaje: string,
-        t: (clave: string) => string
-    ) => {
-        if (!mensaje) return "";
-
-        return mensaje.replace(
-            /\b(gestation|out_of_gestation|maternity|out_of_maternity)\b/g,
-            (estado) => traducirEstadoAnimal(estado, t)
-        );
-    };
-
-    useEffect(() => {
-        pantallaActivaRef.current = pantallaEnfocada;
-
-        if (!pantallaEnfocada) {
-            limpiarAutoEnvioTimer();
-            ultimoCrotalAutoRef.current = null;
-        }
-    }, [pantallaEnfocada, limpiarAutoEnvioTimer]);
-
-
-    useEffect(() => {
-        const maxPagina = Math.max(0, Math.ceil(registrosEnviados.length / TAM_PAGINA) - 1);
-        if (pagina > maxPagina) setPagina(maxPagina);
-    }, [registrosEnviados.length, pagina]);
-
-    useEffect(() => {
-        return () => {
-            if (timerIdRef.current) {
-                clearTimeout(timerIdRef.current);
-            }
-            if (autoEnvioTimerRef.current) {
-                clearTimeout(autoEnvioTimerRef.current);
-            }
-        };
-    }, []);
     const mostrarIdTemporal = (valor: string, estado: EstadoIdVisual) => {
         if (timerIdRef.current) {
             clearTimeout(timerIdRef.current);
@@ -817,97 +233,16 @@ export const LectorGestacionScreen = () => {
         }, 3000);
     };
 
-    useFocusEffect(
-        React.useCallback(() => {
-            const onBackPress = () => {
-                navigation.navigate("ConfiguracionGestacion");
-                return true;
-            };
-
-            const subscription = BackHandler.addEventListener(
-                "hardwareBackPress",
-                onBackPress
-            );
-
-            return () => subscription.remove();
-        }, [navigation])
-    );
-
-    // al entrar/salir
-    useFocusEffect(
-        React.useCallback(() => {
-            let mounted = true;
-
-            setRegistrosEnviados([]);
-            limpiarCrotalLeido();
-            setDetectarDesconocidos(detectarParam);
-            setConfirmar(confirmarParam);
-            setIdRecibido("");
-            setEstadoIdVisual("neutro");
-            cerrarActualizacionId();
-
-            if (timerIdRef.current) {
-                clearTimeout(timerIdRef.current);
-            }
-
-            limpiarAutoEnvioTimer();
-            ultimoCrotalAutoRef.current = null;
-
-            const mov: TipoMovimiento =
-                modoParam === "salida"
-                    ? "salida"
-                    : modoParam === "lectura"
-                        ? "lectura"
-                        : modoParam === "busqueda"
-                            ? "busqueda"
-                            : "entrada";
-
-            setTipoMovimiento(mov);
-            setCorralInput(mov === "entrada" ? String(corralParam) : "");
-
-            (async () => {
-                if (mov === "busqueda") return;
-                if (!idLector) return;
-
-                try {
-                    await iniciarLectura();
-                } catch {
-                    if (!mounted) return;
-                }
-            })();
-
-            return () => {
-                mounted = false;
-
-                if (timerIdRef.current) {
-                    clearTimeout(timerIdRef.current);
-                }
-
-                limpiarAutoEnvioTimer();
-                ultimoCrotalAutoRef.current = null;
-
-                detenerLectura?.().catch(() => { });
-            };
-        }, [
-            idLector,
-            iniciarLectura,
-            detenerLectura,
-            limpiarCrotalLeido,
-            modoParam,
-            corralParam,
-            detectarParam,
-            confirmarParam,
-            limpiarAutoEnvioTimer,
-            cerrarActualizacionId,
-        ])
-    );
     const volverAConfiguracionGestacion = () => {
         navigation.navigate("ConfiguracionGestacion");
     };
+
+    // ------------------------
+    // Handlers
+    // ------------------------
     const enviarRegistro = React.useCallback(async (crotalForzado?: string) => {
         if (!pantallaActivaRef.current) return;
 
-        const requiereCorral = esEntrada;
         const corralTxt = corralInput.trim();
         const crotalTxt = (crotalForzado ?? crotalLeido ?? "").trim();
 
@@ -934,6 +269,7 @@ export const LectorGestacionScreen = () => {
                 setEstaEnviando(true);
 
                 const respuesta = await obtenerLecturaEspada(String(crotalNum));
+
                 if (!respuesta.ok) {
                     if (respuesta.status === 404) {
                         mostrarIdTemporal("—", "error");
@@ -952,7 +288,8 @@ export const LectorGestacionScreen = () => {
                         t("gestationReader_alertReadErrorTitle"),
                         limpiarMensajeBackend(String(detalle)),
                         "error"
-                    ); return;
+                    );
+                    return;
                 }
 
                 const animal = respuesta.data ?? {};
@@ -963,6 +300,7 @@ export const LectorGestacionScreen = () => {
                         String(animal.animalId).trim() !== ""
                         ? String(animal.animalId)
                         : "—";
+
                 const esIdDesconocido = idBackendTexto === "0";
 
                 const crotalTexto =
@@ -1029,6 +367,7 @@ export const LectorGestacionScreen = () => {
                 setEstaEnviando(false);
             }
         }
+
         if (requiereCorral && !corralTxt) {
             Alert.alert(
                 t("gestationReader_alertMissingCorralTitle"),
@@ -1117,7 +456,10 @@ export const LectorGestacionScreen = () => {
 
             if (esIdDesconocido) {
                 mostrarIdTemporal("0", "error");
-                abrirActualizacionId(String(crotalNum), corralNum !== null ? String(corralNum) : "—");
+                abrirActualizacionId(
+                    String(crotalNum),
+                    corralNum !== null ? String(corralNum) : "—"
+                );
             } else if (idBackendTexto !== "—") {
                 mostrarIdTemporal(idBackendTexto, "success");
                 cerrarActualizacionId();
@@ -1192,7 +534,8 @@ export const LectorGestacionScreen = () => {
 
             if (!respuesta.ok) {
                 const detalle =
-                    (respuesta.data && (respuesta.data.message || respuesta.data.error || respuesta.data.mensaje)) ||
+                    (respuesta.data &&
+                        (respuesta.data.message || respuesta.data.error || respuesta.data.mensaje)) ||
                     respuesta.rawText ||
                     `HTTP ${respuesta.status}`;
 
@@ -1200,7 +543,8 @@ export const LectorGestacionScreen = () => {
                     t("gestationReader_alertUpdateIdErrorTitle"),
                     limpiarMensajeBackend(String(detalle)),
                     "error"
-                ); return;
+                );
+                return;
             }
 
             const idActualizado =
@@ -1239,6 +583,117 @@ export const LectorGestacionScreen = () => {
         }
     }, [nuevoIdManual, crotalPendienteId, corralPendienteId, cerrarActualizacionId]);
 
+    // ------------------------
+    // Effects
+    // ------------------------
+    useEffect(() => {
+        pantallaActivaRef.current = pantallaEnfocada;
+
+        if (!pantallaEnfocada) {
+            limpiarAutoEnvioTimer();
+            ultimoCrotalAutoRef.current = null;
+        }
+    }, [pantallaEnfocada, limpiarAutoEnvioTimer]);
+
+    useEffect(() => {
+        const maxPagina = Math.max(0, Math.ceil(registrosEnviados.length / TAM_PAGINA) - 1);
+        if (pagina > maxPagina) setPagina(maxPagina);
+    }, [registrosEnviados.length, pagina]);
+
+    useEffect(() => {
+        return () => {
+            if (timerIdRef.current) {
+                clearTimeout(timerIdRef.current);
+            }
+            if (autoEnvioTimerRef.current) {
+                clearTimeout(autoEnvioTimerRef.current);
+            }
+        };
+    }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const onBackPress = () => {
+                navigation.navigate("ConfiguracionGestacion");
+                return true;
+            };
+
+            const subscription = BackHandler.addEventListener(
+                "hardwareBackPress",
+                onBackPress
+            );
+
+            return () => subscription.remove();
+        }, [navigation])
+    );
+
+    useFocusEffect(
+        React.useCallback(() => {
+            let mounted = true;
+
+            setRegistrosEnviados([]);
+            limpiarCrotalLeido();
+            setDetectarDesconocidos(detectarParam);
+            setConfirmar(confirmarParam);
+            setIdRecibido("");
+            setEstadoIdVisual("neutro");
+            cerrarActualizacionId();
+
+            if (timerIdRef.current) {
+                clearTimeout(timerIdRef.current);
+            }
+
+            limpiarAutoEnvioTimer();
+            ultimoCrotalAutoRef.current = null;
+
+            const mov: TipoMovimiento =
+                modoParam === "salida"
+                    ? "salida"
+                    : modoParam === "lectura"
+                        ? "lectura"
+                        : modoParam === "busqueda"
+                            ? "busqueda"
+                            : "entrada";
+
+            setTipoMovimiento(mov);
+            setCorralInput(mov === "entrada" ? String(corralParam) : "");
+
+            (async () => {
+                if (mov === "busqueda") return;
+                if (!idLector) return;
+
+                try {
+                    await iniciarLectura();
+                } catch {
+                    if (!mounted) return;
+                }
+            })();
+
+            return () => {
+                mounted = false;
+
+                if (timerIdRef.current) {
+                    clearTimeout(timerIdRef.current);
+                }
+
+                limpiarAutoEnvioTimer();
+                ultimoCrotalAutoRef.current = null;
+
+                detenerLectura?.().catch(() => { });
+            };
+        }, [
+            idLector,
+            iniciarLectura,
+            detenerLectura,
+            limpiarCrotalLeido,
+            modoParam,
+            corralParam,
+            detectarParam,
+            confirmarParam,
+            limpiarAutoEnvioTimer,
+            cerrarActualizacionId,
+        ])
+    );
 
     useEffect(() => {
         const crotalActual = (crotalLeido ?? "").trim();
@@ -1286,39 +741,10 @@ export const LectorGestacionScreen = () => {
         limpiarAutoEnvioTimer,
     ]);
 
-    const estilosCajaId = useMemo(() => {
-        if (estadoIdVisual === "success") {
-            return {
-                backgroundColor: "#ECFDF5",
-                borderColor: "#BBF7D0",
-                colorTexto: SUCCESS,
-                colorSubtexto: "#15803D",
-                icono: "checkmark-circle-outline" as const,
-            };
-        }
-
-        if (estadoIdVisual === "error") {
-            return {
-                backgroundColor: "#FEF2F2",
-                borderColor: "#FECACA",
-                colorTexto: DANGER,
-                colorSubtexto: "#B91C1C",
-                icono: "close-circle-outline" as const,
-            };
-        }
-
-        return {
-            backgroundColor: "#F1F5F9",
-            borderColor: BORDER,
-            colorTexto: TEXT,
-            colorSubtexto: MUTED,
-            icono: "id-card-outline" as const,
-        };
-    }, [estadoIdVisual]);
-
-
+    // ------------------------
+    // Render
+    // ------------------------
     return (
-
         <KeyboardAvoidingView
             style={{ flex: 1, backgroundColor: BG }}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -1375,7 +801,6 @@ export const LectorGestacionScreen = () => {
                         </View>
 
                         <View style={{ padding: 14, gap: 14 }}>
-                            {/* Bloque principal */}
                             <View
                                 style={{
                                     backgroundColor: "#EEF2FF",
@@ -1400,7 +825,6 @@ export const LectorGestacionScreen = () => {
                                             gap: 8,
                                         }}
                                     >
-                                        {/* <Ionicons name="paw-outline" size={18} color={BRAND} /> */}
                                         <Text style={{ color: BRAND, fontWeight: "900", fontSize: 15 }}>
                                             {t("gestationReader_animalCardTitle")}
                                         </Text>
@@ -1426,26 +850,8 @@ export const LectorGestacionScreen = () => {
                                 >
                                     {t("gestationReader_animalCrotalLabel")} {formatearCrotalVisual(animalBusqueda?.crotal)}
                                 </Text>
-
-                                {/* <View
-                                    style={{
-                                        alignSelf: "flex-start",
-                                        marginTop: 4,
-                                        paddingHorizontal: 10,
-                                        paddingVertical: 5,
-                                        borderRadius: 999,
-                                        backgroundColor: "#FFFFFF",
-                                        borderWidth: 1,
-                                        borderColor: "#D1D5DB",
-                                    }}
-                                >
-                                    <Text style={{ color: TEXT, fontWeight: "800", fontSize: 12 }}>
-                                        Estado: {String(animalBusqueda?.state ?? "—")}
-                                    </Text>
-                                </View> */}
                             </View>
 
-                            {/* Grid de datos */}
                             <View
                                 style={{
                                     flexDirection: "row",
@@ -1511,7 +917,6 @@ export const LectorGestacionScreen = () => {
                     </View>
                 )}
 
-                {/* Resumen */}
                 {!esLectura && !esBusqueda && (
                     <View
                         style={{
@@ -1531,7 +936,9 @@ export const LectorGestacionScreen = () => {
                                 borderBottomColor: SOFT_BORDER,
                             }}
                         >
-                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}> {t("gestationReader_summaryTitle")}</Text>
+                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
+                                {t("gestationReader_summaryTitle")}
+                            </Text>
                             <Text style={{ color: MUTED, marginTop: 4 }}>
                                 {t("gestationReader_summaryDescription")}
                             </Text>
@@ -1594,7 +1001,6 @@ export const LectorGestacionScreen = () => {
                     </View>
                 )}
 
-                {/* Card lectura */}
                 {!esLectura && !esBusqueda && (
                     <View
                         style={{
@@ -1626,6 +1032,7 @@ export const LectorGestacionScreen = () => {
                                     {t("gestationReader_currentReadingDescription")}
                                 </Text>
                             </View>
+
                             <View style={{ alignSelf: "flex-start", marginTop: -2 }}>
                                 {lectorConectado ? (
                                     <IndicadorConexionAnimado />
@@ -1651,6 +1058,7 @@ export const LectorGestacionScreen = () => {
                                 )}
                             </View>
                         </View>
+
                         <View style={{ padding: 14, gap: 12 }}>
                             <CajaDatoLectura
                                 icon="barcode-outline"
@@ -1683,7 +1091,8 @@ export const LectorGestacionScreen = () => {
                                         : estadoIdVisual === "error"
                                             ? t("gestationReader_unknownAnimal")
                                             : undefined
-                                } />
+                                }
+                            />
                         </View>
                     </View>
                 )}
@@ -1745,7 +1154,8 @@ export const LectorGestacionScreen = () => {
                                 }}
                             >
                                 <Text style={{ color: "white", fontWeight: "900", fontSize: 16 }}>
-                                    {actualizandoId ? t("gestationReader_updatingId")
+                                    {actualizandoId
+                                        ? t("gestationReader_updatingId")
                                         : t("gestationReader_updateId")}
                                 </Text>
                             </TouchableOpacity>
@@ -1753,7 +1163,6 @@ export const LectorGestacionScreen = () => {
                     </View>
                 )}
 
-                {/* Tabla */}
                 {!esBusqueda && (
                     <View
                         style={{
@@ -2135,9 +1544,8 @@ export const LectorGestacionScreen = () => {
                         </View>
                     </View>
                 )}
-                {/* Enviar */}
-                {!esBusqueda && !esLectura && (
 
+                {!esBusqueda && !esLectura && (
                     <View style={{ marginTop: 12 }}>
                         <TouchableOpacity
                             onPress={onEnviar}
@@ -2177,6 +1585,7 @@ export const LectorGestacionScreen = () => {
                     </View>
                 )}
             </ScrollView>
+
             <Modal
                 visible={avisoVisible}
                 transparent

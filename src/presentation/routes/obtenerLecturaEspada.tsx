@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { construirEndpointEspada } from "../../stores/apiConfig";
+import { traducirEstadoAnimal } from "../hooks/traducirEstadoAnimal";
 
 export async function obtenerLecturaEspada(crotal: string) {
     const baseUrl = await construirEndpointEspada("readCrotal");
@@ -116,3 +117,36 @@ export function formatearSoloFecha(fecha?: string) {
 
     return d.toLocaleDateString("es-ES");
 }
+
+export const formatearFecha = (fecha?: string) => {
+    if (!fecha) return "—";
+
+    try {
+        const fechaLimpia = fecha.replace("[UTC]", "");
+        const d = new Date(fechaLimpia);
+
+        if (Number.isNaN(d.getTime())) return fecha;
+
+        return d.toLocaleString("es-ES");
+    } catch {
+        return fecha;
+    }
+};
+
+
+export const limpiarMensajeBackend = (mensaje?: string) => {
+    if (!mensaje) return "";
+    return mensaje.replace(/^Error:\s*/i, "").trim();
+};
+
+export const traducirEstadosEnMensaje = (
+    mensaje: string,
+    t: (clave: string) => string
+) => {
+    if (!mensaje) return "";
+
+    return mensaje.replace(
+        /\b(gestation|out_of_gestation|maternity|out_of_maternity)\b/g,
+        (estado) => traducirEstadoAnimal(estado, t)
+    );
+};
