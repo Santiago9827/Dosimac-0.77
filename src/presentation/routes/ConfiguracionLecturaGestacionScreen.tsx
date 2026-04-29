@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+//cambio a 0.77
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Alert, KeyboardAvoidingView, Platform, ScrollView, Modal } from "react-native";
 import {
