@@ -3,7 +3,9 @@ module.exports = {
     // ios: {
     //   automaticPodsInstallation: true
     // }
-    android: {},
+   android: {
+  packageName: 'com.gptrnbluetoothv2',
+},
   },
   assets: ['src\\assets\\fonts', 'src\\assets\\images'],
 };

@@ -65,6 +65,9 @@ react {
     entryFile = file(["node", "-e", "require('expo/scripts/resolveAppEntry')", rootDir.getAbsoluteFile().getParentFile().getAbsolutePath(), "android", "absolute"].execute(null, rootDir).text.trim())
     cliFile = new File(["node", "--print", "require.resolve('@expo/cli')"].execute(null, rootDir).text.trim())
     bundleCommand = "export:embed"
+
+    autolinkLibrariesWithApp()
+
 }
 
 /**
@@ -131,7 +134,7 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation("com.facebook.react:flipper-integration")
+  //  implementation("com.facebook.react:flipper-integration")
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
@@ -140,6 +143,20 @@ dependencies {
     }
 }
 
-apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+afterEvaluate {
+    tasks.matching { it.name == "generateReleaseLintVitalReportModel" }.configureEach {
+        dependsOn("copyReactNativeVectorIconFonts")
+    }
+
+    tasks.matching { it.name == "lintVitalAnalyzeRelease" }.configureEach {
+        dependsOn("copyReactNativeVectorIconFonts")
+    }
+
+    tasks.matching { it.name == "lintVitalReportRelease" }.configureEach {
+        dependsOn("copyReactNativeVectorIconFonts")
+    }
+}
+
+//apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
 
 
