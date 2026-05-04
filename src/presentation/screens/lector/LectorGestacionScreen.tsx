@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler, Modal,} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler, Modal, } from "react-native";
 import { useFocusEffect, useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { Appbar, Switch, TextInput } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -9,12 +9,14 @@ import { useTranslation } from "react-i18next";
 import { useAwrConn } from "../../../stores/awrConnStore";
 import { construirEndpointEspada } from "../../../stores/apiConfig";
 import { IndicadorConexionAnimado } from "../../components/shared/IndicadorConexionAnimado";
-import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId, formatearFecha, limpiarMensajeBackend, traducirEstadosEnMensaje,} from "../../routes/obtenerLecturaEspada";
+import { obtenerLecturaEspada, formatearSoloFecha, postActualizarId, formatearFecha, limpiarMensajeBackend, traducirEstadosEnMensaje, } from "../../routes/obtenerLecturaEspada";
 import { traducirEstadoAnimal } from "../../hooks/traducirEstadoAnimal";
 import { formatearCrotalVisual } from "../../hooks/formatearCrotalVisual";
-import { CajaDatoLectura, FichaDatoAnimal, MiniResumenCard, RegistroLecturaCard, SwitchRowReadonly , 
- BG, CARD, BORDER, TEXT, MUTED, BRAND, SOFT, SOFT_BORDER, DANGER, SUCCESS, SHADOW, normalizarClave, parseNumeroSeguro,
- RegistroEnviado, TipoMovimiento, EstadoIdVisual, upsertRegistroPorCrotal, postGestation, } from "../../components/shared/Card";
+import {
+    CajaDatoLectura, FichaDatoAnimal, MiniResumenCard, RegistroLecturaCard, SwitchRowReadonly,
+    BG, CARD, BORDER, TEXT, MUTED, BRAND, SOFT, SOFT_BORDER, DANGER, SUCCESS, SHADOW, normalizarClave, parseNumeroSeguro,
+    RegistroEnviado, TipoMovimiento, EstadoIdVisual, upsertRegistroPorCrotal, postGestation,
+} from "../../components/shared/Card";
 
 
 export const LectorGestacionScreen = () => {
@@ -185,19 +187,40 @@ export const LectorGestacionScreen = () => {
     const abrirActualizacionId = React.useCallback((crotal: string, corral: string) => {
         if (!detectarDesconocidos) return;
 
+        limpiarAutoEnvioTimer();
+        ultimoCrotalAutoRef.current = null;
+        limpiarCrotalLeido();
+        detenerLectura?.().catch(() => { });
+
         setMostrarActualizarId(true);
         setNuevoIdManual("");
         setCrotalPendienteId(String(crotal));
         setCorralPendienteId(corral?.trim() ? corral : "—");
-    }, [detectarDesconocidos]);
+    }, [
+        detectarDesconocidos,
+        limpiarAutoEnvioTimer,
+        limpiarCrotalLeido,
+        detenerLectura,
+    ]);
 
     const cerrarActualizacionId = React.useCallback(() => {
         setMostrarActualizarId(false);
         setNuevoIdManual("");
         setCrotalPendienteId("");
         setCorralPendienteId("—");
-    }, []);
 
+        limpiarCrotalLeido();
+        ultimoCrotalAutoRef.current = null;
+
+        if (!esBusqueda && idLector) {
+            iniciarLectura?.().catch(() => { });
+        }
+    }, [
+        esBusqueda,
+        idLector,
+        iniciarLectura,
+        limpiarCrotalLeido,
+    ]);
     const mostrarAviso = (
         titulo: string,
         mensaje: string,
@@ -242,6 +265,12 @@ export const LectorGestacionScreen = () => {
     // ------------------------
     const enviarRegistro = React.useCallback(async (crotalForzado?: string) => {
         if (!pantallaActivaRef.current) return;
+
+        if (mostrarActualizarId || actualizandoId) {
+            limpiarCrotalLeido();
+            ultimoCrotalAutoRef.current = null;
+            return;
+        }
 
         const corralTxt = corralInput.trim();
         const crotalTxt = (crotalForzado ?? crotalLeido ?? "").trim();
@@ -487,7 +516,7 @@ export const LectorGestacionScreen = () => {
         } finally {
             setEstaEnviando(false);
         }
-    }, [esEntrada, esLectura, esSalida, corralInput, crotalLeido, limpiarCrotalLeido]);
+    }, [esEntrada, esLectura, esSalida, corralInput, crotalLeido, limpiarCrotalLeido, mostrarActualizarId, actualizandoId]);
 
     const onEnviar = () => {
         if (esLectura || !confirmar) return;
@@ -704,6 +733,15 @@ export const LectorGestacionScreen = () => {
             return;
         }
 
+        if (mostrarActualizarId || actualizandoId) {
+            limpiarAutoEnvioTimer();
+            if (crotalActual) {
+                limpiarCrotalLeido();
+            }
+            ultimoCrotalAutoRef.current = null;
+            return;
+        }
+
         if (!usaEnvioAutomatico) {
             limpiarAutoEnvioTimer();
             ultimoCrotalAutoRef.current = null;
@@ -739,6 +777,9 @@ export const LectorGestacionScreen = () => {
         estaEnviando,
         enviarRegistro,
         limpiarAutoEnvioTimer,
+        mostrarActualizarId,
+        actualizandoId,
+        limpiarCrotalLeido,
     ]);
 
     // ------------------------

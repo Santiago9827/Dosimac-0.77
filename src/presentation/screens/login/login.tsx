@@ -62,12 +62,20 @@ export const LoginScreen = () => {
 			}
 
 			if (!respuesta.ok) {
+				const rawText = String(respuesta.rawText ?? "").toLowerCase();
+
+				const esCredencialIncorrecta =
+					respuesta.status === 401 || rawText.includes("unauthorized");
+
+				if (esCredencialIncorrecta) {
+					Alert.alert(t("login_errorTitle"), t("login_invalidCredentials")); return;
+				}
+
 				const detalle =
 					(typeof respuesta.data === "object" &&
 						(respuesta.data?.message ||
 							respuesta.data?.error ||
 							respuesta.data?.mensaje)) ||
-					respuesta.rawText ||
 					`HTTP ${respuesta.status}`;
 
 				Alert.alert("Error de login", String(detalle));
@@ -241,9 +249,8 @@ export const LoginScreen = () => {
 								<TouchableOpacity
 									onPress={onSubmit}
 									disabled={disabled}
-									className={`mt-5 rounded-xl py-3 items-center ${
-										disabled ? "bg-indigo-300" : "bg-indigo-600"
-									}`}
+									className={`mt-5 rounded-xl py-3 items-center ${disabled ? "bg-indigo-300" : "bg-indigo-600"
+										}`}
 								>
 									<Text className="text-white font-bold text-base">
 										{cargando ? t("login_loading") : t("login_button")}

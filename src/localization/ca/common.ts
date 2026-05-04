@@ -31,6 +31,7 @@ export default {
     login_invalidIpTitle: "IP no vàlida",
     login_invalidIpMessage: "Introdueix una IP o una adreça de servidor vàlida.",
     login_saveIpErrorMessage: "No s'ha pogut desar la configuració IP.",
+    login_invalidCredentials: "Nom d'usuari o contrasenya incorrectes",
 
     Lista_instalaciones: 'Instal·lacions',
     Maintenance: 'Manteniment',

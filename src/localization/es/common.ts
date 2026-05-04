@@ -1,5 +1,5 @@
-import { Server } from "http";
-import { config } from "process";
+//import { Server } from "http";
+//import { config } from "process";
 
 /* eslint-disable prettier/prettier */
 export default {
@@ -81,6 +81,7 @@ export default {
    Enviar: "Enviar",
    Salir: "Salir",
    Informacion: "Información",
+   login_invalidCredentials: "Usuario o contraseña incorrectos",
 
    InicioConfiguracion: "Iniciando conexión",
    ConfiguracionWifi: "Configurando...",

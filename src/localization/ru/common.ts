@@ -1,4 +1,3 @@
-import { config } from "process";
 
 export default {
     username: 'Пользователь',
@@ -21,6 +20,7 @@ export default {
     login_serverIpLabel: "IP сервера",
     login_cancel: "Отмена",
     login_accept: "Принять",
+    login_invalidCredentials: "Неверное имя пользователя или пароль",
 
     login_configTitle: "Настройка",
     login_errorTitle: "Ошибка входа",

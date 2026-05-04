@@ -19,6 +19,7 @@ export default {
     login_serverIpLabel: "서버 IP",
     login_cancel: "취소",
     login_accept: "확인",
+    login_invalidCredentials: "사용자 이름 또는 비밀번호가 올바르지 않습니다",
 
     login_configTitle: "설정",
     login_errorTitle: "로그인 오류",
