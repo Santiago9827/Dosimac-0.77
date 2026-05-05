@@ -64,21 +64,7 @@ export default function Drnewupdate() {
       <SafeAreaView style={styles.safe}>
          <Appbar.Header elevated>
             {/* <Appbar.BackAction onPress={navigation.goBack} /> */}
-            <Appbar.BackAction
-               onPress={() => {
-                  if (!token) {
-                     goToHome();
-                     return;
-                  }
-
-                  if (!sfarm) {
-                     goToHome();
-                     return;
-                  }
-
-                  navigation.goBack();
-               }}
-            />
+            <Appbar.BackAction onPress={goToHome} />
             <Appbar.Content title={t('common:DosimacRegistration')} />
          </Appbar.Header>
 

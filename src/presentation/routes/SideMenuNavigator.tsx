@@ -4,7 +4,7 @@
 import React from 'react';
 import { DrawerContentComponentProps, DrawerContentScrollView, DrawerItem, DrawerItemList, createDrawerNavigator } from '@react-navigation/drawer';
 import { globalColors } from '../theme/theme';
-import { Text, View, Platform, Dimensions, useWindowDimensions } from 'react-native';
+import { Text, View, Platform, Dimensions, useWindowDimensions, Image } from 'react-native';
 import { BottomTabNavigator } from './BottomTabNavigator';
 import { IonIcon } from '../components/shared/IonIcon';
 import { Divider } from 'react-native-paper';
@@ -34,6 +34,10 @@ import { ConfiguracionIPScreen } from "../screens/ip/ConfiguracionIPScreen";
 import { ConfiguracionLecturaMaternidadScreen } from "./ConfiguracionLecturaMaternidadScreen";
 import { ConfiguracionGestacionScreen } from './ConfiguracionLecturaGestacionScreen';
 import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import FontAwesome6 from "react-native-vector-icons/FontAwesome6";
+
+
 
 
 
@@ -325,6 +329,7 @@ export const PrivateDrawerNavigator = () => {
 
 const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   const { t } = useTranslation();
+  const CERDO_ICON = require('../../assets/images/CerdoAzul.png');
   const insets = useSafeAreaInsets();
   const logout = useAuthStore((s) => s.logout);
   const gray = "#6B7280";
@@ -364,7 +369,12 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       >
         <DrawerItem
           label={t("common:back", { defaultValue: "Dosimac Server" })}
-          icon={() => <IonIcon name="chevron-back-outline" color={inactiveTint} />}
+          icon={() => (
+            <Image
+              source={CERDO_ICON}
+              style={{ width: 24, height: 24, resizeMode: 'contain' }}
+            />
+          )}
           labelStyle={{ color: inactiveTint, fontWeight: "700" }}
           style={{ marginHorizontal: 8, borderRadius: 100, paddingHorizontal: 20 }}
           onPress={() => {
