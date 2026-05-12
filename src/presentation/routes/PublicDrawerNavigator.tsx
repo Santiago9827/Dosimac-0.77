@@ -6,7 +6,7 @@ import {
     DrawerItem,
     DrawerContentComponentProps,
 } from '@react-navigation/drawer';
-import { Platform, useWindowDimensions, View, Text } from 'react-native';
+import { Platform, useWindowDimensions, View, Text, Image } from 'react-native';
 import { Divider } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -138,6 +138,9 @@ export const PublicDrawerNavigator = () => {
 const PublicDrawerContent = (props: DrawerContentComponentProps) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const CERDO_ICON = require('../../assets/images/CerdoAzul.png');
+    const CERDO_ICON2 = require('../../assets/images/CerdoLogin.png');
+
 
     // const activeRoute = props.state.routeNames[props.state.index]; 
     const activeRoute = props.state.routeNames[props.state.index] as keyof PublicDrawerParamList;
@@ -164,11 +167,35 @@ const PublicDrawerContent = (props: DrawerContentComponentProps) => {
     });
 
     const iconColor = (focused: boolean) => (focused ? activeTint : inactiveTint);
+    const CerdoDrawerIcon = () => (
+        <Image
+            source={CERDO_ICON}
+            style={{
+                width: 24,
+                height: 24,
+                resizeMode: "contain",
+            }}
+        />
+    );
+
+     const CerdoDrawerIcon2 = () => (
+        <Image
+            source={CERDO_ICON2}
+            style={{
+                width: 24,
+                height: 24,
+                resizeMode: "contain",
+            }}
+        />
+    );
+
 
     const isSimpleMenu =
         activeRoute === "Login" ||
         activeRoute === "ConfigIP" ||
         activeRoute === "PublicStart";
+
+
     return (
         <DrawerContentScrollView
             {...props}
@@ -178,15 +205,15 @@ const PublicDrawerContent = (props: DrawerContentComponentProps) => {
             {isSimpleMenu ? (
                 <>
                     <DrawerItem
-                         label="Dosimac Server"
-                        icon={() => <IonIcon name="log-in-outline" color={iconColor(activeRoute === "Login")} />}
+                        label="Dosimac Server"
+                        icon={CerdoDrawerIcon2}
                         labelStyle={labelStyle(activeRoute === "Login")}
                         style={itemStyle(activeRoute === "Login")}
                         onPress={() => go("Login" as never)}
                     />
 
                     <DrawerItem
-                         label={t("AltaDispositivos")}
+                        label={t("AltaDispositivos")}
                         icon={() => <IonIcon name="add-outline" color={iconColor(false)} />}
                         labelStyle={labelStyle(false)}
                         style={itemStyle(false)}
@@ -194,7 +221,7 @@ const PublicDrawerContent = (props: DrawerContentComponentProps) => {
                     />
 
                     <DrawerItem
-                       label={t("ConfiguracionIP")}
+                        label={t("ConfiguracionIP")}
                         icon={() => <IonIcon name="wifi-outline" color={iconColor(activeRoute === "ConfigIP")} />}
                         labelStyle={labelStyle(activeRoute === "ConfigIP")}
                         style={itemStyle(activeRoute === "ConfigIP")}
@@ -205,7 +232,7 @@ const PublicDrawerContent = (props: DrawerContentComponentProps) => {
                 <>
                     <DrawerItem
                         label="Dosimac Server"
-                        icon={() => <IonIcon name="log-in-outline" color={iconColor(false)} />}
+                        icon={CerdoDrawerIcon}
                         labelStyle={labelStyle(false)}
                         style={itemStyle(false)}
                         onPress={() => go("Login")}

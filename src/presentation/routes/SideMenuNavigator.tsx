@@ -368,7 +368,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 12 }}
       >
         <DrawerItem
-          label={t("common:back", { defaultValue: "Dosimac Server" })}
+          label={t("common:back", { defaultValue: "er" })}
           icon={() => (
             <Image
               source={CERDO_ICON}

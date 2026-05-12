@@ -7,7 +7,8 @@ import {
     Platform,
     ScrollView,
     TouchableOpacity,
-    Modal
+    Modal,
+    Keyboard,
 } from "react-native";
 import {
     Appbar,
@@ -134,6 +135,8 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
     } | null>(null);
 
     const ultimoCrotalProcesadoRef = useRef<string>("");
+    const scrollRef = useRef<ScrollView | null>(null);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
 
     const requiereCorral = modo === "entrada";
     const requiereBusqueda = modo === "busqueda";
@@ -173,6 +176,13 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
             await detenerLectura?.();
         } catch { }
     };
+    const moverScrollAlFinal = React.useCallback(() => {
+    if (Platform.OS === "android") {
+        setTimeout(() => {
+            scrollRef.current?.scrollToEnd({ animated: true });
+        }, 250);
+    }
+}, []);
     useEffect(() => {
         return () => {
             detenerLectura?.().catch(() => { });
@@ -372,6 +382,21 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
     };
 
     useEffect(() => {
+        const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+            setKeyboardHeight(e.endCoordinates.height);
+        });
+
+        const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+            setKeyboardHeight(0);
+        });
+
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
+
+    useEffect(() => {
         const crotalActual = String(crotalLeido ?? "").trim();
 
         if (!leyendoBusquedaEspada || !crotalActual) return;
@@ -559,25 +584,26 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
 
     return (
         <KeyboardAvoidingView
-            style={{ flex: 1, backgroundColor: BG }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={90}
-        >
+    style={{ flex: 1, backgroundColor: BG }}
+    behavior={Platform.OS === "ios" ? "padding" : undefined}
+    keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+>
             <Appbar.Header elevated style={{ backgroundColor: BRAND }}>
                 <Appbar.BackAction color="white" onPress={() => navigation.goBack()} />
                 <Appbar.Content title={t("maternidadConfig_screenTitle")} titleStyle={{ color: "white" }} />
             </Appbar.Header>
 
-            <ScrollView
-                contentContainerStyle={{
-                    flexGrow: 1,
-                    padding: 16,
-                    gap: 12,
-                    paddingBottom: 24,
-                }}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-            >
+           <ScrollView
+    ref={scrollRef}
+    contentContainerStyle={{
+        flexGrow: 1,
+        padding: 16,
+        gap: 12,
+        paddingBottom: keyboardHeight > 0 ? keyboardHeight + 32 : 24,
+    }}
+    keyboardShouldPersistTaps="handled"
+    showsVerticalScrollIndicator={false}
+>
                 <Card mode="contained" style={{ borderRadius: 18, backgroundColor: CARD }}>
                     <Card.Content>
                         <Text style={{ fontSize: 18, fontWeight: "900", color: TEXT }}>
@@ -684,17 +710,18 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                     <Divider />
                                     <View style={{ height: 14 }} />
 
-                                    <TextInput
-                                        mode="outlined"
-                                        label={t("maternidadConfig_corralLabel")}
-                                        value={corral}
-                                        onChangeText={setCorral}
-                                        placeholder="Ej: 1"
-                                        keyboardType="number-pad"
-                                        left={<TextInput.Icon icon="home-outline" />}
-                                        outlineColor={BORDER}
-                                        activeOutlineColor={BRAND}
-                                    />
+                                   <TextInput
+    mode="outlined"
+    label={t("maternidadConfig_corralLabel")}
+    value={corral}
+    onChangeText={setCorral}
+    placeholder="Ej: 1"
+    keyboardType="number-pad"
+    left={<TextInput.Icon icon="home-outline" />}
+    outlineColor={BORDER}
+    activeOutlineColor={BRAND}
+    onFocus={moverScrollAlFinal}
+/>
 
                                     {!puedeContinuar && (
                                         <Text style={{ color: "#DC2626", fontWeight: "700", marginTop: 8 }}>

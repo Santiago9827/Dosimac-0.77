@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 //cambio a 0.77
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Alert, KeyboardAvoidingView, Platform, ScrollView, Modal } from "react-native";
+import { View, Alert, KeyboardAvoidingView, Platform, ScrollView, Modal, Keyboard } from "react-native";
 import {
     Appbar,
     Button,
@@ -118,6 +118,9 @@ export const ConfiguracionGestacionScreen = () => {
     const [avisoMensaje, setAvisoMensaje] = useState("");
     const [avisoTipo, setAvisoTipo] = useState<"warning" | "error" | "info">("info");
 
+    const scrollRef = useRef<ScrollView | null>(null);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+
     const [animalPendiente, setAnimalPendiente] = useState<any | null>(null);
     const [crotalEsperado, setCrotalEsperado] = useState("");
 
@@ -165,6 +168,21 @@ export const ConfiguracionGestacionScreen = () => {
             await detenerLectura?.();
         } catch { }
     };
+
+    useEffect(() => {
+        const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+            setKeyboardHeight(e.endCoordinates.height);
+        });
+
+        const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+            setKeyboardHeight(0);
+        });
+
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -356,12 +374,16 @@ export const ConfiguracionGestacionScreen = () => {
             }
         }
 
-        navigation.navigate("LectorGestacion", {
-            modo,
-            corral: corral.trim(),
-            detectarDesconocidos,
-            confirmar,
-        });
+        Keyboard.dismiss();
+
+        setTimeout(() => {
+            navigation.navigate("LectorGestacion", {
+                modo,
+                corral: corral.trim(),
+                detectarDesconocidos,
+                confirmar,
+            });
+        }, Platform.OS === "android" ? 80 : 0);
     };
 
     // Caso: búsqueda por crotal usando la espada directamente
@@ -551,8 +573,8 @@ export const ConfiguracionGestacionScreen = () => {
     return (
         <KeyboardAvoidingView
             style={{ flex: 1, backgroundColor: BG }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={90}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
             <Appbar.Header elevated style={{ backgroundColor: BRAND }}>
                 <Appbar.BackAction color="white" onPress={() => navigation.goBack()} />
@@ -560,11 +582,12 @@ export const ConfiguracionGestacionScreen = () => {
             </Appbar.Header>
 
             <ScrollView
+                ref={scrollRef}
                 contentContainerStyle={{
                     flexGrow: 1,
                     padding: 16,
                     gap: 12,
-                    paddingBottom: 24,
+                    paddingBottom: keyboardHeight > 0 ? keyboardHeight + 32 : 24,
                 }}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
@@ -677,6 +700,13 @@ export const ConfiguracionGestacionScreen = () => {
                                         left={<TextInput.Icon icon="home-outline" />}
                                         outlineColor={BORDER}
                                         activeOutlineColor={BRAND}
+                                        onFocus={() => {
+                                            if (Platform.OS === "android") {
+                                                setTimeout(() => {
+                                                    scrollRef.current?.scrollToEnd({ animated: true });
+                                                }, 250);
+                                            }
+                                        }}
                                     />
 
                                     {!puedeContinuar && (

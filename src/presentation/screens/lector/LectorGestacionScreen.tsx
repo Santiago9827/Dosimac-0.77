@@ -103,6 +103,8 @@ export const LectorGestacionScreen = () => {
     const [corralPendienteId, setCorralPendienteId] = useState("—");
     const [actualizandoId, setActualizandoId] = useState(false);
 
+
+
     // ------------------------
     // Valores derivados
     // ------------------------
@@ -257,9 +259,24 @@ export const LectorGestacionScreen = () => {
         }, 3000);
     };
 
+    //!-----------------Hcer prueba luego-------------------------------
     const volverAConfiguracionGestacion = () => {
         navigation.navigate("ConfiguracionGestacion");
     };
+
+    // const volverAConfiguracionGestacion = React.useCallback(() => {
+    //     if (navigation.canGoBack()) {
+    //         navigation.goBack();
+    //         return;
+    //     }
+
+    //     navigation.navigate("ConfiguracionGestacion");
+    // }, [navigation]);
+    //!-----------------Fin prueba luego-------------------------------
+
+
+
+
 
     // ------------------------
     // Handlers
@@ -644,7 +661,7 @@ export const LectorGestacionScreen = () => {
     useFocusEffect(
         React.useCallback(() => {
             const onBackPress = () => {
-                navigation.navigate("ConfiguracionGestacion");
+                volverAConfiguracionGestacion();
                 return true;
             };
 
@@ -654,7 +671,7 @@ export const LectorGestacionScreen = () => {
             );
 
             return () => subscription.remove();
-        }, [navigation])
+        }, [volverAConfiguracionGestacion])
     );
 
     useFocusEffect(
@@ -789,8 +806,8 @@ export const LectorGestacionScreen = () => {
     return (
         <KeyboardAvoidingView
             style={{ flex: 1, backgroundColor: BG }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={90}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
             <Appbar.Header
                 elevated
@@ -940,7 +957,7 @@ export const LectorGestacionScreen = () => {
                             </View>
 
                             <TouchableOpacity
-                                onPress={() => navigation.navigate("ConfiguracionGestacion")}
+                                onPress={volverAConfiguracionGestacion}
                                 activeOpacity={0.9}
                                 style={{
                                     marginTop: 4,

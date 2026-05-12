@@ -778,6 +778,9 @@ export const LectorMaternidadScreen = () => {
     };
     //!-----Fin traduccion--------
 
+    const volverAConfiguracionMaternidad = () => {
+        navigation.navigate("ConfiguracionLectura");
+    };
 
 
     const mostrarAviso = (
@@ -844,7 +847,7 @@ export const LectorMaternidadScreen = () => {
     useFocusEffect(
         React.useCallback(() => {
             const onBackPress = () => {
-                navigation.navigate("ConfiguracionLectura");
+                volverAConfiguracionMaternidad();
                 return true;
             };
 
@@ -854,7 +857,7 @@ export const LectorMaternidadScreen = () => {
             );
 
             return () => subscription.remove();
-        }, [navigation])
+        }, [volverAConfiguracionMaternidad])
     );
 
     useFocusEffect(
@@ -920,9 +923,7 @@ export const LectorMaternidadScreen = () => {
             cerrarActualizacionId,
         ])
     );
-    const volverAConfiguracionMaternidad = () => {
-        navigation.navigate("ConfiguracionLectura");
-    };
+
     const onEnviar = React.useCallback(async (crotalForzado?: string) => {
         if (!pantallaActivaRef.current) return;
 
@@ -1357,8 +1358,8 @@ export const LectorMaternidadScreen = () => {
     return (
         <KeyboardAvoidingView
             style={{ flex: 1, backgroundColor: BG }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={90}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
             <Appbar.Header
                 elevated
@@ -1491,7 +1492,7 @@ export const LectorMaternidadScreen = () => {
                             </View>
 
                             <TouchableOpacity
-                                onPress={() => navigation.navigate("ConfiguracionLecturaMaternidad")}
+                                onPress={volverAConfiguracionMaternidad}
                                 activeOpacity={0.9}
                                 style={{
                                     marginTop: 4,
