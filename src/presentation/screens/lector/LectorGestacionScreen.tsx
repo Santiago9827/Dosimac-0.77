@@ -126,6 +126,7 @@ export const LectorGestacionScreen = () => {
 
     const totalPaginas = Math.max(1, Math.ceil(registrosEnviados.length / TAM_PAGINA));
     const totalRegistrosEnviados = registrosEnviados.length;
+    const hayRegistros = registrosEnviados.length > 0;
 
     const itemsPagina = useMemo(() => {
         const start = pagina * TAM_PAGINA;
@@ -1471,7 +1472,7 @@ export const LectorGestacionScreen = () => {
                         </View>
 
                         <View style={{ position: "relative" }}>
-                            {!esLectura && !esSalida && (
+                            {hayRegistros && !esLectura && !esSalida && (
                                 <>
                                     <LineaVerticalTabla
                                         left={PADDING_TABLA_X + ANCHO_CORRAL + ESPACIO_CORRAL_ID_ENTRADA / 2}
@@ -1488,7 +1489,7 @@ export const LectorGestacionScreen = () => {
                                 </>
                             )}
 
-                            {esSalida && (
+                            {hayRegistros && esSalida && (
                                 <LineaVerticalTabla
                                     left={PADDING_TABLA_X + ANCHO_ID + ESPACIO_ID_CROTAL_SALIDA / 2}
                                 />
@@ -1543,7 +1544,7 @@ export const LectorGestacionScreen = () => {
                                                     width: ANCHO_CROTAL_SALIDA,
                                                     color: MUTED,
                                                     fontWeight: "900",
-                                                    textAlign: "left",
+                                                    textAlign: "center",
                                                 }}
                                                 numberOfLines={1}
                                             >
@@ -1553,8 +1554,50 @@ export const LectorGestacionScreen = () => {
                                     </View>
 
                                     {registrosEnviados.length === 0 ? (
-                                        <View style={{ padding: 14 }}>
-                                            <Text style={{ color: MUTED }}>{t("gestationReader_noRecords")}</Text>
+                                        <View
+                                            style={{
+                                                paddingVertical: 24,
+                                                paddingHorizontal: 16,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                backgroundColor: "#FFFFFF",
+                                            }}
+                                        >
+                                            <View
+                                                style={{
+                                                    width: 42,
+                                                    height: 42,
+                                                    borderRadius: 21,
+                                                    backgroundColor: "#F1F5F9",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    marginBottom: 10,
+                                                }}
+                                            >
+                                                <Ionicons name="file-tray-outline" size={22} color={MUTED} />
+                                            </View>
+
+                                            <Text
+                                                style={{
+                                                    color: TEXT,
+                                                    fontWeight: "900",
+                                                    fontSize: 15,
+                                                    textAlign: "center",
+                                                }}
+                                            >
+                                                {t("gestationReader_noRecords")}
+                                            </Text>
+
+                                            <Text
+                                                style={{
+                                                    color: MUTED,
+                                                    fontSize: 13,
+                                                    marginTop: 4,
+                                                    textAlign: "center",
+                                                }}
+                                            >
+                                                Los animales leídos aparecerán aquí.
+                                            </Text>
                                         </View>
                                     ) : (
                                         itemsPagina.map((r, idx) => (

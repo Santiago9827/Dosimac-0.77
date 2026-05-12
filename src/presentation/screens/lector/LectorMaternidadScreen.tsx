@@ -709,6 +709,7 @@ export const LectorMaternidadScreen = () => {
 
     const totalPaginas = Math.max(1, Math.ceil(registrosEnviados.length / TAM_PAGINA));
     const totalRegistrosEnviados = registrosEnviados.length;
+    const hayRegistros = registrosEnviados.length > 0;
 
     const pageItems = useMemo(() => {
         const start = pagina * TAM_PAGINA;
@@ -1355,6 +1356,56 @@ export const LectorMaternidadScreen = () => {
             icono: "id-card-outline" as const,
         };
     }, [estadoIdVisual]);
+
+    const EmptyRecords = () => (
+        <View
+            style={{
+                paddingVertical: 26,
+                paddingHorizontal: 16,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#FFFFFF",
+            }}
+        >
+            <View
+                style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: "#F1F5F9",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 10,
+                }}
+            >
+                <Ionicons name="file-tray-outline" size={22} color={MUTED} />
+            </View>
+
+            <Text
+                style={{
+                    color: TEXT,
+                    fontWeight: "900",
+                    fontSize: 15,
+                    textAlign: "center",
+                }}
+            >
+                {t("maternityReader_noRecords")}
+            </Text>
+
+            <Text
+                style={{
+                    color: MUTED,
+                    fontSize: 13,
+                    marginTop: 4,
+                    textAlign: "center",
+                }}
+            >
+                Los animales leídos aparecerán aquí.
+            </Text>
+        </View>
+    );
+
+
     return (
         <KeyboardAvoidingView
             style={{ flex: 1, backgroundColor: BG }}
@@ -2009,7 +2060,7 @@ export const LectorMaternidadScreen = () => {
                         </View>
 
                         <View style={{ position: "relative" }}>
-                            {!esLectura && esEntrada && (
+                            {hayRegistros && !esLectura && esEntrada && (
                                 <>
                                     <LineaVerticalTabla
                                         left={PADDING_TABLA_X + ANCHO_CORRAL + ESPACIO_CORRAL_ID_ENTRADA / 2}
@@ -2026,6 +2077,12 @@ export const LectorMaternidadScreen = () => {
                                 </>
                             )}
 
+                            {hayRegistros && esSalida && (
+                                <LineaVerticalTabla
+                                    left={PADDING_TABLA_X + ANCHO_ID + ESPACIO_ID_CROTAL_SALIDA / 2}
+                                />
+                            )}
+
                             {esSalida && (
                                 <LineaVerticalTabla
                                     left={PADDING_TABLA_X + ANCHO_ID + ESPACIO_ID_CROTAL_SALIDA / 2}
@@ -2034,10 +2091,8 @@ export const LectorMaternidadScreen = () => {
 
                             {esLectura ? (
                                 <View style={{ padding: 14, gap: 12 }}>
-                                    {registrosEnviados.length === 0 ? (
-                                        <Text style={{ color: MUTED }}>
-                                            {t("maternityReader_noRecords")}
-                                        </Text>
+                                    {!hayRegistros ? (
+                                        <EmptyRecords />
                                     ) : (
                                         registrosEnviados.map((r) => (
                                             <RegistroLecturaCard
