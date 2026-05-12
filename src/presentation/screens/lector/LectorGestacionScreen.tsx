@@ -123,6 +123,7 @@ export const LectorGestacionScreen = () => {
     const tiempoAutoEnvioMs = esLectura ? 300 : 1000;
 
     const totalPaginas = Math.max(1, Math.ceil(registrosEnviados.length / TAM_PAGINA));
+    const totalRegistrosEnviados = registrosEnviados.length;
 
     const itemsPagina = useMemo(() => {
         const start = pagina * TAM_PAGINA;
@@ -1178,8 +1179,19 @@ export const LectorGestacionScreen = () => {
                                 placeholder={t("gestationReader_newIdPlaceholder")}
                                 autoCapitalize="characters"
                                 autoCorrect={false}
-                                outlineColor={BORDER}
-                                activeOutlineColor={BRAND}
+
+                                outlineColor={DANGER}
+                                activeOutlineColor={DANGER}
+
+                                style={{
+                                    backgroundColor: "#FFF7F7",
+                                }}
+                                outlineStyle={{
+                                    borderWidth: 2,
+                                    borderRadius: 14,
+                                }}
+                                textColor={TEXT}
+                                placeholderTextColor="#B91C1C"
                             />
 
                             <TouchableOpacity
@@ -1230,9 +1242,40 @@ export const LectorGestacionScreen = () => {
                             }}
                         >
                             <View style={{ flex: 1 }}>
-                                <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                                    {t("gestationReader_sentRecordsTitle")}
-                                </Text>
+                                <View
+                                    style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: 10,
+                                    }}
+                                >
+                                    <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
+                                        {t("gestationReader_sentRecordsTitle")}
+                                    </Text>
+
+                                    <View
+                                        style={{
+                                            minWidth: 36,
+                                            height: 30,
+                                            paddingHorizontal: 10,
+                                            borderRadius: 999,
+                                            backgroundColor: totalRegistrosEnviados > 0 ? BRAND : "#E5E7EB",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                color: totalRegistrosEnviados > 0 ? "#FFFFFF" : MUTED,
+                                                fontWeight: "900",
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            {totalRegistrosEnviados}
+                                        </Text>
+                                    </View>
+                                </View>
 
                                 {esLectura && !lectorConectado && (
                                     <View
