@@ -110,7 +110,7 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
     const [modo, setModo] = useState<Modo>("entrada");
     const [corral, setCorral] = useState("");
     const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
-    const [confirmar, setConfirmar] = useState(true);
+    const [confirmar, setConfirmar] = useState(false);
 
     const [tipoBusqueda, setTipoBusqueda] = useState<"crotal" | "id">("crotal");
     const [origenBusquedaCrotal, setOrigenBusquedaCrotal] = useState<"manual" | "espada">("manual");
@@ -629,7 +629,8 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                                 <Ionicons name="options-outline" size={18} color={BRAND} />
                                 <Text style={{ fontSize: 16, fontWeight: "900", color: TEXT }}>
-                                    {modo === "entrada" ? t("maternidadConfig_entryParamsTitle")
+                                    {modo === "entrada"
+                                        ? t("maternidadConfig_entryParamsTitle")
                                         : t("maternidadConfig_exitParamsTitle")}
                                 </Text>
                             </View>
@@ -640,10 +641,49 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                     : t("maternidadConfig_exitParamsDescription")}
                             </Text>
 
+                            <View style={{ height: 16 }} />
+
+                            {/* Primero: identificar animales desconocidos */}
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                                <View style={{ flex: 1, paddingRight: 10 }}>
+                                    <Text style={{ color: TEXT, fontWeight: "800" }}>
+                                        {t("maternidadConfig_detectUnknownTitle")}
+                                    </Text>
+                                    <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
+                                        {t("maternidadConfig_detectUnknownDescription")}
+                                    </Text>
+                                </View>
+                                <Switch
+                                    value={detectarDesconocidos}
+                                    onValueChange={setDetectarDesconocidos}
+                                />
+                            </View>
+
                             <View style={{ height: 12 }} />
 
+                            {/* Segundo: confirmar envío */}
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                                <View style={{ flex: 1, paddingRight: 10 }}>
+                                    <Text style={{ color: TEXT, fontWeight: "800" }}>
+                                        Confirmar envío
+                                    </Text>
+                                    <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
+                                        {t("maternidadConfig_confirmDescription")}
+                                    </Text>
+                                </View>
+                                <Switch
+                                    value={confirmar}
+                                    onValueChange={setConfirmar}
+                                />
+                            </View>
+
+                            {/* Después: corral solo en entrada */}
                             {modo === "entrada" && (
                                 <>
+                                    <View style={{ height: 14 }} />
+                                    <Divider />
+                                    <View style={{ height: 14 }} />
+
                                     <TextInput
                                         mode="outlined"
                                         label={t("maternidadConfig_corralLabel")}
@@ -661,36 +701,8 @@ export const ConfiguracionLecturaMaternidadScreen = () => {
                                             {t("maternidadConfig_corralRequired")}
                                         </Text>
                                     )}
-
-                                    <View style={{ height: 14 }} />
-                                    <Divider />
-                                    <View style={{ height: 14 }} />
                                 </>
                             )}
-
-                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                                <View style={{ flex: 1, paddingRight: 10 }}>
-                                    <Text style={{ color: TEXT, fontWeight: "800" }}>
-                                        {t("maternidadConfig_detectUnknownTitle")}
-                                    </Text>
-                                    <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
-                                        {t("maternidadConfig_detectUnknownDescription")}
-                                    </Text>
-                                </View>
-                                <Switch value={detectarDesconocidos} onValueChange={setDetectarDesconocidos} />
-                            </View>
-
-                            <View style={{ height: 12 }} />
-
-                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                                <View style={{ flex: 1, paddingRight: 10 }}>
-                                    <Text style={{ color: TEXT, fontWeight: "800" }}>Confirmar envío</Text>
-                                    <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
-                                        {t("maternidadConfig_confirmDescription")}
-                                    </Text>
-                                </View>
-                                <Switch value={confirmar} onValueChange={setConfirmar} />
-                            </View>
                         </Card.Content>
                     </Card>
                 )}

@@ -103,7 +103,7 @@ export const ConfiguracionGestacionScreen = () => {
     const [modo, setModo] = useState<Modo>("entrada");
     const [corral, setCorral] = useState("");
     const [detectarDesconocidos, setDetectarDesconocidos] = useState(true);
-    const [confirmar, setConfirmar] = useState(true);
+    const [confirmar, setConfirmar] = useState(false);
 
     const [tipoBusqueda, setTipoBusqueda] = useState<"crotal" | "id">("crotal");
     const [origenBusquedaCrotal, setOrigenBusquedaCrotal] = useState<"manual" | "espada">("manual");
@@ -630,10 +630,43 @@ export const ConfiguracionGestacionScreen = () => {
                                     : t("gestacionConfig_exitParamsDescription")}
                             </Text>
 
+                            <View style={{ height: 16 }} />
+
+                            {/* Primero: identificar animales desconocidos */}
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                                <View style={{ flex: 1, paddingRight: 10 }}>
+                                    <Text style={{ color: TEXT, fontWeight: "800" }}>
+                                        {t("gestacionConfig_detectUnknownTitle")}
+                                    </Text>
+                                    <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
+                                        {t("gestacionConfig_detectUnknownDescription")}
+                                    </Text>
+                                </View>
+                                <Switch value={detectarDesconocidos} onValueChange={setDetectarDesconocidos} />
+                            </View>
+
                             <View style={{ height: 12 }} />
 
+                            {/* Segundo: confirmar envío */}
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                                <View style={{ flex: 1, paddingRight: 10 }}>
+                                    <Text style={{ color: TEXT, fontWeight: "800" }}>
+                                        {t("gestacionConfig_confirmTitle")}
+                                    </Text>
+                                    <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
+                                        {t("gestacionConfig_confirmDescription")}
+                                    </Text>
+                                </View>
+                                <Switch value={confirmar} onValueChange={setConfirmar} />
+                            </View>
+
+                            {/* Después: corral solo en entrada */}
                             {modo === "entrada" && (
                                 <>
+                                    <View style={{ height: 14 }} />
+                                    <Divider />
+                                    <View style={{ height: 14 }} />
+
                                     <TextInput
                                         mode="outlined"
                                         label={t("gestacionConfig_corralLabel")}
@@ -651,36 +684,8 @@ export const ConfiguracionGestacionScreen = () => {
                                             {t("gestacionConfig_corralRequired")}
                                         </Text>
                                     )}
-
-                                    <View style={{ height: 14 }} />
-                                    <Divider />
-                                    <View style={{ height: 14 }} />
                                 </>
                             )}
-
-                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                                <View style={{ flex: 1, paddingRight: 10 }}>
-                                    <Text style={{ color: TEXT, fontWeight: "800" }}>
-                                        {t("gestacionConfig_detectUnknownTitle")}
-                                    </Text>
-                                    <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
-                                        {t("gestacionConfig_detectUnknownDescription")}
-                                    </Text>
-                                </View>
-                                <Switch value={detectarDesconocidos} onValueChange={setDetectarDesconocidos} />
-                            </View>
-
-                            <View style={{ height: 12 }} />
-
-                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                                <View style={{ flex: 1, paddingRight: 10 }}>
-                                    <Text style={{ color: TEXT, fontWeight: "800" }}> {t("gestacionConfig_confirmTitle")}</Text>
-                                    <Text style={{ color: MUTED, marginTop: 2, fontSize: 12 }}>
-                                        {t("gestacionConfig_confirmDescription")}
-                                    </Text>
-                                </View>
-                                <Switch value={confirmar} onValueChange={setConfirmar} />
-                            </View>
                         </Card.Content>
                     </Card>
                 )}

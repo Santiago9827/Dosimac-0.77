@@ -964,85 +964,163 @@ export const LectorGestacionScreen = () => {
                         style={{
                             backgroundColor: CARD,
                             borderRadius: 18,
-                            overflow: "hidden",
                             borderWidth: 1,
                             borderColor: BORDER,
+                            padding: 8,
                             ...SHADOW,
                         }}
                     >
                         <View
                             style={{
-                                backgroundColor: SOFT,
-                                padding: 14,
-                                borderBottomWidth: 1,
-                                borderBottomColor: SOFT_BORDER,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 8,
                             }}
                         >
-                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}>
-                                {t("gestationReader_summaryTitle")}
-                            </Text>
-                            <Text style={{ color: MUTED, marginTop: 4 }}>
-                                {t("gestationReader_summaryDescription")}
-                            </Text>
-                        </View>
+                            {/* Modo + Corral juntos */}
+                            <View
+                                style={{
+                                    flex: 1,
+                                    minHeight: 54,
+                                    borderRadius: 14,
+                                    backgroundColor: "#F8FAFC",
+                                    borderWidth: 1,
+                                    borderColor: BORDER,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    paddingHorizontal: 10,
+                                }}
+                            >
+                                {/* Modo */}
+                                <View
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 8,
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="swap-horizontal-outline"
+                                        size={18}
+                                        color={BRAND}
+                                    />
 
-                        <View style={{ padding: 14, gap: 12 }}>
-                            <View style={{ flexDirection: "row", gap: 10 }}>
-                                <MiniResumenCard
-                                    icon="swap-horizontal-outline"
-                                    titulo={t("gestationReader_mode")}
-                                    valor={
-                                        tipoMovimiento === "entrada"
-                                            ? t("gestationReader_modeEntry")
-                                            : tipoMovimiento === "salida"
-                                                ? t("gestationReader_modeExit")
-                                                : tipoMovimiento === "lectura"
-                                                    ? t("gestationReader_modeReading")
-                                                    : t("gestationReader_modeSearch")
-                                    }
+                                    <View>
+                                        <Text
+                                            style={{
+                                                color: MUTED,
+                                                fontSize: 10,
+                                                fontWeight: "800",
+                                            }}
+                                        >
+                                            {t("gestationReader_mode")}
+                                        </Text>
+
+                                        <Text
+                                            style={{
+                                                color: TEXT,
+                                                fontSize: 14,
+                                                fontWeight: "900",
+                                                marginTop: 1,
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {tipoMovimiento === "entrada"
+                                                ? t("gestationReader_modeEntry")
+                                                : t("gestationReader_modeExit")}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                {/* Línea separadora */}
+                                <View
+                                    style={{
+                                        width: 1,
+                                        height: 30,
+                                        backgroundColor: "#E2E8F0",
+                                        marginHorizontal: 8,
+                                    }}
                                 />
 
-                                <MiniResumenCard
-                                    icon="home-outline"
-                                    titulo={t("gestationReader_corral")}
-                                    valor={corralInput || "—"}
-                                />
+                                {/* Corral */}
+                                <View
+                                    style={{
+                                        flex: 0.75,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 8,
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="home-outline"
+                                        size={18}
+                                        color={BRAND}
+                                    />
+
+                                    <View>
+                                        <Text
+                                            style={{
+                                                color: MUTED,
+                                                fontSize: 10,
+                                                fontWeight: "800",
+                                            }}
+                                        >
+                                            {t("gestationReader_corral")}
+                                        </Text>
+
+                                        <Text
+                                            style={{
+                                                color: TEXT,
+                                                fontSize: 14,
+                                                fontWeight: "900",
+                                                marginTop: 1,
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {corralInput || "—"}
+                                        </Text>
+                                    </View>
+                                </View>
                             </View>
 
-                            <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
-
-                            <SwitchRowReadonly
-                                title={t("gestationReader_detectUnknownTitle")}
-                                description={t("gestationReader_detectUnknownDescription")}
-                                value={detectarDesconocidos}
-                            />
-
-                            <SwitchRowReadonly
-                                title={t("gestationReader_confirmSendTitle")}
-                                description={t("gestationReader_confirmSendDescription")}
-                                value={confirmar}
-                            />
-
+                            {/* Botón cambiar */}
                             <TouchableOpacity
                                 onPress={() => navigation.navigate("ConfiguracionGestacion")}
                                 activeOpacity={0.9}
                                 style={{
-                                    marginTop: 6,
-                                    height: 42,
-                                    borderRadius: 12,
+                                    height: 54,
+                                    width: 120,
+                                    borderRadius: 14,
                                     alignItems: "center",
                                     justifyContent: "center",
                                     backgroundColor: "#E5E7EB",
+                                    paddingHorizontal: 8,
                                 }}
                             >
-                                <Text style={{ color: TEXT, fontWeight: "900" }}>
+                                <Ionicons
+                                    name="settings-outline"
+                                    size={17}
+                                    color={TEXT}
+                                    style={{ marginBottom: 2 }}
+                                />
+
+                                <Text
+                                    style={{
+                                        color: TEXT,
+                                        fontWeight: "900",
+                                        fontSize: 11,
+                                        textAlign: "center",
+                                    }}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                >
                                     {t("gestationReader_changeSettings")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 )}
-
                 {!esLectura && !esBusqueda && (
                     <View
                         style={{

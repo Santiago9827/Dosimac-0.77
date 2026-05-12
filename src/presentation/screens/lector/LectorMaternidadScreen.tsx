@@ -1510,81 +1510,166 @@ export const LectorMaternidadScreen = () => {
                     </View>
                 )}
                 {/* Resumen */}
+                {/* Resumen compacto */}
                 {!esLectura && !esBusqueda && (
                     <View
                         style={{
                             backgroundColor: CARD,
                             borderRadius: 18,
-                            overflow: "hidden",
                             borderWidth: 1,
                             borderColor: BORDER,
+                            padding: 8,
                             ...SHADOW,
                         }}
                     >
                         <View
                             style={{
-                                backgroundColor: SOFT,
-                                padding: 14,
-                                borderBottomWidth: 1,
-                                borderBottomColor: SOFT_BORDER,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 8,
                             }}
                         >
-                            <Text style={{ color: TEXT, fontSize: 18, fontWeight: "900" }}> {t("maternityReader_summaryTitle")}</Text>
-                            <Text style={{ color: MUTED, marginTop: 4 }}>
-                                {t("maternityReader_summaryDescription")}
-                            </Text>
-                        </View>
-
-                        <View style={{ padding: 14, gap: 12 }}>
-                            <View style={{ flexDirection: "row", gap: 10 }}>
-                                <MiniResumenCard
-                                    icon="swap-horizontal-outline"
-                                    titulo={t("maternityReader_mode")}
-                                    valor={
-                                        tipoMovimiento === "entrada"
-                                            ? t("maternityReader_modeEntry")
-                                            : tipoMovimiento === "salida"
-                                                ? t("maternityReader_modeExit")
-                                                : t("maternityReader_modeReading")
-                                    }
-                                />
-
-                                {esEntrada && (
-                                    <MiniResumenCard
-                                        icon="home-outline"
-                                        titulo="Corral"
-                                        valor={corralInput || "—"}
+                            {/* Modo + Corral */}
+                            <View
+                                style={{
+                                    flex: 1,
+                                    minHeight: 54,
+                                    borderRadius: 14,
+                                    backgroundColor: "#F8FAFC",
+                                    borderWidth: 1,
+                                    borderColor: BORDER,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    paddingHorizontal: 10,
+                                }}
+                            >
+                                {/* Modo */}
+                                <View
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 8,
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="swap-horizontal-outline"
+                                        size={18}
+                                        color={BRAND}
                                     />
+
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={{
+                                                color: MUTED,
+                                                fontSize: 10,
+                                                fontWeight: "800",
+                                            }}
+                                        >
+                                            {t("maternityReader_mode")}
+                                        </Text>
+
+                                        <Text
+                                            style={{
+                                                color: TEXT,
+                                                fontSize: 14,
+                                                fontWeight: "900",
+                                                marginTop: 1,
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {tipoMovimiento === "entrada"
+                                                ? t("maternityReader_modeEntry")
+                                                : t("maternityReader_modeExit")}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                {/* Corral solo si es entrada */}
+                                {esEntrada && (
+                                    <>
+                                        <View
+                                            style={{
+                                                width: 1,
+                                                height: 30,
+                                                backgroundColor: "#E2E8F0",
+                                                marginHorizontal: 8,
+                                            }}
+                                        />
+
+                                        <View
+                                            style={{
+                                                flex: 0.75,
+                                                flexDirection: "row",
+                                                alignItems: "center",
+                                                gap: 8,
+                                            }}
+                                        >
+                                            <Ionicons
+                                                name="home-outline"
+                                                size={18}
+                                                color={BRAND}
+                                            />
+
+                                            <View style={{ flex: 1 }}>
+                                                <Text
+                                                    style={{
+                                                        color: MUTED,
+                                                        fontSize: 10,
+                                                        fontWeight: "800",
+                                                    }}
+                                                >
+                                                    {t("maternityReader_tableHeaderCorral")}
+                                                </Text>
+
+                                                <Text
+                                                    style={{
+                                                        color: TEXT,
+                                                        fontSize: 14,
+                                                        fontWeight: "900",
+                                                        marginTop: 1,
+                                                    }}
+                                                    numberOfLines={1}
+                                                >
+                                                    {corralInput || "—"}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </>
                                 )}
                             </View>
 
-                            <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
-
-                            <SwitchRowReadonly
-                                title={t("maternityReader_detectUnknownTitle")}
-                                description={t("maternityReader_detectUnknownDescription")}
-                                value={detectarDesconocidos}
-                            />
-
-                            <SwitchRowReadonly
-                                title={t("maternityReader_confirmSendTitle")}
-                                description={t("maternityReader_confirmSendDescription")}
-                                value={confirmar}
-                            />
-
+                            {/* Botón cambiar */}
                             <TouchableOpacity
                                 onPress={() => navigation.navigate("ConfiguracionLectura")}
                                 activeOpacity={0.9}
                                 style={{
-                                    marginTop: 6,
-                                    height: 42,
-                                    borderRadius: 12,
+                                    height: 54,
+                                    width: 120,
+                                    borderRadius: 14,
                                     alignItems: "center",
                                     justifyContent: "center",
                                     backgroundColor: "#E5E7EB",
+                                    paddingHorizontal: 8,
                                 }}
                             >
-                                <Text style={{ color: TEXT, fontWeight: "900" }}>
+                                <Ionicons
+                                    name="settings-outline"
+                                    size={17}
+                                    color={TEXT}
+                                    style={{ marginBottom: 2 }}
+                                />
+
+                                <Text
+                                    style={{
+                                        color: TEXT,
+                                        fontWeight: "900",
+                                        fontSize: 11,
+                                        textAlign: "center",
+                                    }}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                >
                                     {t("maternityReader_changeSettings")}
                                 </Text>
                             </TouchableOpacity>
