@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler, Modal } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, BackHandler, Modal, Keyboard } from "react-native";
 import { Appbar, Switch, TextInput } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAwrConn } from "../../../stores/awrConnStore";
@@ -675,6 +675,9 @@ export const LectorMaternidadScreen = () => {
     const autoEnvioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const ultimoCrotalAutoRef = useRef<string | null>(null);
     const scrollRef = useRef<ScrollView | null>(null);
+    const formularioIdYRef = useRef(0);
+
+    const [altoTeclado, setAltoTeclado] = useState(0);
 
     const [corralInput, setCorralInput] = useState("");
     const [tipoMovimiento, setTipoMovimiento] = useState<TipoMovimiento>("entrada");
@@ -818,6 +821,52 @@ export const LectorMaternidadScreen = () => {
             setEstadoIdVisual("neutro");
         }, 3000);
     };
+
+    const subirFormularioId = React.useCallback(() => {
+        const yFormulario = Math.max(formularioIdYRef.current - 80, 0);
+
+        scrollRef.current?.scrollTo({
+            y: yFormulario,
+            animated: true,
+        });
+    }, []);
+
+    useEffect(() => {
+        const eventoMostrar =
+            Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+
+        const eventoOcultar =
+            Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+        const subMostrar = Keyboard.addListener(eventoMostrar, (event) => {
+            setAltoTeclado(event.endCoordinates?.height ?? 0);
+
+            if (mostrarActualizarId) {
+                setTimeout(() => {
+                    subirFormularioId();
+                }, Platform.OS === "ios" ? 80 : 180);
+            }
+        });
+
+        const subOcultar = Keyboard.addListener(eventoOcultar, () => {
+            setAltoTeclado(0);
+        });
+
+        return () => {
+            subMostrar.remove();
+            subOcultar.remove();
+        };
+    }, [mostrarActualizarId, subirFormularioId]);
+
+    useEffect(() => {
+        if (!mostrarActualizarId) return;
+
+        const timer = setTimeout(() => {
+            subirFormularioId();
+        }, 250);
+
+        return () => clearTimeout(timer);
+    }, [mostrarActualizarId, subirFormularioId]);
 
     useEffect(() => {
         pantallaActivaRef.current = pantallaEnfocada;
@@ -1427,7 +1476,10 @@ export const LectorMaternidadScreen = () => {
                 ref={scrollRef}
                 contentContainerStyle={{
                     padding: 16,
-                    paddingBottom: 140,
+                    paddingBottom:
+                        mostrarActualizarId && altoTeclado > 0
+                            ? altoTeclado + 180
+                            : 140,
                     gap: 14,
                     flexGrow: 1,
                 }}
@@ -1828,6 +1880,9 @@ export const LectorMaternidadScreen = () => {
 
                 {!esBusqueda && mostrarActualizarId && (
                     <View
+                        onLayout={(event) => {
+                            formularioIdYRef.current = event.nativeEvent.layout.y;
+                        }}
                         style={{
                             backgroundColor: CARD,
                             borderRadius: 18,
@@ -1862,6 +1917,11 @@ export const LectorMaternidadScreen = () => {
                                 label={t("maternityReader_newIdLabel")}
                                 value={nuevoIdManual}
                                 onChangeText={setNuevoIdManual}
+                                onFocus={() => {
+                                    setTimeout(() => {
+                                        subirFormularioId();
+                                    }, Platform.OS === "ios" ? 100 : 250);
+                                }}
                                 placeholder={t("maternityReader_newIdPlaceholder")}
                                 autoCapitalize="characters"
                                 autoCorrect={false}
@@ -2082,12 +2142,12 @@ export const LectorMaternidadScreen = () => {
                                     left={PADDING_TABLA_X + ANCHO_ID + ESPACIO_ID_CROTAL_SALIDA / 2}
                                 />
                             )}
-
+                            {/* 
                             {esSalida && (
                                 <LineaVerticalTabla
                                     left={PADDING_TABLA_X + ANCHO_ID + ESPACIO_ID_CROTAL_SALIDA / 2}
                                 />
-                            )}
+                            )} */}
 
                             {esLectura ? (
                                 <View style={{ padding: 14, gap: 12 }}>
